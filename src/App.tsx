@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CompleteSignup from "./pages/CompleteSignup";
@@ -24,18 +26,23 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/complete-signup" element={<CompleteSignup />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/profile" element={<Profile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <SidebarProvider>
+            <div className="min-h-screen flex w-full">
+              <AppSidebar />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/complete-signup" element={<CompleteSignup />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/journal" element={<Journal />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/profile" element={<Profile />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
