@@ -9,13 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      pending_signups: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          expires_at: string
+          id: string
+          name: string
+          phone_number: string
+          timezone: string | null
+          token: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          name: string
+          phone_number: string
+          timezone?: string | null
+          token: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          phone_number?: string
+          timezone?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_signups: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
