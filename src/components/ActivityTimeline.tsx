@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Timeline } from 'lucide-react';
+import { Calendar, Clock, History } from 'lucide-react';
 import { useState } from 'react';
 
 interface TimelineEvent {
@@ -83,7 +83,7 @@ export const ActivityTimeline = () => {
               onClick={() => setViewMode('timeline')}
               className="bg-gray-700 border-gray-600"
             >
-              <Timeline className="w-4 h-4 mr-2" />
+              <History className="w-4 h-4 mr-2" />
               Timeline View
             </Button>
           </div>
@@ -102,7 +102,7 @@ export const ActivityTimeline = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
-            <Timeline className="w-5 h-5" />
+            <History className="w-5 h-5" />
             Activity Timeline
           </CardTitle>
           <Button

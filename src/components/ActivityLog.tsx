@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MessageSquare, Globe, Filter, Calendar, Timeline } from 'lucide-react';
+import { Clock, MessageSquare, Globe, Filter, Calendar, History } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -119,7 +120,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
             >
               {viewMode === 'list' ? (
                 <>
-                  <Timeline className="w-4 h-4 mr-2" />
+                  <History className="w-4 h-4 mr-2" />
                   Timeline
                 </>
               ) : (
