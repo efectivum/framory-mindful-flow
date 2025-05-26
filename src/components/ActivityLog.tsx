@@ -1,14 +1,14 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MessageSquare, Globe, Filter, Calendar } from 'lucide-react';
+import { Clock, MessageSquare, Globe, Filter, Calendar, Timeline } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Activity, ActivityType, ActivitySource, ACTIVITY_TYPE_LABELS, ACTIVITY_SOURCE_LABELS } from '@/lib/activityTypes';
+import { ActivityTimeline } from './ActivityTimeline';
 
 interface ActivityLogProps {
   limit?: number;
@@ -20,6 +20,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
   const { user } = useAuth();
   const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
   const [sourceFilter, setSourceFilter] = useState<ActivitySource | 'all'>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline'>('list');
 
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities', user?.id, typeFilter, sourceFilter, limit],
@@ -80,6 +81,10 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
     }
   };
 
+  if (viewMode === 'timeline') {
+    return <ActivityTimeline />;
+  }
+
   if (isLoading) {
     return (
       <Card className={`bg-gray-800/50 border-gray-700 ${className}`}>
@@ -105,33 +110,53 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
             <Clock className="w-5 h-5" />
             Activity Log
           </CardTitle>
-          {showFilters && (
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ActivityType | 'all')}>
-                <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {Object.entries(ACTIVITY_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as ActivitySource | 'all')}>
-                <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  {Object.entries(ACTIVITY_SOURCE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'list' ? 'timeline' : 'list')}
+              className="bg-gray-700 border-gray-600"
+            >
+              {viewMode === 'list' ? (
+                <>
+                  <Timeline className="w-4 h-4 mr-2" />
+                  Timeline
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4 mr-2" />
+                  List
+                </>
+              )}
+            </Button>
+            {showFilters && (
+              <>
+                <Filter className="w-4 h-4 text-gray-400" />
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ActivityType | 'all')}>
+                  <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {Object.entries(ACTIVITY_TYPE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as ActivitySource | 'all')}>
+                  <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
+                    <SelectValue placeholder="Source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sources</SelectItem>
+                    {Object.entries(ACTIVITY_SOURCE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
