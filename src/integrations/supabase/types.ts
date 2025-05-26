@@ -111,6 +111,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activities: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          source: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_messages: {
         Row: {
           created_at: string

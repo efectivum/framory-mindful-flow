@@ -47,7 +47,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as Activity[] || [];
+      return data || [];
     },
     enabled: !!user?.id,
   });
@@ -141,12 +141,12 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
               <div key={activity.id} className="p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Badge className={`text-xs ${getTypeColor(activity.type)}`}>
-                      {ACTIVITY_TYPE_LABELS[activity.type]}
+                    <Badge className={`text-xs ${getTypeColor(activity.type as ActivityType)}`}>
+                      {ACTIVITY_TYPE_LABELS[activity.type as ActivityType]}
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-gray-400">
-                      {getSourceIcon(activity.source)}
-                      <span>{ACTIVITY_SOURCE_LABELS[activity.source]}</span>
+                      {getSourceIcon(activity.source as ActivitySource)}
+                      <span>{ACTIVITY_SOURCE_LABELS[activity.source as ActivitySource]}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-500">
