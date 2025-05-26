@@ -1,11 +1,56 @@
 
-import { Target, Plus, Clock, CheckCircle } from 'lucide-react';
+import { Target, Plus, Clock, CheckCircle, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const Goals = () => {
+  const { user } = useAuth();
+
+  // Fetch WhatsApp insights related to goals
+  const { data: whatsappInsights } = useQuery({
+    queryKey: ['whatsapp-goal-insights', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('ai_insights')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('source_type', 'whatsapp')
+        .eq('insight_type', 'progress')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch recent WhatsApp messages for context
+  const { data: recentMessages } = useQuery({
+    queryKey: ['recent-whatsapp-messages', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
   const goals = [
     {
       id: 1,
@@ -51,7 +96,7 @@ const Goals = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {goals.map((goal) => (
               <Card key={goal.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
                 <CardHeader>
@@ -85,6 +130,83 @@ const Goals = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* WhatsApp Integration Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* AI Insights from WhatsApp */}
+            <Card className="bg-gradient-to-br from-green-500/10 to-teal-600/10 border-gray-700/50">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  WhatsApp Progress Insights
+                </CardTitle>
+                <p className="text-gray-400 text-sm">AI analysis from your WhatsApp check-ins</p>
+              </CardHeader>
+              <CardContent>
+                {whatsappInsights && whatsappInsights.length > 0 ? (
+                  <div className="space-y-3">
+                    {whatsappInsights.map((insight) => (
+                      <div key={insight.id} className="p-3 bg-gray-800/30 rounded-lg">
+                        <p className="text-gray-300 text-sm">{insight.content}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-gray-500">
+                            {new Date(insight.created_at).toLocaleDateString()}
+                          </span>
+                          {insight.confidence_score && (
+                            <span className="text-xs text-green-400">
+                              {Math.round(insight.confidence_score * 100)}% confidence
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    No WhatsApp insights yet. Start sharing your progress via WhatsApp to see AI analysis here!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent WhatsApp Activity */}
+            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-gray-700/50">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Recent WhatsApp Activity
+                </CardTitle>
+                <p className="text-gray-400 text-sm">Your latest check-ins and updates</p>
+              </CardHeader>
+              <CardContent>
+                {recentMessages && recentMessages.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentMessages.map((message) => (
+                      <div key={message.id} className="p-3 bg-gray-800/30 rounded-lg">
+                        <p className="text-gray-300 text-sm line-clamp-2">{message.message_content}</p>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs text-gray-500">
+                            {new Date(message.created_at).toLocaleDateString()}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            message.direction === 'inbound' 
+                              ? 'bg-blue-500/20 text-blue-300' 
+                              : 'bg-green-500/20 text-green-300'
+                          }`}>
+                            {message.direction}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    No WhatsApp messages yet. Connect your WhatsApp to start tracking progress!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

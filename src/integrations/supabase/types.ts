@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          confidence_score: number | null
+          content: string
+          created_at: string
+          id: string
+          insight_type: string
+          metadata: Json | null
+          source_id: string | null
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          insight_type: string
+          metadata?: Json | null
+          source_id?: string | null
+          source_type: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          insight_type?: string
+          metadata?: Json | null
+          source_id?: string | null
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pending_signups: {
         Row: {
           completed: boolean | null
@@ -39,6 +75,75 @@ export type Database = {
           phone_number?: string
           timezone?: string | null
           token?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          daily_reminder_time: string | null
+          id: string
+          phone_number: string | null
+          timezone: string | null
+          updated_at: string
+          weekly_reminder_day: number | null
+          whatsapp_active: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          daily_reminder_time?: string | null
+          id: string
+          phone_number?: string | null
+          timezone?: string | null
+          updated_at?: string
+          weekly_reminder_day?: number | null
+          whatsapp_active?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          daily_reminder_time?: string | null
+          id?: string
+          phone_number?: string | null
+          timezone?: string | null
+          updated_at?: string
+          weekly_reminder_day?: number | null
+          whatsapp_active?: boolean | null
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          message_content: string
+          message_type: string | null
+          phone_number: string
+          processed: boolean | null
+          user_id: string
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          id?: string
+          message_content: string
+          message_type?: string | null
+          phone_number: string
+          processed?: boolean | null
+          user_id: string
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          message_content?: string
+          message_type?: string | null
+          phone_number?: string
+          processed?: boolean | null
+          user_id?: string
+          whatsapp_message_id?: string | null
         }
         Relationships: []
       }
