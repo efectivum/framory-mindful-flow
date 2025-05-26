@@ -1,56 +1,12 @@
 
-import { Target, Plus, Clock, CheckCircle, MessageSquare } from 'lucide-react';
+import { Target, Plus, Clock, CheckCircle, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { ActivityLog } from '@/components/ActivityLog';
 
 const Goals = () => {
-  const { user } = useAuth();
-
-  // Fetch WhatsApp insights related to goals
-  const { data: whatsappInsights } = useQuery({
-    queryKey: ['whatsapp-goal-insights', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('ai_insights')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('source_type', 'whatsapp')
-        .eq('insight_type', 'progress')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
-
-  // Fetch recent WhatsApp messages for context
-  const { data: recentMessages } = useQuery({
-    queryKey: ['recent-whatsapp-messages', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('whatsapp_messages')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
-
   const goals = [
     {
       id: 1,
@@ -132,81 +88,52 @@ const Goals = () => {
             ))}
           </div>
 
-          {/* WhatsApp Integration Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* AI Insights from WhatsApp */}
-            <Card className="bg-gradient-to-br from-green-500/10 to-teal-600/10 border-gray-700/50">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  WhatsApp Progress Insights
-                </CardTitle>
-                <p className="text-gray-400 text-sm">AI analysis from your WhatsApp check-ins</p>
-              </CardHeader>
-              <CardContent>
-                {whatsappInsights && whatsappInsights.length > 0 ? (
-                  <div className="space-y-3">
-                    {whatsappInsights.map((insight) => (
-                      <div key={insight.id} className="p-3 bg-gray-800/30 rounded-lg">
-                        <p className="text-gray-300 text-sm">{insight.content}</p>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-xs text-gray-500">
-                            {new Date(insight.created_at).toLocaleDateString()}
-                          </span>
-                          {insight.confidence_score && (
-                            <span className="text-xs text-green-400">
-                              {Math.round(insight.confidence_score * 100)}% confidence
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+          {/* Unified Activity Log */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ActivityLog />
+            </div>
+            
+            <div className="space-y-6">
+              <Card className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Quick Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">This Week</span>
+                    <span className="text-white font-medium">12 activities</span>
                   </div>
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    No WhatsApp insights yet. Start sharing your progress via WhatsApp to see AI analysis here!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Goals Updated</span>
+                    <span className="text-white font-medium">5 times</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Habits Tracked</span>
+                    <span className="text-white font-medium">8 times</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Via WhatsApp</span>
+                    <span className="text-white font-medium">7 updates</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Recent WhatsApp Activity */}
-            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-gray-700/50">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Recent WhatsApp Activity
-                </CardTitle>
-                <p className="text-gray-400 text-sm">Your latest check-ins and updates</p>
-              </CardHeader>
-              <CardContent>
-                {recentMessages && recentMessages.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentMessages.map((message) => (
-                      <div key={message.id} className="p-3 bg-gray-800/30 rounded-lg">
-                        <p className="text-gray-300 text-sm line-clamp-2">{message.message_content}</p>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-xs text-gray-500">
-                            {new Date(message.created_at).toLocaleDateString()}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            message.direction === 'inbound' 
-                              ? 'bg-blue-500/20 text-blue-300' 
-                              : 'bg-green-500/20 text-green-300'
-                          }`}>
-                            {message.direction}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    No WhatsApp messages yet. Connect your WhatsApp to start tracking progress!
+              <Card className="bg-gradient-to-br from-green-500/10 to-teal-600/10 border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Recent Achievement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-300 mb-2">
+                    You've maintained your meditation streak for 12 days! Keep it up! 🎉
                   </p>
-                )}
-              </CardContent>
-            </Card>
+                  <span className="text-xs text-green-400">2 hours ago</span>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
