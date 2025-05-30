@@ -1,17 +1,17 @@
-
 import { Target, Plus, Clock, CheckCircle, Activity, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ActivityLog } from '@/components/ActivityLog';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Goals = () => {
   const { toast } = useToast();
   const [completedToday, setCompletedToday] = useState<number[]>([]);
+  const isMobile = useIsMobile();
 
   const goals = [
     {
@@ -60,6 +60,122 @@ const Goals = () => {
     // TODO: Save completion to database and update streak
   };
 
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <TooltipProvider>
+        <div className="min-h-screen bg-white">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Goals & Habits</h1>
+                <p className="text-gray-600">Track your progress and build lasting habits</p>
+              </div>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Goal
+              </Button>
+            </div>
+
+            <div className="space-y-6 mb-8">
+              {goals.map((goal) => (
+                <Card 
+                  key={goal.id} 
+                  className="bg-white border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md"
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <Target className="w-5 h-5 text-blue-600" />
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="font-medium text-orange-600">{goal.streak} day streak</span>
+                      </div>
+                    </div>
+                    <CardTitle className="text-gray-900">{goal.title}</CardTitle>
+                    <p className="text-gray-600 text-sm">{goal.description}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-600">Progress</span>
+                          <span className="text-gray-900">{goal.progress}%</span>
+                        </div>
+                        <Progress 
+                          value={goal.progress} 
+                          className="h-2" 
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          {Math.floor((goal.progress / 100) * goal.target)} of {goal.target} days
+                        </span>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className={`w-full transition-all duration-300 ${
+                              completedToday.includes(goal.id) 
+                                ? 'bg-green-600 border-green-500 text-white hover:bg-green-700' 
+                                : 'hover:bg-blue-50 hover:border-blue-300 border-gray-300'
+                            }`}
+                            onClick={() => handleMarkComplete(goal.id, goal.title)}
+                            disabled={completedToday.includes(goal.id)}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            {completedToday.includes(goal.id) ? 'Completed Today!' : 'Mark Complete Today'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {completedToday.includes(goal.id) 
+                              ? 'You\'ve already completed this habit today!'
+                              : 'Mark this habit as complete for today to maintain your streak'
+                            }
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Mobile Stats */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Quick Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">This Week</span>
+                  <span className="text-gray-900 font-medium">12 activities</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Goals Updated</span>
+                  <span className="text-gray-900 font-medium">5 times</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Habits Tracked</span>
+                  <span className="text-gray-900 font-medium">8 times</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Desktop layout - keep existing code but import the necessary components
+  const { SidebarInset, SidebarTrigger } = require('@/components/ui/sidebar');
+  
   return (
     <TooltipProvider>
       <SidebarInset>
