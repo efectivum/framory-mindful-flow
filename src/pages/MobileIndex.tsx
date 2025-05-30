@@ -49,59 +49,64 @@ const MobileIndex = () => {
     "How can I improve tomorrow?",
   ];
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
-    <div className="h-full bg-white overflow-y-auto">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="bg-white px-6 pt-12 pb-6 border-b border-gray-100">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Good morning! 👋</h1>
         <p className="text-gray-600">Ready to continue your growth journey?</p>
       </div>
 
-      {/* Main Action */}
-      <div className="px-6 mb-8">
+      <div className="px-6 py-6 space-y-6">
+        {/* Main Action */}
         <Button 
           onClick={() => navigate('/journal')}
-          className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl flex items-center justify-between px-6 text-lg font-medium"
+          className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl flex items-center justify-between px-6 text-lg font-medium shadow-sm"
         >
           <span>Start writing</span>
           <ArrowRight className="w-6 h-6" />
         </Button>
-      </div>
 
-      {/* Voice Input */}
-      <div className="px-6 mb-8">
+        {/* Voice Input */}
         <Button 
           variant="outline"
-          className="w-full h-14 border-2 border-gray-200 hover:border-gray-300 rounded-2xl flex items-center justify-center gap-3 text-gray-700"
+          className="w-full h-14 border border-gray-200 hover:border-gray-300 bg-white rounded-2xl flex items-center justify-center gap-3 text-gray-700 shadow-sm"
         >
           <Mic className="w-5 h-5" />
           <span>Voice note</span>
         </Button>
-      </div>
 
-      {/* Suggestions */}
-      <div className="px-6 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Writing prompts</h2>
-        <div className="space-y-3">
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => navigate('/journal')}
-              className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-colors flex items-center justify-between group"
-            >
-              <span className="text-gray-700">{suggestion}</span>
-              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-            </button>
-          ))}
+        {/* Suggestions */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Writing prompts</h2>
+          <div className="space-y-3">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => navigate('/journal')}
+                className="w-full p-4 text-left bg-white border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm transition-all flex items-center justify-between group"
+              >
+                <span className="text-gray-700 text-sm">{suggestion}</span>
+                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Bottom Section */}
-      <div className="px-6 pb-20">
-        <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors">
-          <RotateCcw className="w-4 h-4" />
-          <span className="text-sm">Click to refresh</span>
-        </button>
+        {/* Refresh Action */}
+        <div className="pt-4">
+          <button 
+            onClick={handleRefresh}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors mx-auto"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span className="text-sm">Click to refresh</span>
+          </button>
+        </div>
       </div>
     </div>
   );

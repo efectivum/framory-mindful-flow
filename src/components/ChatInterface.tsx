@@ -85,11 +85,11 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center gap-3 p-4 bg-white border-b border-gray-100">
         <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-          <span className="text-white font-semibold">F</span>
+          <span className="text-white font-semibold text-lg">F</span>
         </div>
         <div>
           <h1 className="text-gray-900 font-semibold">Framory Assistant</h1>
@@ -106,25 +106,25 @@ export const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-4 md:bottom-0">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-100 p-4 md:bottom-0">
         {/* Activity Type Indicator */}
         {selectedActivity && (
-          <div className="mb-2">
-            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-200">
+          <div className="mb-3">
+            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-100">
               {selectedActivity}
             </span>
           </div>
         )}
 
-        <div className="flex items-end gap-2 relative">
+        <div className="flex items-end gap-3 relative">
           {/* Activity Selector Button */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowActivitySelector(!showActivitySelector)}
             className={cn(
-              "text-gray-500 hover:text-gray-700 p-2 shrink-0",
-              showActivitySelector && "text-blue-600"
+              "text-gray-500 hover:text-gray-700 p-2 shrink-0 rounded-full",
+              showActivitySelector && "text-blue-600 bg-blue-50"
             )}
           >
             <Plus className="w-5 h-5" />
@@ -145,7 +145,7 @@ export const ChatInterface = () => {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="w-full max-h-32 min-h-12 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:bg-white pr-20"
+              className="w-full max-h-32 min-h-12 px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pr-20 shadow-sm"
               rows={1}
             />
             
@@ -154,14 +154,14 @@ export const ChatInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-gray-600 p-1.5"
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-gray-600 p-1.5"
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full"
               >
                 <Smile className="w-4 h-4" />
               </Button>
@@ -172,7 +172,7 @@ export const ChatInterface = () => {
           {inputText.trim() ? (
             <Button
               onClick={handleSend}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0 shadow-sm"
             >
               <Send className="w-5 h-5" />
             </Button>
@@ -180,10 +180,10 @@ export const ChatInterface = () => {
             <Button
               onClick={toggleRecording}
               className={cn(
-                "p-3 rounded-full shrink-0 transition-colors",
+                "p-3 rounded-full shrink-0 transition-colors shadow-sm",
                 isRecording
                   ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200"
               )}
             >
               <Mic className="w-5 h-5" />

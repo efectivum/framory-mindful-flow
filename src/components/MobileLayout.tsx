@@ -12,32 +12,27 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const getCurrentPage = () => {
-    const path = location.pathname.slice(1) || 'dashboard';
-    if (path === '') return 'dashboard';
-    return path;
-  };
+  const pages = [
+    { path: '/', name: 'dashboard' },
+    { path: '/goals', name: 'goals' },
+    { path: '/journal', name: 'journal' },
+    { path: '/chat', name: 'chat' },
+    { path: '/profile', name: 'profile' },
+  ];
 
-  const handlePageChange = (page: string) => {
-    const route = page === 'dashboard' ? '/' : `/${page}`;
-    navigate(route);
-  };
-
-  const pages = ['dashboard', 'goals', 'journal', 'insights', 'chat'];
-  const currentPage = getCurrentPage();
-  const currentIndex = pages.indexOf(currentPage);
+  const currentIndex = pages.findIndex(page => page.path === location.pathname);
 
   const handlers = useSwipeable({
     onSwipedLeft: () => {
       const nextIndex = Math.min(currentIndex + 1, pages.length - 1);
-      if (nextIndex !== currentIndex) {
-        handlePageChange(pages[nextIndex]);
+      if (nextIndex !== currentIndex && nextIndex >= 0) {
+        navigate(pages[nextIndex].path);
       }
     },
     onSwipedRight: () => {
       const prevIndex = Math.max(currentIndex - 1, 0);
-      if (prevIndex !== currentIndex) {
-        handlePageChange(pages[prevIndex]);
+      if (prevIndex !== currentIndex && prevIndex >= 0) {
+        navigate(pages[prevIndex].path);
       }
     },
     preventScrollOnSwipe: false,
@@ -47,15 +42,11 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-white">
       <div {...handlers} className="h-full w-full">
-        <div className="h-full w-full pb-16">
+        <div className="h-full w-full pb-16 overflow-y-auto">
           {children}
         </div>
       </div>
-
-      <BottomNavigation
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-      />
+      <BottomNavigation />
     </div>
   );
 };
