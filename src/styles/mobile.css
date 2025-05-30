@@ -1,0 +1,105 @@
+
+/* Mobile-first CSS utilities */
+@import url('./index.css');
+
+/* Safe area padding for iOS devices */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Touch-friendly interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better scrolling on iOS */
+.ios-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Prevent zoom on input focus */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  font-size: 16px;
+}
+
+/* Custom scrollbar for mobile */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Mobile animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.slide-out-down {
+  animation: slideOutDown 0.3s ease-out;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  .mobile-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
+/* Haptic feedback simulation */
+.haptic-light {
+  transition: transform 0.1s ease-out;
+}
+
+.haptic-light:active {
+  transform: scale(0.98);
+}
+
+/* Pull to refresh indicator */
+.pull-to-refresh {
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: all 0.3s ease-out;
+}
+
+.pull-to-refresh.active {
+  transform: translateY(0);
+  opacity: 1;
+}

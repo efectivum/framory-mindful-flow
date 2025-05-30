@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,37 +15,87 @@ import Insights from "./pages/Insights";
 import Resources from "./pages/Resources";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { MobileLayout } from "@/components/MobileLayout";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="min-h-screen flex w-full">
-              <AppSidebar />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/complete-signup" element={<CompleteSignup />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/journal" element={<Journal />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/profile" element={<Profile />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          </SidebarProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const location = useLocation();
+
+  // Update current page based on route
+  useEffect(() => {
+    const path = location.pathname.slice(1) || 'dashboard';
+    if (path === '') setCurrentPage('dashboard');
+    else if (path === 'goals') setCurrentPage('goals');
+    else if (path === 'journal') setCurrentPage('journal');
+    else if (path === 'insights') setCurrentPage('insights');
+    else if (path === 'chat') setCurrentPage('chat');
+    else if (path === 'profile') setCurrentPage('profile');
+  }, [location]);
+
+  const handlePageChange = (page: string) => {
+    setCurrentPage(page);
+    // Navigate programmatically
+    window.history.pushState({}, '', `/${page === 'dashboard' ? '' : page}`);
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full">
+                {/* Desktop Layout */}
+                <div className="hidden md:flex w-full">
+                  <AppSidebar />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/complete-signup" element={<CompleteSignup />} />
+                    <Route path="/goals" element={<Goals />} />
+                    <Route path="/journal" element={<Journal />} />
+                    <Route path="/insights" element={<Insights />} />
+                    <Route path="/resources" element={<Resources />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/chat" element={<Chat />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+
+                {/* Mobile Layout */}
+                <div className="md:hidden w-full">
+                  <MobileLayout
+                    currentPage={currentPage}
+                    onPageChange={handlePageChange}
+                  >
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/complete-signup" element={<CompleteSignup />} />
+                      <Route path="/goals" element={<Goals />} />
+                      <Route path="/journal" element={<Journal />} />
+                      <Route path="/insights" element={<Insights />} />
+                      <Route path="/resources" element={<Resources />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/chat" element={<Chat />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </MobileLayout>
+                </div>
+              </div>
+            </SidebarProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { UserButton } from '@/components/UserButton';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,17 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { DashboardWidget } from '@/components/DashboardWidget';
 import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart } from 'lucide-react';
+import MobileIndex from './MobileIndex';
 
 const Index = () => {
   const { user, loading } = useAuth();
+
+  // Show mobile version on small screens
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    return <MobileIndex />;
+  }
 
   if (loading) {
     return (
