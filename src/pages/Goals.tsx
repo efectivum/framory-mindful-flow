@@ -1,8 +1,10 @@
+
 import { Target, Plus, Clock, CheckCircle, Activity, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { ActivityLog } from '@/components/ActivityLog';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -173,9 +175,7 @@ const Goals = () => {
     );
   }
 
-  // Desktop layout - keep existing code but import the necessary components
-  const { SidebarInset, SidebarTrigger } = require('@/components/ui/sidebar');
-  
+  // Desktop layout - now using proper imports
   return (
     <TooltipProvider>
       <SidebarInset>
