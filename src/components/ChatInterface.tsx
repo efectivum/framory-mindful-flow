@@ -85,15 +85,15 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
+    <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-700 bg-gray-800/50">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+      <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white">
+        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
           <span className="text-white font-semibold">F</span>
         </div>
         <div>
-          <h1 className="text-white font-semibold">Framory Assistant</h1>
-          <p className="text-gray-400 text-sm">Your personal growth companion</p>
+          <h1 className="text-gray-900 font-semibold">Framory Assistant</h1>
+          <p className="text-gray-600 text-sm">Your personal growth companion</p>
         </div>
       </div>
 
@@ -106,11 +106,11 @@ export const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-gray-800/95 backdrop-blur-md border-t border-gray-700 p-4 md:bottom-0">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-4 md:bottom-0">
         {/* Activity Type Indicator */}
         {selectedActivity && (
           <div className="mb-2">
-            <span className="inline-block px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full border border-blue-500/30">
+            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-200">
               {selectedActivity}
             </span>
           </div>
@@ -123,8 +123,8 @@ export const ChatInterface = () => {
             size="sm"
             onClick={() => setShowActivitySelector(!showActivitySelector)}
             className={cn(
-              "text-gray-400 hover:text-white p-2 shrink-0",
-              showActivitySelector && "text-blue-400"
+              "text-gray-500 hover:text-gray-700 p-2 shrink-0",
+              showActivitySelector && "text-blue-600"
             )}
           >
             <Plus className="w-5 h-5" />
@@ -145,7 +145,7 @@ export const ChatInterface = () => {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="w-full max-h-32 min-h-12 px-4 py-3 bg-gray-700 border border-gray-600 rounded-2xl text-white placeholder-gray-400 resize-none focus:outline-none focus:border-blue-500 pr-20"
+              className="w-full max-h-32 min-h-12 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:bg-white pr-20"
               rows={1}
             />
             
@@ -154,14 +154,14 @@ export const ChatInterface = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white p-1.5"
+                className="text-gray-400 hover:text-gray-600 p-1.5"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white p-1.5"
+                className="text-gray-400 hover:text-gray-600 p-1.5"
               >
                 <Smile className="w-4 h-4" />
               </Button>
@@ -172,7 +172,7 @@ export const ChatInterface = () => {
           {inputText.trim() ? (
             <Button
               onClick={handleSend}
-              className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shrink-0"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0"
             >
               <Send className="w-5 h-5" />
             </Button>
@@ -183,7 +183,7 @@ export const ChatInterface = () => {
                 "p-3 rounded-full shrink-0 transition-colors",
                 isRecording
                   ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                  : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
               )}
             >
               <Mic className="w-5 h-5" />

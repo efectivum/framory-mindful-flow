@@ -21,7 +21,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onPageChange,
 }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-800/95 backdrop-blur-md border-t border-gray-700 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 md:hidden">
       <div className="flex items-center justify-around py-2 px-4 safe-area-pb">
         {navItems.map((item) => {
           const isActive = currentPage === item.id;
@@ -32,17 +32,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               key={item.id}
               onClick={() => onPageChange(item.id)}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-16 min-h-16",
+                "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-16 min-h-12",
                 isActive 
-                  ? "text-blue-400 bg-blue-500/20" 
-                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  ? "text-blue-600" 
+                  : "text-gray-400 hover:text-gray-600"
               )}
             >
-              <Icon className={cn("w-6 h-6 mb-1", isActive && "scale-110")} />
+              <Icon className={cn("w-5 h-5 mb-1", isActive && "stroke-2")} />
               <span className="text-xs font-medium">{item.label}</span>
-              {isActive && (
-                <div className="w-1 h-1 bg-blue-400 rounded-full mt-1" />
-              )}
             </button>
           );
         })}

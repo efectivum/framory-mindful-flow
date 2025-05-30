@@ -7,14 +7,14 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { DashboardWidget } from '@/components/DashboardWidget';
 import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import MobileIndex from './MobileIndex';
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const isMobile = useIsMobile();
 
   // Show mobile version on small screens
-  const isMobile = window.innerWidth < 768;
-
   if (isMobile) {
     return <MobileIndex />;
   }
