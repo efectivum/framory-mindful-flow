@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { UserButton } from '@/components/UserButton';
 import { Button } from '@/components/ui/button';
@@ -8,11 +9,22 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { DashboardWidget } from '@/components/DashboardWidget';
 import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHabits } from '@/hooks/useHabits';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
 import MobileIndex from './MobileIndex';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
+  const { habits } = useHabits();
+  const { entries, stats } = useJournalEntries();
+
+  // Calculate habit stats
+  const activeHabits = habits.filter(habit => habit.is_active);
+  const longestStreak = Math.max(...activeHabits.map(habit => habit.current_streak), 0);
+  const avgProgress = activeHabits.length > 0 
+    ? Math.round((activeHabits.reduce((sum, habit) => sum + (habit.current_streak / habit.target_days * 100), 0) / activeHabits.length))
+    : 0;
 
   // Show mobile version on small screens
   if (isMobile) {
@@ -70,44 +82,50 @@ const Index = () => {
           <div className="p-6">
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <Button className="h-16 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-left justify-start">
-                <Plus className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="font-medium">Add New Entry</div>
-                  <div className="text-sm opacity-90">Quick journal reflection</div>
-                </div>
-              </Button>
+              <Link to="/journal">
+                <Button className="h-16 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-left justify-start w-full">
+                  <Plus className="w-6 h-6 mr-3" />
+                  <div>
+                    <div className="font-medium">Add New Entry</div>
+                    <div className="text-sm opacity-90">Quick journal reflection</div>
+                  </div>
+                </Button>
+              </Link>
               
-              <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start">
-                <Target className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="font-medium">Track Progress</div>
-                  <div className="text-sm opacity-70">Update your goals</div>
-                </div>
-              </Button>
+              <Link to="/goals">
+                <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full">
+                  <Target className="w-6 h-6 mr-3" />
+                  <div>
+                    <div className="font-medium">Track Progress</div>
+                    <div className="text-sm opacity-70">Update your goals</div>
+                  </div>
+                </Button>
+              </Link>
               
-              <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start">
-                <BookOpen className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="font-medium">Daily Prompt</div>
-                  <div className="text-sm opacity-70">Guided reflection</div>
-                </div>
-              </Button>
+              <Link to="/journal">
+                <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full">
+                  <BookOpen className="w-6 h-6 mr-3" />
+                  <div>
+                    <div className="font-medium">Daily Prompt</div>
+                    <div className="text-sm opacity-70">Guided reflection</div>
+                  </div>
+                </Button>
+              </Link>
             </div>
 
             {/* Dashboard Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <DashboardWidget
                 title="Current Streak"
-                value="12 days"
-                description="Meditation practice"
+                value={longestStreak > 0 ? `${longestStreak} days` : "Start today!"}
+                description={activeHabits.length > 0 ? "Longest habit streak" : "Create your first habit"}
                 icon={Target}
                 gradient="from-blue-500/10 to-purple-600/10"
               />
               
               <DashboardWidget
                 title="This Week"
-                value="5"
+                value={stats.thisWeekCount}
                 description="Journal entries"
                 icon={BookOpen}
                 gradient="from-green-500/10 to-teal-600/10"
@@ -115,7 +133,7 @@ const Index = () => {
               
               <DashboardWidget
                 title="Mood Score"
-                value="8.2/10"
+                value={stats.averageMood > 0 ? `${stats.averageMood.toFixed(1)}/5` : "No data"}
                 description="Average this week"
                 icon={Heart}
                 gradient="from-pink-500/10 to-red-600/10"
@@ -123,8 +141,8 @@ const Index = () => {
               
               <DashboardWidget
                 title="Goals Progress"
-                value="75%"
-                description="Monthly completion"
+                value={`${avgProgress}%`}
+                description="Average completion"
                 icon={TrendingUp}
                 gradient="from-yellow-500/10 to-orange-600/10"
               />
@@ -135,21 +153,26 @@ const Index = () => {
               <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Recent Reflections</h3>
                 <div className="space-y-3">
-                  <div className="p-3 bg-gray-700/30 rounded-lg">
-                    <div className="text-white font-medium mb-1">Morning Gratitude</div>
-                    <div className="text-gray-400 text-sm">Grateful for the peaceful morning and...</div>
-                    <div className="text-gray-500 text-xs mt-1">2 hours ago</div>
-                  </div>
-                  <div className="p-3 bg-gray-700/30 rounded-lg">
-                    <div className="text-white font-medium mb-1">Goal Achievement</div>
-                    <div className="text-gray-400 text-sm">Completed my meditation goal for...</div>
-                    <div className="text-gray-500 text-xs mt-1">Yesterday</div>
-                  </div>
-                  <div className="p-3 bg-gray-700/30 rounded-lg">
-                    <div className="text-white font-medium mb-1">Weekly Review</div>
-                    <div className="text-gray-400 text-sm">Reflecting on this week's progress...</div>
-                    <div className="text-gray-500 text-xs mt-1">3 days ago</div>
-                  </div>
+                  {entries.slice(0, 3).map((entry) => (
+                    <div key={entry.id} className="p-3 bg-gray-700/30 rounded-lg">
+                      <div className="text-white font-medium mb-1">
+                        {entry.title || 'Journal Entry'}
+                      </div>
+                      <div className="text-gray-400 text-sm">
+                        {entry.content.length > 60 
+                          ? `${entry.content.substring(0, 60)}...` 
+                          : entry.content}
+                      </div>
+                      <div className="text-gray-500 text-xs mt-1">
+                        {new Date(entry.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                  {entries.length === 0 && (
+                    <div className="text-gray-400 text-center py-4">
+                      No journal entries yet. Start writing to see your reflections here!
+                    </div>
+                  )}
                 </div>
               </div>
 

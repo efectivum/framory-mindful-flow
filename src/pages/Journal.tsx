@@ -5,10 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { ActivityLog } from '@/components/ActivityLog';
+import { CreateJournalDialog } from '@/components/CreateJournalDialog';
+import { JournalEntryCard } from '@/components/JournalEntryCard';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 
 const Journal = () => {
   const isMobile = useIsMobile();
+  const { entries, isLoading, createEntry, stats } = useJournalEntries();
+  const [quickContent, setQuickContent] = useState('');
+  const [quickMood, setQuickMood] = useState('');
+
+  const handleQuickEntry = () => {
+    if (!quickContent.trim()) return;
+    
+    createEntry({
+      content: quickContent.trim(),
+      mood_after: quickMood ? parseInt(quickMood) : undefined,
+    });
+
+    setQuickContent('');
+    setQuickMood('');
+  };
 
   const journalContent = (
     <div className="flex-1 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
@@ -18,10 +37,7 @@ const Journal = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Journaling</h1>
             <p className="text-gray-400">Capture your thoughts and reflections</p>
           </div>
-          <Button className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Entry
-          </Button>
+          <CreateJournalDialog />
         </div>
 
         <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
@@ -37,21 +53,55 @@ const Journal = () => {
                 <Textarea
                   placeholder="What's on your mind today?"
                   className="min-h-32 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400"
+                  value={quickContent}
+                  onChange={(e) => setQuickContent(e.target.value)}
                 />
                 <div className="flex justify-between items-center mt-4">
-                  <select className="bg-gray-700 border-gray-600 text-white rounded px-3 py-1 text-sm">
-                    <option>Select mood</option>
-                    <option>Positive</option>
-                    <option>Neutral</option>
-                    <option>Contemplative</option>
-                    <option>Challenging</option>
+                  <select 
+                    className="bg-gray-700 border-gray-600 text-white rounded px-3 py-1 text-sm"
+                    value={quickMood}
+                    onChange={(e) => setQuickMood(e.target.value)}
+                  >
+                    <option value="">Select mood</option>
+                    <option value="5">😄 Excellent</option>
+                    <option value="4">😊 Good</option>
+                    <option value="3">😐 Neutral</option>
+                    <option value="2">😕 Low</option>
+                    <option value="1">😞 Very Low</option>
                   </select>
-                  <Button size="sm">Save Entry</Button>
+                  <Button 
+                    size="sm" 
+                    onClick={handleQuickEntry}
+                    disabled={!quickContent.trim()}
+                  >
+                    Save Entry
+                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <ActivityLog />
+            {/* Journal Entries */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">Recent Entries</h2>
+              {isLoading ? (
+                <div className="text-gray-400">Loading entries...</div>
+              ) : entries.length > 0 ? (
+                <div className="space-y-4">
+                  {entries.slice(0, 10).map((entry) => (
+                    <JournalEntryCard key={entry.id} entry={entry} />
+                  ))}
+                </div>
+              ) : (
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                  <CardContent className="p-8 text-center">
+                    <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No entries yet</h3>
+                    <p className="text-gray-400 mb-4">Start your journaling journey by creating your first entry.</p>
+                    <CreateJournalDialog />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -76,20 +126,22 @@ const Journal = () => {
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">This Week</span>
-                  <span className="text-white font-medium">5 entries</span>
+                  <span className="text-white font-medium">{stats.thisWeekCount} entries</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Current Streak</span>
-                  <span className="text-white font-medium">8 days</span>
+                  <span className="text-white font-medium">{stats.currentStreak} days</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Total Entries</span>
-                  <span className="text-white font-medium">127</span>
+                  <span className="text-white font-medium">{stats.totalCount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Via WhatsApp</span>
-                  <span className="text-white font-medium">23 entries</span>
-                </div>
+                {stats.averageMood > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Avg Mood</span>
+                    <span className="text-white font-medium">{stats.averageMood.toFixed(1)}/5</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
