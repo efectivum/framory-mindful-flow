@@ -53,13 +53,10 @@ const Goals = () => {
 
     setCompletedToday(prev => [...prev, goalId]);
     
-    // Celebration toast with confetti effect
     toast({
       title: "🎉 Habit completed!",
       description: `Great job completing ${goalTitle} today! Keep up the streak!`,
     });
-
-    // TODO: Save completion to database and update streak
   };
 
   // Mobile layout
@@ -146,7 +143,6 @@ const Goals = () => {
               ))}
             </div>
 
-            {/* Mobile Stats */}
             <Card className="bg-blue-50 border-blue-200">
               <CardHeader>
                 <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
@@ -175,7 +171,7 @@ const Goals = () => {
     );
   }
 
-  // Desktop layout - now using proper imports
+  // Desktop layout
   return (
     <TooltipProvider>
       <SidebarInset>
@@ -262,7 +258,6 @@ const Goals = () => {
               ))}
             </div>
 
-            {/* Unified Activity Log */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <ActivityLog />
