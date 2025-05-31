@@ -45,6 +45,122 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_completions: {
+        Row: {
+          completed_at: string
+          habit_id: string
+          id: string
+          mood_rating: number | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          habit_id: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          habit_id?: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          created_at: string
+          current_streak: number
+          description: string | null
+          frequency_type: string
+          frequency_value: number
+          id: string
+          is_active: boolean
+          longest_streak: number
+          target_days: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          description?: string | null
+          frequency_type?: string
+          frequency_value?: number
+          id?: string
+          is_active?: boolean
+          longest_streak?: number
+          target_days?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          description?: string | null
+          frequency_type?: string
+          frequency_value?: number
+          id?: string
+          is_active?: boolean
+          longest_streak?: number
+          target_days?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          mood_after: number | null
+          mood_before: number | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pending_signups: {
         Row: {
           completed: boolean | null
@@ -144,6 +260,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          growth_focus: string
+          id: string
+          notification_frequency: string
+          notification_time: string | null
+          push_notifications_enabled: boolean
+          tone_of_voice: string
+          updated_at: string
+          user_id: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          growth_focus?: string
+          id?: string
+          notification_frequency?: string
+          notification_time?: string | null
+          push_notifications_enabled?: boolean
+          tone_of_voice?: string
+          updated_at?: string
+          user_id: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          growth_focus?: string
+          id?: string
+          notification_frequency?: string
+          notification_time?: string | null
+          push_notifications_enabled?: boolean
+          tone_of_voice?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
       whatsapp_messages: {
         Row: {
           created_at: string
@@ -187,6 +342,10 @@ export type Database = {
     Functions: {
       cleanup_expired_signups: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_habit_streak: {
+        Args: { habit_id_param: string }
         Returns: undefined
       }
     }
