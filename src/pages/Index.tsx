@@ -78,42 +78,42 @@ const Index = () => {
             </div>
           </header>
           
-          <div className="p-6">
+          <div className="p-4 lg:p-6">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <Link to="/journal">
-                <Button className="h-16 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-left justify-start w-full">
-                  <Plus className="w-6 h-6 mr-3" />
-                  <div>
-                    <div className="font-medium">Add New Entry</div>
-                    <div className="text-sm opacity-90">Quick journal reflection</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+              <Link to="/journal" className="block">
+                <Button className="h-20 lg:h-24 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-left justify-start w-full p-4">
+                  <Plus className="w-6 h-6 mr-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-base lg:text-lg leading-tight">Add New Entry</div>
+                    <div className="text-sm opacity-90 mt-1 leading-tight">Quick journal reflection</div>
                   </div>
                 </Button>
               </Link>
               
-              <Link to="/goals">
-                <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full">
-                  <Target className="w-6 h-6 mr-3" />
-                  <div>
-                    <div className="font-medium">Track Progress</div>
-                    <div className="text-sm opacity-70">Update your goals</div>
+              <Link to="/goals" className="block">
+                <Button variant="outline" className="h-20 lg:h-24 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full p-4">
+                  <Target className="w-6 h-6 mr-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-base lg:text-lg leading-tight">Track Progress</div>
+                    <div className="text-sm opacity-70 mt-1 leading-tight">Update your goals</div>
                   </div>
                 </Button>
               </Link>
               
-              <Link to="/journal">
-                <Button variant="outline" className="h-16 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full">
-                  <BookOpen className="w-6 h-6 mr-3" />
-                  <div>
-                    <div className="font-medium">Daily Prompt</div>
-                    <div className="text-sm opacity-70">Guided reflection</div>
+              <Link to="/journal" className="block md:col-span-2 xl:col-span-1">
+                <Button variant="outline" className="h-20 lg:h-24 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full p-4">
+                  <BookOpen className="w-6 h-6 mr-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-base lg:text-lg leading-tight">Daily Prompt</div>
+                    <div className="text-sm opacity-70 mt-1 leading-tight">Guided reflection</div>
                   </div>
                 </Button>
               </Link>
             </div>
 
             {/* Dashboard Widgets */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
               <DashboardWidget
                 title="Current Streak"
                 value={longestStreak > 0 ? `${longestStreak} days` : "Start today!"}
@@ -148,56 +148,56 @@ const Index = () => {
             </div>
 
             {/* Recent Activity & Quick Tips */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Recent Reflections</h3>
                 <div className="space-y-3">
                   {entries.slice(0, 3).map((entry) => (
                     <div key={entry.id} className="p-3 bg-gray-700/30 rounded-lg">
-                      <div className="text-white font-medium mb-1">
+                      <div className="text-white font-medium mb-1 truncate">
                         {entry.title || 'Journal Entry'}
                       </div>
-                      <div className="text-gray-400 text-sm">
-                        {entry.content.length > 60 
-                          ? `${entry.content.substring(0, 60)}...` 
+                      <div className="text-gray-400 text-sm line-clamp-2 leading-relaxed">
+                        {entry.content.length > 80 
+                          ? `${entry.content.substring(0, 80)}...` 
                           : entry.content}
                       </div>
-                      <div className="text-gray-500 text-xs mt-1">
+                      <div className="text-gray-500 text-xs mt-2">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
                   {entries.length === 0 && (
-                    <div className="text-gray-400 text-center py-4">
+                    <div className="text-gray-400 text-center py-6 text-sm leading-relaxed">
                       No journal entries yet. Start writing to see your reflections here!
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+                  <Clock className="w-5 h-5 flex-shrink-0" />
                   Today's Focus
                 </h3>
                 <div className="space-y-4">
-                  <div className="p-3 bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-lg border border-blue-500/20">
-                    <div className="text-white font-medium mb-1">Complete Your Habits</div>
-                    <div className="text-gray-400 text-sm">
+                  <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-lg border border-blue-500/20">
+                    <div className="text-white font-medium mb-2 leading-tight">Complete Your Habits</div>
+                    <div className="text-gray-400 text-sm leading-relaxed">
                       You have {activeHabits.length} active habits to track today
                     </div>
                   </div>
                   
-                  <div className="p-3 bg-gradient-to-r from-green-500/10 to-teal-600/10 rounded-lg border border-green-500/20">
-                    <div className="text-white font-medium mb-1">Daily Reflection</div>
-                    <div className="text-gray-400 text-sm">
+                  <div className="p-4 bg-gradient-to-r from-green-500/10 to-teal-600/10 rounded-lg border border-green-500/20">
+                    <div className="text-white font-medium mb-2 leading-tight">Daily Reflection</div>
+                    <div className="text-gray-400 text-sm leading-relaxed">
                       Take a moment to journal about your day
                     </div>
                   </div>
                   
-                  <div className="p-3 bg-gradient-to-r from-purple-500/10 to-pink-600/10 rounded-lg border border-purple-500/20">
-                    <div className="text-white font-medium mb-1">Growth Tip</div>
-                    <div className="text-gray-400 text-sm">
+                  <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-600/10 rounded-lg border border-purple-500/20">
+                    <div className="text-white font-medium mb-2 leading-tight">Growth Tip</div>
+                    <div className="text-gray-400 text-sm leading-relaxed">
                       Small consistent actions lead to remarkable transformations
                     </div>
                   </div>
