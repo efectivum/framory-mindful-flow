@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CopyableText } from '@/components/CopyableText';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -49,6 +50,35 @@ const Profile = () => {
                 <Button variant="outline" className="w-full">
                   Edit Profile
                 </Button>
+              </CardContent>
+            </Card>
+
+            {/* Account Information */}
+            <Card className="bg-white border-gray-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Account Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Your Email
+                  </label>
+                  <CopyableText text={user?.email || 'No email available'} />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    User ID
+                  </label>
+                  <CopyableText text={user?.id || 'No ID available'} />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Current URL
+                  </label>
+                  <CopyableText text={window.location.href} />
+                </div>
               </CardContent>
             </Card>
 
@@ -218,6 +248,34 @@ const Profile = () => {
 
             {/* Settings */}
             <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white">Account Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      Your Email
+                    </label>
+                    <CopyableText text={user?.email || 'No email available'} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      User ID
+                    </label>
+                    <CopyableText text={user?.id || 'No ID available'} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-white font-medium mb-2">
+                      Current URL
+                    </label>
+                    <CopyableText text={window.location.href} />
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">

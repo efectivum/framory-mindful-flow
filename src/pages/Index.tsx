@@ -3,11 +3,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserButton } from '@/components/UserButton';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { CopyableText } from '@/components/CopyableText';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { DashboardWidget } from '@/components/DashboardWidget';
-import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart } from 'lucide-react';
+import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHabits } from '@/hooks/useHabits';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -148,7 +147,7 @@ const Index = () => {
               />
             </div>
 
-            {/* Recent Activity & Quick Info */}
+            {/* Recent Activity & Quick Tips */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Recent Reflections</h3>
@@ -177,27 +176,30 @@ const Index = () => {
               </div>
 
               <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Account Info</h3>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Today's Focus
+                </h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Your Email
-                    </label>
-                    <CopyableText text={user.email || 'No email available'} />
+                  <div className="p-3 bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-lg border border-blue-500/20">
+                    <div className="text-white font-medium mb-1">Complete Your Habits</div>
+                    <div className="text-gray-400 text-sm">
+                      You have {activeHabits.length} active habits to track today
+                    </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      User ID
-                    </label>
-                    <CopyableText text={user.id} />
+                  <div className="p-3 bg-gradient-to-r from-green-500/10 to-teal-600/10 rounded-lg border border-green-500/20">
+                    <div className="text-white font-medium mb-1">Daily Reflection</div>
+                    <div className="text-gray-400 text-sm">
+                      Take a moment to journal about your day
+                    </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Current URL
-                    </label>
-                    <CopyableText text={window.location.href} />
+                  <div className="p-3 bg-gradient-to-r from-purple-500/10 to-pink-600/10 rounded-lg border border-purple-500/20">
+                    <div className="text-white font-medium mb-1">Growth Tip</div>
+                    <div className="text-gray-400 text-sm">
+                      Small consistent actions lead to remarkable transformations
+                    </div>
                   </div>
                 </div>
               </div>
