@@ -1,8 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useMoodAnalysis } from '@/hooks/useMoodAnalysis';
 
 export interface JournalEntry {
   id: string;
@@ -11,6 +11,11 @@ export interface JournalEntry {
   content: string;
   mood_before?: number;
   mood_after?: number;
+  ai_detected_mood?: number;
+  ai_sentiment_score?: number;
+  ai_detected_emotions?: string[];
+  ai_confidence_level?: number;
+  mood_alignment_score?: number;
   tags?: string[];
   created_at: string;
   updated_at: string;
@@ -20,6 +25,7 @@ export const useJournalEntries = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { analyzeMood, calculateMoodAlignment } = useMoodAnalysis();
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['journal-entries', user?.id],
@@ -48,9 +54,24 @@ export const useJournalEntries = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      // Analyze mood with AI
+      const aiAnalysis = await analyzeMood(newEntry.content);
+      
+      let aiData = {};
+      if (aiAnalysis) {
+        const alignment = calculateMoodAlignment(newEntry.mood_after, aiAnalysis.mood);
+        aiData = {
+          ai_detected_mood: aiAnalysis.mood,
+          ai_sentiment_score: aiAnalysis.sentiment,
+          ai_detected_emotions: aiAnalysis.emotions,
+          ai_confidence_level: aiAnalysis.confidence,
+          mood_alignment_score: alignment,
+        };
+      }
+
       const { data, error } = await supabase
         .from('journal_entries')
-        .insert([{ ...newEntry, user_id: user.id }])
+        .insert([{ ...newEntry, ...aiData, user_id: user.id }])
         .select()
         .single();
 
@@ -61,7 +82,7 @@ export const useJournalEntries = () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       toast({
         title: "Success!",
-        description: "Journal entry saved successfully!",
+        description: "Journal entry saved with AI mood analysis!",
       });
     },
     onError: (error) => {
@@ -107,7 +128,6 @@ export const useJournalEntries = () => {
     },
   });
 
-  // Get stats for dashboard
   const getJournalStats = () => {
     const thisWeek = entries.filter(entry => {
       const entryDate = new Date(entry.created_at);
@@ -121,10 +141,22 @@ export const useJournalEntries = () => {
       .reduce((sum, entry) => sum + (entry.mood_after || 0), 0) / 
       entries.filter(entry => entry.mood_after).length || 0;
 
+    const avgAiMood = entries
+      .filter(entry => entry.ai_detected_mood)
+      .reduce((sum, entry) => sum + (entry.ai_detected_mood || 0), 0) / 
+      entries.filter(entry => entry.ai_detected_mood).length || 0;
+
+    const avgAlignment = entries
+      .filter(entry => entry.mood_alignment_score)
+      .reduce((sum, entry) => sum + (entry.mood_alignment_score || 0), 0) / 
+      entries.filter(entry => entry.mood_alignment_score).length || 0;
+
     return {
       thisWeekCount: thisWeek.length,
       totalCount: entries.length,
       averageMood: avgMood,
+      averageAiMood: avgAiMood,
+      averageAlignment: avgAlignment,
       currentStreak: calculateJournalStreak(entries),
     };
   };

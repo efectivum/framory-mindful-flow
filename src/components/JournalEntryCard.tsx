@@ -3,23 +3,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JournalEntry } from '@/hooks/useJournalEntries';
+import { MoodDisplay } from '@/components/MoodDisplay';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
 }
 
 export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
-  const getMoodEmoji = (mood: number) => {
-    const moodMap = {
-      1: '😞',
-      2: '😕',
-      3: '😐',
-      4: '😊',
-      5: '😄',
-    };
-    return moodMap[mood as keyof typeof moodMap] || '';
-  };
-
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
       <CardHeader className="pb-3">
@@ -32,20 +22,13 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
               {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
             </p>
           </div>
-          <div className="flex gap-2">
-            {entry.mood_before && (
-              <div className="text-center">
-                <div className="text-lg">{getMoodEmoji(entry.mood_before)}</div>
-                <div className="text-xs text-gray-400">Before</div>
-              </div>
-            )}
-            {entry.mood_after && (
-              <div className="text-center">
-                <div className="text-lg">{getMoodEmoji(entry.mood_after)}</div>
-                <div className="text-xs text-gray-400">After</div>
-              </div>
-            )}
-          </div>
+          <MoodDisplay 
+            userMood={entry.mood_after}
+            aiMood={entry.ai_detected_mood}
+            aiEmotions={entry.ai_detected_emotions}
+            aiConfidence={entry.ai_confidence_level}
+            alignmentScore={entry.mood_alignment_score}
+          />
         </div>
       </CardHeader>
       <CardContent>

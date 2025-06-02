@@ -35,7 +35,7 @@ const Journal = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Journaling</h1>
-            <p className="text-gray-400">Capture your thoughts and reflections</p>
+            <p className="text-gray-400">Capture your thoughts and reflections with AI mood insights</p>
           </div>
           <CreateJournalDialog />
         </div>
@@ -51,7 +51,7 @@ const Journal = () => {
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder="What's on your mind today?"
+                  placeholder="What's on your mind today? AI will analyze your emotional state..."
                   className="min-h-32 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400"
                   value={quickContent}
                   onChange={(e) => setQuickContent(e.target.value)}
@@ -62,7 +62,7 @@ const Journal = () => {
                     value={quickMood}
                     onChange={(e) => setQuickMood(e.target.value)}
                   >
-                    <option value="">Select mood</option>
+                    <option value="">Select your mood</option>
                     <option value="5">😄 Excellent</option>
                     <option value="4">😊 Good</option>
                     <option value="3">😐 Neutral</option>
@@ -121,7 +121,7 @@ const Journal = () => {
 
             <Card className="bg-gradient-to-br from-blue-500/10 to-teal-600/10 border-gray-700/50">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Writing Stats</CardTitle>
+                <CardTitle className="text-white text-lg">Mood Insights</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
@@ -138,8 +138,20 @@ const Journal = () => {
                 </div>
                 {stats.averageMood > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Avg Mood</span>
+                    <span className="text-gray-400">Your Avg Mood</span>
                     <span className="text-white font-medium">{stats.averageMood.toFixed(1)}/5</span>
+                  </div>
+                )}
+                {stats.averageAiMood > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">AI Avg Mood</span>
+                    <span className="text-white font-medium">{stats.averageAiMood.toFixed(1)}/5</span>
+                  </div>
+                )}
+                {stats.averageAlignment > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Mood Alignment</span>
+                    <span className="text-white font-medium">{Math.round(stats.averageAlignment * 100)}%</span>
                   </div>
                 )}
               </CardContent>
@@ -147,17 +159,17 @@ const Journal = () => {
 
             <Card className="bg-gradient-to-br from-orange-500/10 to-red-600/10 border-gray-700/50">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Recent Insights</CardTitle>
+                <CardTitle className="text-white text-lg">AI Insights</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-800/30 rounded-lg">
-                    <p className="text-gray-300 text-sm">You seem more reflective on Mondays based on your recent entries.</p>
-                    <span className="text-xs text-orange-400">AI Insight</span>
+                    <p className="text-gray-300 text-sm">Your self-awareness is improving! AI analysis shows good alignment with your reported moods.</p>
+                    <span className="text-xs text-orange-400">Emotional Intelligence</span>
                   </div>
                   <div className="p-3 bg-gray-800/30 rounded-lg">
-                    <p className="text-gray-300 text-sm">Your mood patterns show improvement when you exercise.</p>
-                    <span className="text-xs text-orange-400">AI Insight</span>
+                    <p className="text-gray-300 text-sm">Grateful emotions are frequently detected in your entries - keep nurturing this positive pattern!</p>
+                    <span className="text-xs text-orange-400">Pattern Recognition</span>
                   </div>
                 </div>
               </CardContent>

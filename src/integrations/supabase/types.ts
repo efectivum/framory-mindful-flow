@@ -127,10 +127,15 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          ai_confidence_level: number | null
+          ai_detected_emotions: string[] | null
+          ai_detected_mood: number | null
+          ai_sentiment_score: number | null
           content: string
           created_at: string
           id: string
           mood_after: number | null
+          mood_alignment_score: number | null
           mood_before: number | null
           tags: string[] | null
           title: string | null
@@ -138,10 +143,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_confidence_level?: number | null
+          ai_detected_emotions?: string[] | null
+          ai_detected_mood?: number | null
+          ai_sentiment_score?: number | null
           content: string
           created_at?: string
           id?: string
           mood_after?: number | null
+          mood_alignment_score?: number | null
           mood_before?: number | null
           tags?: string[] | null
           title?: string | null
@@ -149,10 +159,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_confidence_level?: number | null
+          ai_detected_emotions?: string[] | null
+          ai_detected_mood?: number | null
+          ai_sentiment_score?: number | null
           content?: string
           created_at?: string
           id?: string
           mood_after?: number | null
+          mood_alignment_score?: number | null
           mood_before?: number | null
           tags?: string[] | null
           title?: string | null
