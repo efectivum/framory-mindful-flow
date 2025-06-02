@@ -58,7 +58,7 @@ const menuItems = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700">
+    <Sidebar collapsible="icon" className="bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700">
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
