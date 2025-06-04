@@ -40,9 +40,9 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   });
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-white">
+    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div {...handlers} className="h-full w-full">
-        <div className="h-full w-full pb-16 overflow-y-auto">
+        <div className="h-full w-full pb-16 overflow-y-auto p-6">
           {children}
         </div>
       </div>
