@@ -116,11 +116,19 @@ const CompleteSignup = () => {
 
       if (error) throw error;
 
-      // Mark signup as completed
-      await supabase
-        .from('pending_signups')
-        .update({ completed: true })
-        .eq('token', token);
+      // Mark signup as completed using edge function call
+      // Since RLS now restricts updates to service role only
+      const { error: completeError } = await supabase.functions.invoke('whatsapp-signup', {
+        body: {
+          action: 'complete',
+          token: token
+        }
+      });
+
+      if (completeError) {
+        console.error('Error completing signup:', completeError);
+        // Don't throw here as the user was created successfully
+      }
 
       toast({
         title: "Account Created!",

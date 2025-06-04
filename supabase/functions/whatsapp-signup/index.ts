@@ -18,7 +18,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { name, phone_number, timezone = 'UTC' } = await req.json()
+    const body = await req.json()
+    
+    // Handle completion of signup
+    if (body.action === 'complete' && body.token) {
+      const { error } = await supabaseClient
+        .from('pending_signups')
+        .update({ completed: true })
+        .eq('token', body.token)
+
+      if (error) {
+        console.error('Error completing signup:', error)
+        return new Response(
+          JSON.stringify({ error: 'Failed to complete signup' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Handle new signup creation
+    const { name, phone_number, timezone = 'UTC' } = body
 
     if (!name || !phone_number) {
       return new Response(
