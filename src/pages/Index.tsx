@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -9,12 +8,14 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
   const { habits } = useHabits();
   const { entries, stats } = useJournalEntries();
+  const { summaryData } = useJournalAnalysis();
 
   // Calculate habit stats
   const activeHabits = habits.filter(habit => habit.is_active);
@@ -124,8 +125,9 @@ const Index = () => {
         />
       </div>
 
-      {/* Recent Activity & Quick Tips */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+      {/* Recent Activity & Emotion Insights */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
+        {/* Recent Reflections */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Recent Reflections</h3>
           <div className="space-y-3">
@@ -152,6 +154,35 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Emotion Landscape */}
+        {summaryData?.emotionBreakdown && (
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Emotion Landscape</h3>
+            <div className="relative min-h-[200px] flex flex-wrap items-center justify-center gap-2">
+              {Object.entries(summaryData.emotionBreakdown)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 6)
+                .map(([emotion, intensity]) => {
+                  const size = 30 + (intensity / 10) * 40;
+                  return (
+                    <div
+                      key={emotion}
+                      className="rounded-full bg-gradient-to-br from-purple-500/60 to-pink-600/60 flex items-center justify-center text-white text-xs font-medium hover:scale-110 transition-transform cursor-pointer"
+                      style={{ width: `${size}px`, height: `${size}px` }}
+                      title={`${emotion}: ${intensity.toFixed(1)}/10`}
+                    >
+                      {emotion.slice(0, 3)}
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="text-center mt-3">
+              <p className="text-gray-400 text-xs">Your recent emotional patterns</p>
+            </div>
+          </div>
+        )}
+
+        {/* Today's Focus */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 flex-shrink-0" />

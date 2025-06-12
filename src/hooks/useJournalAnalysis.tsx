@@ -1,75 +1,61 @@
 
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 
-export interface JournalSummaryAnalysis {
-  emotionBreakdown: Record<string, number>;
-  keyInsights: string[];
+export interface AnalysisSummary {
   summary: string;
-  recommendations: string[];
-  overallTrend: 'improving' | 'stable' | 'declining' | 'mixed';
-  riskFactors: string[];
   strengths: string[];
-}
-
-export interface JournalEntryAnalysis {
-  emotionalThemes: string[];
-  cognitivePatterns: string[];
-  insights: string[];
-  suggestions: string[];
-  emotionalComplexity: number;
-  selfAwareness: number;
-  growthIndicators: string[];
-  concerns: string[];
+  keyInsights: string[];
+  recommendations: string[];
+  emotionBreakdown: Record<string, number>;
 }
 
 export const useJournalAnalysis = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const [isSummaryLoading, setSummaryLoading] = useState(false);
+  const [summaryData, setSummaryData] = useState<AnalysisSummary | null>(null);
 
-  const generateSummaryAnalysis = useMutation({
-    mutationFn: async (entries: JournalEntry[]): Promise<JournalSummaryAnalysis> => {
+  const generateSummaryAnalysis = async (entries: JournalEntry[]) => {
+    if (!user || entries.length === 0) return;
+
+    setSummaryLoading(true);
+    try {
+      // Get user preferences for personalized analysis
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('Generating summary analysis for', entries.length, 'entries');
+      
       const { data, error } = await supabase.functions.invoke('analyze-journal-summary', {
-        body: { entries, analysisType: 'summary' }
+        body: { 
+          entries,
+          userPreferences: preferences 
+        }
       });
 
-      if (error) throw error;
-      return data;
-    },
-    onError: (error) => {
-      toast({
-        title: "Analysis Error",
-        description: `Failed to generate summary: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
+      if (error) {
+        console.error('Error in summary analysis:', error);
+        throw error;
+      }
 
-  const generateEntryAnalysis = useMutation({
-    mutationFn: async (entry: JournalEntry): Promise<JournalEntryAnalysis> => {
-      const { data, error } = await supabase.functions.invoke('analyze-journal-summary', {
-        body: { entries: [entry], analysisType: 'entry' }
-      });
-
-      if (error) throw error;
-      return data;
-    },
-    onError: (error) => {
-      toast({
-        title: "Analysis Error",
-        description: `Failed to analyze entry: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
+      console.log('Summary analysis response:', data);
+      setSummaryData(data);
+    } catch (error) {
+      console.error('Failed to generate summary analysis:', error);
+      throw error;
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   return {
-    generateSummaryAnalysis: generateSummaryAnalysis.mutate,
-    generateEntryAnalysis: generateEntryAnalysis.mutate,
-    isSummaryLoading: generateSummaryAnalysis.isPending,
-    isEntryLoading: generateEntryAnalysis.isPending,
-    summaryData: generateSummaryAnalysis.data,
-    entryData: generateEntryAnalysis.data,
+    generateSummaryAnalysis,
+    isSummaryLoading,
+    summaryData,
   };
 };

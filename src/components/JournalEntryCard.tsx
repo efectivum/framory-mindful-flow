@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Brain } from 'lucide-react';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { MoodDisplay } from '@/components/MoodDisplay';
+import { QuickInsights } from '@/components/QuickInsights';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -14,7 +15,7 @@ interface JournalEntryCardProps {
 
 export const JournalEntryCard = ({ entry, onAnalyze }: JournalEntryCardProps) => {
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors cursor-pointer group">
+    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -44,14 +45,18 @@ export const JournalEntryCard = ({ entry, onAnalyze }: JournalEntryCardProps) =>
                 }}
               >
                 <Brain className="w-4 h-4 mr-1" />
-                Analyze
+                Deep Analysis
               </Button>
             )}
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-gray-300 mb-3 whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+      <CardContent className="space-y-4">
+        <p className="text-gray-300 whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+        
+        {/* Quick AI Insights */}
+        <QuickInsights entry={entry} />
+        
         {entry.tags && entry.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">
             {entry.tags.map((tag, index) => (

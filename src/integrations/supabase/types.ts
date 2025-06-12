@@ -45,6 +45,50 @@ export type Database = {
         }
         Relationships: []
       }
+      entry_quick_analysis: {
+        Row: {
+          action_suggestions: string[] | null
+          confidence_score: number | null
+          created_at: string
+          emotional_insights: string[] | null
+          entry_id: string
+          growth_indicators: string[] | null
+          id: string
+          quick_takeaways: string[]
+          user_id: string
+        }
+        Insert: {
+          action_suggestions?: string[] | null
+          confidence_score?: number | null
+          created_at?: string
+          emotional_insights?: string[] | null
+          entry_id: string
+          growth_indicators?: string[] | null
+          id?: string
+          quick_takeaways?: string[]
+          user_id: string
+        }
+        Update: {
+          action_suggestions?: string[] | null
+          confidence_score?: number | null
+          created_at?: string
+          emotional_insights?: string[] | null
+          entry_id?: string
+          growth_indicators?: string[] | null
+          id?: string
+          quick_takeaways?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entry_quick_analysis_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -311,6 +355,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
+      weekly_insights: {
+        Row: {
+          average_mood: number | null
+          created_at: string
+          emotional_summary: string | null
+          entry_count: number
+          growth_observations: string[] | null
+          id: string
+          insights: Json
+          key_patterns: string[] | null
+          recommendations: string[] | null
+          updated_at: string
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          average_mood?: number | null
+          created_at?: string
+          emotional_summary?: string | null
+          entry_count?: number
+          growth_observations?: string[] | null
+          id?: string
+          insights?: Json
+          key_patterns?: string[] | null
+          recommendations?: string[] | null
+          updated_at?: string
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          average_mood?: number | null
+          created_at?: string
+          emotional_summary?: string | null
+          entry_count?: number
+          growth_observations?: string[] | null
+          id?: string
+          insights?: Json
+          key_patterns?: string[] | null
+          recommendations?: string[] | null
+          updated_at?: string
+          user_id?: string
+          week_end_date?: string
+          week_start_date?: string
         }
         Relationships: []
       }
