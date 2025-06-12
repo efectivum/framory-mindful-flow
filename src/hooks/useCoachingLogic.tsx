@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,6 +37,14 @@ export interface CoachingState {
   level_3_count_this_week: number;
   week_start_date: string;
   updated_at: string;
+}
+
+export interface CoachingResponse {
+  type: string;
+  content: string;
+  action?: string;
+  actionLabel?: string;
+  pattern_detected?: string;
 }
 
 export const useCoachingLogic = () => {
@@ -201,7 +208,7 @@ export const useCoachingLogic = () => {
   };
 
   // Generate coaching response
-  const generateCoachingResponse = (level: 1 | 2 | 3, entry: JournalEntry, entries: JournalEntry[]) => {
+  const generateCoachingResponse = (level: 1 | 2 | 3, entry: JournalEntry, entries: JournalEntry[]): CoachingResponse => {
     switch (level) {
       case 1:
         return generateLevel1Response(entry);
@@ -226,7 +233,7 @@ export const useCoachingLogic = () => {
 };
 
 // Level 1: Simple acknowledgments
-const generateLevel1Response = (entry: JournalEntry) => {
+const generateLevel1Response = (entry: JournalEntry): CoachingResponse => {
   const responses = [
     { type: 'acknowledgment', content: 'Noted.' },
     { type: 'acknowledgment', content: 'Got it.' },
@@ -248,7 +255,7 @@ const generateLevel1Response = (entry: JournalEntry) => {
 };
 
 // Level 2: Pattern insights
-const generateLevel2Response = (entry: JournalEntry, entries: JournalEntry[], patterns: UserPattern[]) => {
+const generateLevel2Response = (entry: JournalEntry, entries: JournalEntry[], patterns: UserPattern[]): CoachingResponse => {
   // Check for emotion frequency patterns
   const emotionWords = ['frustrated', 'angry', 'sad', 'happy', 'excited', 'anxious'];
   for (const emotion of emotionWords) {
@@ -288,7 +295,7 @@ const generateLevel2Response = (entry: JournalEntry, entries: JournalEntry[], pa
 };
 
 // Level 3: Direct recommendations
-const generateLevel3Response = (entry: JournalEntry, entries: JournalEntry[]) => {
+const generateLevel3Response = (entry: JournalEntry, entries: JournalEntry[]): CoachingResponse => {
   const crisisKeywords = ['overwhelmed', 'paralyzed', 'can\'t cope'];
   const hasCrisisKeyword = crisisKeywords.some(keyword => 
     entry.content.toLowerCase().includes(keyword)
@@ -299,7 +306,7 @@ const generateLevel3Response = (entry: JournalEntry, entries: JournalEntry[]) =>
       type: 'crisis_intervention',
       content: 'High-stress detected. This is a critical signal. Let\'s interrupt the pattern.',
       action: 'system_reset',
-      action_label: 'Perform a 3-minute System Reset'
+      actionLabel: 'Perform a 3-minute System Reset'
     };
   }
 
@@ -309,7 +316,7 @@ const generateLevel3Response = (entry: JournalEntry, entries: JournalEntry[]) =>
       type: 'motivation_boost',
       content: 'The data shows that for you, "unmotivated" is often a sign of decision fatigue. Let\'s ignore the big list and focus on one small action.',
       action: 'small_task',
-      action_label: 'Complete 1 small task'
+      actionLabel: 'Complete 1 small task'
     };
   }
 
@@ -320,7 +327,7 @@ const generateLevel3Response = (entry: JournalEntry, entries: JournalEntry[]) =>
       type: 'habit_recovery',
       content: 'I see a connection. Your mood has dipped recently. This is a crucial moment. Let\'s not break the chain.',
       action: 'habit_reset',
-      action_label: 'Start a 1-minute reset activity'
+      actionLabel: 'Start a 1-minute reset activity'
     };
   }
 
