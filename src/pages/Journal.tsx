@@ -1,12 +1,14 @@
-
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Brain, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { CreateJournalDialog } from '@/components/CreateJournalDialog';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
 import { VoiceButton } from '@/components/VoiceButton';
-import { useJournalEntries } from '@/hooks/useJournalEntries';
+import { EmotionBreakdown } from '@/components/EmotionBreakdown';
+import { EntryAnalysisModal } from '@/components/EntryAnalysisModal';
+import { useJournalEntries, JournalEntry } from '@/hooks/useJournalEntries';
+import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
@@ -15,8 +17,11 @@ import { useState } from 'react';
 const Journal = () => {
   const isMobile = useIsMobile();
   const { entries, isLoading, createEntry, stats } = useJournalEntries();
+  const { generateSummaryAnalysis, isSummaryLoading, summaryData } = useJournalAnalysis();
   const [quickContent, setQuickContent] = useState('');
   const [quickMood, setQuickMood] = useState('');
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
 
   const handleQuickEntry = () => {
     if (!quickContent.trim()) return;
@@ -38,9 +43,21 @@ const Journal = () => {
     }
   };
 
+  const handleAnalyzeEntry = (entry: JournalEntry) => {
+    setSelectedEntry(entry);
+    setShowAnalysisModal(true);
+  };
+
+  const handleGenerateSummary = () => {
+    if (entries.length > 0) {
+      generateSummaryAnalysis(entries.slice(0, 10)); // Analyze last 10 entries
+    }
+  };
+
   const content = (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
       <div className="lg:col-span-2">
+        {/* Quick Reflection Card */}
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -87,6 +104,72 @@ const Journal = () => {
           </CardContent>
         </Card>
 
+        {/* AI Summary Analysis */}
+        {entries.length > 2 && (
+          <Card className="bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border-gray-700/50 backdrop-blur-sm mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  AI Journal Analysis
+                </CardTitle>
+                <Button 
+                  size="sm" 
+                  onClick={handleGenerateSummary}
+                  disabled={isSummaryLoading}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isSummaryLoading ? 'Analyzing...' : 'Generate Analysis'}
+                </Button>
+              </div>
+            </CardHeader>
+            {summaryData && (
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/30 rounded-lg">
+                    <h4 className="text-white font-medium mb-2">Summary</h4>
+                    <p className="text-gray-300 text-sm">{summaryData.summary}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-800/30 rounded-lg">
+                      <h4 className="text-green-300 font-medium mb-2 flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4" />
+                        Strengths
+                      </h4>
+                      <div className="space-y-1">
+                        {summaryData.strengths.map((strength, index) => (
+                          <div key={index} className="text-gray-300 text-sm">• {strength}</div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-800/30 rounded-lg">
+                      <h4 className="text-blue-300 font-medium mb-2">Key Insights</h4>
+                      <div className="space-y-1">
+                        {summaryData.keyInsights.slice(0, 3).map((insight, index) => (
+                          <div key={index} className="text-gray-300 text-sm">• {insight}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {summaryData.recommendations.length > 0 && (
+                    <div className="p-4 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                      <h4 className="text-indigo-300 font-medium mb-2">Recommendations</h4>
+                      <div className="space-y-1">
+                        {summaryData.recommendations.map((rec, index) => (
+                          <div key={index} className="text-gray-300 text-sm">• {rec}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
         {/* Journal Entries */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Recent Entries</h2>
@@ -95,7 +178,11 @@ const Journal = () => {
           ) : entries.length > 0 ? (
             <div className="space-y-4">
               {entries.slice(0, 10).map((entry) => (
-                <JournalEntryCard key={entry.id} entry={entry} />
+                <JournalEntryCard 
+                  key={entry.id} 
+                  entry={entry} 
+                  onAnalyze={handleAnalyzeEntry}
+                />
               ))}
             </div>
           ) : (
@@ -112,6 +199,12 @@ const Journal = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Emotion Breakdown */}
+        {summaryData?.emotionBreakdown && (
+          <EmotionBreakdown emotions={summaryData.emotionBreakdown} />
+        )}
+
+        {/* Today's Prompt */}
         <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-gray-700/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white text-lg">Today's Prompt</CardTitle>
@@ -126,6 +219,7 @@ const Journal = () => {
           </CardContent>
         </Card>
 
+        {/* Mood Insights */}
         <Card className="bg-gradient-to-br from-blue-500/10 to-teal-600/10 border-gray-700/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white text-lg">Mood Insights</CardTitle>
@@ -164,6 +258,7 @@ const Journal = () => {
           </CardContent>
         </Card>
 
+        {/* AI Insights */}
         <Card className="bg-gradient-to-br from-orange-500/10 to-red-600/10 border-gray-700/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white text-lg">AI Insights</CardTitle>
@@ -182,6 +277,16 @@ const Journal = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Entry Analysis Modal */}
+      <EntryAnalysisModal
+        entry={selectedEntry}
+        open={showAnalysisModal}
+        onClose={() => {
+          setShowAnalysisModal(false);
+          setSelectedEntry(null);
+        }}
+      />
     </div>
   );
 
