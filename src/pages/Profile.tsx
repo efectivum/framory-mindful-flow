@@ -1,5 +1,5 @@
 
-import { User, Settings, Bell, Shield, Download } from 'lucide-react';
+import { User, Bell, Shield, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CopyableText } from '@/components/CopyableText';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
+import { UserPreferencesForm } from '@/components/UserPreferencesForm';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -77,50 +78,14 @@ const Profile = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-white font-medium">Daily Reminders</div>
-                <div className="text-gray-400 text-sm">Get reminded to journal daily</div>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-white font-medium">Goal Progress</div>
-                <div className="text-gray-400 text-sm">Updates on your habit streaks</div>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-white font-medium">Weekly Insights</div>
-                <div className="text-gray-400 text-sm">Personalized growth insights</div>
-              </div>
-              <Switch />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-white font-medium">WhatsApp Nudges</div>
-                <div className="text-gray-400 text-sm">Quick reflection prompts via WhatsApp</div>
-              </div>
-              <Switch />
-            </div>
-          </CardContent>
-        </Card>
+        {/* User Preferences Form */}
+        <UserPreferencesForm />
 
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Preferences
+              <Bell className="w-5 h-5" />
+              Additional Settings
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -131,15 +96,6 @@ const Profile = () => {
                 <option>UTC-5 (Eastern Time)</option>
                 <option>UTC+0 (GMT)</option>
                 <option>UTC+1 (Central European Time)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-white font-medium mb-2">Preferred Reminder Time</label>
-              <select className="w-full bg-gray-700 border-gray-600 text-white rounded px-3 py-2">
-                <option>Morning (9:00 AM)</option>
-                <option>Afternoon (2:00 PM)</option>
-                <option>Evening (7:00 PM)</option>
-                <option>Custom</option>
               </select>
             </div>
             <div>
