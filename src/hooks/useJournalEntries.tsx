@@ -79,12 +79,19 @@ export const useJournalEntries = () => {
 
       if (error) throw error;
 
-      // Auto-trigger quick analysis
+      // Auto-trigger enhanced quick analysis with user context
       try {
+        // Get user preferences and patterns for personalized analysis
+        const [preferencesResult, patternsResult] = await Promise.all([
+          supabase.from('user_preferences').select('*').eq('user_id', user.id).single(),
+          supabase.from('user_patterns').select('*').eq('user_id', user.id).order('confidence_level', { ascending: false }).limit(5)
+        ]);
+
         const analysisResponse = await supabase.functions.invoke('analyze-journal-summary', {
           body: { 
             entries: [data], 
-            analysisType: 'quick' 
+            analysisType: 'quick',
+            userPreferences: preferencesResult.data
           }
         });
 
@@ -141,7 +148,7 @@ export const useJournalEntries = () => {
       queryClient.invalidateQueries({ queryKey: ['coaching-interactions'] });
       toast({
         title: "Success!",
-        description: "Journal entry saved with AI analysis!",
+        description: "Journal entry saved with personalized AI analysis!",
       });
     },
     onError: (error) => {

@@ -1,8 +1,11 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,113 +26,170 @@ serve(async (req) => {
 
     console.log(`Generating ${analysisType} analysis for ${entries.length} entries`);
 
-    // Prepare personalized context
-    const personalizedContext = userPreferences ? 
+    // Create Supabase client with service role for additional data access
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get user ID from first entry
+    const userId = entries[0].user_id;
+
+    // Fetch user context for personalization
+    const [userPatternsResult, coachingStateResult, recentEntriesResult] = await Promise.all([
+      supabase.from('user_patterns').select('*').eq('user_id', userId).order('confidence_level', { ascending: false }).limit(10),
+      supabase.from('coaching_state').select('*').eq('user_id', userId).single(),
+      supabase.from('journal_entries').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20)
+    ]);
+
+    const userPatterns = userPatternsResult.data || [];
+    const coachingState = coachingStateResult.data;
+    const recentEntries = recentEntriesResult.data || [];
+
+    // Build personalized context
+    let personalContext = userPreferences ? 
       `User prefers ${userPreferences.tone_of_voice} communication style and focuses on ${userPreferences.growth_focus}.` : 
       'Use a supportive and encouraging tone.';
+
+    // Add pattern context
+    if (userPatterns.length > 0) {
+      const topPatterns = userPatterns.slice(0, 3).map(p => `${p.pattern_type}: ${p.pattern_key}`).join(', ');
+      personalContext += ` Known patterns: ${topPatterns}.`;
+    }
+
+    // Add historical context
+    if (recentEntries.length > 5) {
+      const avgMood = recentEntries.filter(e => e.mood_after).reduce((sum, e) => sum + e.mood_after, 0) / recentEntries.filter(e => e.mood_after).length;
+      personalContext += ` Recent average mood: ${avgMood.toFixed(1)}/5.`;
+      
+      const commonEmotions = recentEntries.flatMap(e => e.ai_detected_emotions || [])
+        .reduce((acc, emotion) => {
+          acc[emotion] = (acc[emotion] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+      
+      const topEmotions = Object.entries(commonEmotions)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([emotion]) => emotion);
+      
+      if (topEmotions.length > 0) {
+        personalContext += ` Frequently expressed emotions: ${topEmotions.join(', ')}.`;
+      }
+    }
 
     let systemPrompt = '';
     let userPrompt = '';
 
     if (analysisType === 'individual' && entries.length === 1) {
       // Individual entry deep analysis
-      systemPrompt = `You are a compassionate AI therapist and personal development coach. Analyze this journal entry deeply and personally. ${personalizedContext}
+      systemPrompt = `You are a compassionate AI therapist and personal development coach who knows this person well. ${personalContext}
 
-Provide analysis in this exact JSON format:
+Provide deeply personalized analysis in this exact JSON format:
 {
-  "insights": ["insight1", "insight2", "insight3"],
+  "insights": ["personal insight referencing their patterns", "insight about their growth", "insight connecting to their history"],
   "emotionalThemes": ["theme1", "theme2", "theme3"],
-  "cognitivePatterns": ["pattern1", "pattern2"],
-  "suggestions": ["suggestion1", "suggestion2", "suggestion3"],
+  "cognitivePatterns": ["pattern specific to this person", "pattern they've shown before"],
+  "suggestions": ["suggestion based on what works for them", "suggestion building on their strengths", "suggestion addressing their specific challenges"],
   "emotionalComplexity": 7,
   "selfAwareness": 8,
-  "growthIndicators": ["indicator1", "indicator2"],
-  "concerns": ["concern1", "concern2"]
+  "growthIndicators": ["specific progress they've made", "positive change noticed"],
+  "concerns": ["gentle concern based on patterns", "area needing attention"]
 }
 
-Make insights personal and actionable. Emotional complexity and self-awareness should be scores from 1-10.`;
+Make insights personal by referencing their known patterns, growth areas, and what you've observed about them specifically. Use "you" language and be specific about THEIR journey.`;
 
-      userPrompt = `Analyze this journal entry deeply:
+      userPrompt = `Analyze this journal entry for someone you know well:
 
 Title: ${entries[0].title || 'Untitled'}
 Content: ${entries[0].content}
 User's mood after writing: ${entries[0].mood_after || 'Not specified'}
-AI detected emotions: ${entries[0].ai_detected_emotions?.join(', ') || 'None detected'}`;
+AI detected emotions: ${entries[0].ai_detected_emotions?.join(', ') || 'None detected'}
+
+Context about this person:
+${personalContext}`;
 
     } else if (analysisType === 'quick') {
-      // Quick analysis for individual entries
-      systemPrompt = `You are a caring friend who provides quick, actionable insights from journal entries. ${personalizedContext}
+      // Enhanced quick analysis with personal context
+      systemPrompt = `You are this person's personal AI coach who has been following their journey. ${personalContext}
 
-Provide analysis in this exact JSON format:
+Provide personalized quick insights in this exact JSON format:
 {
-  "quick_takeaways": ["takeaway1", "takeaway2", "takeaway3"],
-  "emotional_insights": ["insight1", "insight2"],
-  "growth_indicators": ["indicator1", "indicator2"],
-  "action_suggestions": ["suggestion1", "suggestion2"],
+  "quick_takeaways": ["takeaway connecting to their patterns", "takeaway about their specific growth", "takeaway addressing their known challenges"],
+  "emotional_insights": ["insight about THEIR emotional patterns", "insight about how this fits their journey"],
+  "growth_indicators": ["specific progress you notice", "positive change in their patterns"],
+  "action_suggestions": ["suggestion based on what works for them", "suggestion addressing their specific needs"],
   "confidence_score": 0.85
 }
 
-Keep takeaways concise but meaningful. Focus on practical insights and growth opportunities.`;
+Reference their known patterns and speak as someone who understands their unique journey. Be specific about THEIR growth and challenges.`;
 
-      userPrompt = `Provide quick insights for this journal entry:
+      userPrompt = `Provide personalized insights for someone you've been coaching:
 
-Content: ${entries[0].content}
-Mood: ${entries[0].mood_after || 'Not specified'}`;
+Entry: ${entries[0].content}
+Mood: ${entries[0].mood_after || 'Not specified'}
+
+Personal context: ${personalContext}
+
+Known patterns to reference: ${userPatterns.map(p => `${p.pattern_type} (${p.pattern_key})`).join(', ')}`;
 
     } else if (analysisType === 'weekly') {
       // Weekly insights analysis
-      systemPrompt = `You are a personal development coach creating weekly reflection insights. ${personalizedContext}
+      systemPrompt = `You are a personal development coach who has been following this person's weekly journey. ${personalContext}
 
-Provide analysis in this exact JSON format:
+Provide deeply personal weekly analysis in this exact JSON format:
 {
-  "emotional_summary": "A warm, personal summary of the week's emotional journey",
-  "key_patterns": ["pattern1", "pattern2", "pattern3"],
-  "recommendations": ["rec1", "rec2", "rec3"],
-  "growth_observations": ["observation1", "observation2"],
+  "emotional_summary": "A warm, personal summary referencing their specific patterns and growth",
+  "key_patterns": ["pattern specific to this person", "pattern you've observed consistently", "new pattern emerging"],
+  "recommendations": ["rec based on their preferences", "rec building on their strengths", "rec addressing their challenges"],
+  "growth_observations": ["specific growth you've witnessed", "positive change in their approach"],
   "insights": {
     "dominant_emotions": ["emotion1", "emotion2"],
-    "breakthrough_moments": ["moment1", "moment2"],
-    "areas_for_attention": ["area1", "area2"]
+    "breakthrough_moments": ["specific moment of growth", "positive pattern shift"],
+    "areas_for_attention": ["area based on their patterns", "gentle guidance for improvement"]
   }
 }
 
-Write as if you're a caring friend who has been following their journey. Be encouraging and specific.`;
+Write as their personal coach who has been watching their journey. Reference specific patterns and celebrate their unique progress.`;
 
-      const weekContent = entries.map(entry => 
-        `Entry ${entry.created_at}: ${entry.content.substring(0, 200)}...`
+      const weekContent = entries.map((entry, index) => 
+        `Day ${index + 1}: ${entry.content.substring(0, 200)}... (Mood: ${entry.mood_after || 'N/A'})`
       ).join('\n\n');
 
-      userPrompt = `Analyze this week's journal entries for patterns and growth:
+      userPrompt = `Analyze this week's entries for someone you know well:
 
 ${weekContent}
 
-Total entries: ${entries.length}
-Average mood: ${entries.filter(e => e.mood_after).reduce((sum, e) => sum + e.mood_after, 0) / entries.filter(e => e.mood_after).length || 'Not available'}`;
+Personal context: ${personalContext}
+Their patterns: ${userPatterns.map(p => `${p.pattern_type}: ${p.pattern_key} (confidence: ${p.confidence_level})`).join(', ')}
+Total entries this week: ${entries.length}`;
 
     } else {
-      // Summary analysis (original functionality)
-      systemPrompt = `You are a compassionate AI therapist providing personalized journal analysis. ${personalizedContext}
+      // Summary analysis with personal context
+      systemPrompt = `You are a compassionate AI therapist providing deeply personalized journal analysis for someone you know well. ${personalContext}
 
-Analyze the journal entries and provide insights in this exact JSON format:
+Analyze their entries and provide personal insights in this exact JSON format:
 {
-  "summary": "A warm, encouraging summary",
-  "strengths": ["strength1", "strength2", "strength3"],
-  "keyInsights": ["insight1", "insight2", "insight3"],
-  "recommendations": ["rec1", "rec2", "rec3"],
+  "summary": "A warm, personal summary that references their specific journey and patterns",
+  "strengths": ["strength you've observed in them", "strength that's growing", "strength they may not recognize"],
+  "keyInsights": ["insight about their unique patterns", "insight about their growth trajectory", "insight connecting their experiences"],
+  "recommendations": ["rec based on their preferences", "rec leveraging their strengths", "rec addressing their specific challenges"],
   "emotionBreakdown": {
     "positive": 60,
     "neutral": 25,
     "negative": 15
   }
-}`;
+}
 
-      const entriesText = entries.map(entry => 
-        `Entry from ${entry.created_at}: ${entry.content}`
+Reference their known patterns and speak as someone who truly knows their journey.`;
+
+      const entriesText = entries.map((entry, index) => 
+        `Entry ${index + 1} (${entry.created_at}): ${entry.content} (Mood: ${entry.mood_after || 'N/A'})`
       ).join('\n\n');
 
-      userPrompt = `Analyze these journal entries:
+      userPrompt = `Analyze these journal entries for someone you've been following:
 
-${entriesText}`;
+${entriesText}
+
+Personal context: ${personalContext}
+Their established patterns: ${userPatterns.map(p => `${p.pattern_type}: ${p.pattern_key}`).join(', ')}`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

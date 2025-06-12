@@ -35,19 +35,19 @@ export const useJournalAnalysis = () => {
 
     setSummaryLoading(true);
     try {
-      // Get user preferences for personalized analysis
-      const { data: preferences } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Get user preferences and patterns for personalized analysis
+      const [preferencesResult, patternsResult] = await Promise.all([
+        supabase.from('user_preferences').select('*').eq('user_id', user.id).single(),
+        supabase.from('user_patterns').select('*').eq('user_id', user.id).order('confidence_level', { ascending: false }).limit(10)
+      ]);
 
-      console.log('Generating summary analysis for', entries.length, 'entries');
+      console.log('Generating personalized summary analysis for', entries.length, 'entries');
       
       const { data, error } = await supabase.functions.invoke('analyze-journal-summary', {
         body: { 
           entries,
-          userPreferences: preferences 
+          userPreferences: preferencesResult.data,
+          userPatterns: patternsResult.data
         }
       });
 
@@ -56,7 +56,7 @@ export const useJournalAnalysis = () => {
         throw error;
       }
 
-      console.log('Summary analysis response:', data);
+      console.log('Personalized summary analysis response:', data);
       setSummaryData(data);
     } catch (error) {
       console.error('Failed to generate summary analysis:', error);
@@ -71,20 +71,20 @@ export const useJournalAnalysis = () => {
 
     setEntryLoading(true);
     try {
-      // Get user preferences for personalized analysis
-      const { data: preferences } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Get user preferences and patterns for personalized analysis
+      const [preferencesResult, patternsResult] = await Promise.all([
+        supabase.from('user_preferences').select('*').eq('user_id', user.id).single(),
+        supabase.from('user_patterns').select('*').eq('user_id', user.id).order('confidence_level', { ascending: false }).limit(10)
+      ]);
 
-      console.log('Generating entry analysis for entry:', entry.id);
+      console.log('Generating personalized entry analysis for entry:', entry.id);
       
       const { data, error } = await supabase.functions.invoke('analyze-journal-summary', {
         body: { 
           entries: [entry],
           analysisType: 'individual',
-          userPreferences: preferences 
+          userPreferences: preferencesResult.data,
+          userPatterns: patternsResult.data
         }
       });
 
@@ -93,7 +93,7 @@ export const useJournalAnalysis = () => {
         throw error;
       }
 
-      console.log('Entry analysis response:', data);
+      console.log('Personalized entry analysis response:', data);
       setEntryData(data);
     } catch (error) {
       console.error('Failed to generate entry analysis:', error);
