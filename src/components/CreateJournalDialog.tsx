@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VoiceButton } from '@/components/VoiceButton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 
 export const CreateJournalDialog = () => {
@@ -42,6 +43,14 @@ export const CreateJournalDialog = () => {
     setOpen(false);
   };
 
+  const handleVoiceTranscription = (text: string) => {
+    if (content.trim()) {
+      setContent(prev => prev + ' ' + text);
+    } else {
+      setContent(text);
+    }
+  };
+
   const moodOptions = [
     { value: 1, label: '😞 Very Low' },
     { value: 2, label: '😕 Low' },
@@ -75,14 +84,20 @@ export const CreateJournalDialog = () => {
           
           <div className="space-y-2">
             <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What's on your mind today?"
-              rows={6}
-              required
-            />
+            <div className="relative">
+              <Textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What's on your mind today?"
+                rows={6}
+                required
+                className="pr-12"
+              />
+              <div className="absolute top-2 right-2">
+                <VoiceButton onTranscription={handleVoiceTranscription} />
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

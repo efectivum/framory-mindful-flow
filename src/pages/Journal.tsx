@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { CreateJournalDialog } from '@/components/CreateJournalDialog';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
+import { VoiceButton } from '@/components/VoiceButton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLayout } from '@/components/PageLayout';
@@ -29,6 +30,14 @@ const Journal = () => {
     setQuickMood('');
   };
 
+  const handleVoiceTranscription = (text: string) => {
+    if (quickContent.trim()) {
+      setQuickContent(prev => prev + ' ' + text);
+    } else {
+      setQuickContent(text);
+    }
+  };
+
   const content = (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
       <div className="lg:col-span-2">
@@ -43,12 +52,17 @@ const Journal = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <Textarea
-              placeholder="What's on your mind today? AI will analyze your emotional state..."
-              className="min-h-32 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400"
-              value={quickContent}
-              onChange={(e) => setQuickContent(e.target.value)}
-            />
+            <div className="relative">
+              <Textarea
+                placeholder="What's on your mind today? AI will analyze your emotional state..."
+                className="min-h-32 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 pr-12"
+                value={quickContent}
+                onChange={(e) => setQuickContent(e.target.value)}
+              />
+              <div className="absolute top-2 right-2">
+                <VoiceButton onTranscription={handleVoiceTranscription} />
+              </div>
+            </div>
             <div className="flex justify-between items-center mt-4">
               <select 
                 className="bg-gray-700 border-gray-600 text-white rounded px-3 py-1 text-sm"
