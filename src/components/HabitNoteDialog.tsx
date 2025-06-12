@@ -19,7 +19,7 @@ export const HabitNoteDialog = ({ habitTitle, onSaveNote, disabled = false }: Ha
   const [open, setOpen] = useState(false);
 
   const handleSave = () => {
-    onSaveNote(note, moodRating[0]);
+    onSaveNote(note.trim(), moodRating[0]);
     setNote('');
     setMoodRating([5]);
     setOpen(false);

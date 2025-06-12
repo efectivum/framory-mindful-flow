@@ -27,6 +27,19 @@ export interface HabitCompletion {
   mood_rating: number | null;
 }
 
+const logActivity = async (userId: string, type: string, title: string, content: string, metadata = {}) => {
+  await supabase
+    .from('user_activities')
+    .insert([{
+      user_id: userId,
+      type,
+      source: 'website',
+      title,
+      content,
+      metadata
+    }]);
+};
+
 export const useHabits = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -61,10 +74,21 @@ export const useHabits = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivity(
+        user.id,
+        'habit',
+        'New Habit Created',
+        `Created a new habit: ${newHabit.title}`,
+        { habit_id: data.id, frequency_type: newHabit.frequency_type }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast({
         title: "Success!",
         description: "New habit created successfully!",
@@ -95,10 +119,21 @@ export const useHabits = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      await logActivity(
+        user.id,
+        'habit',
+        'Habit Updated',
+        `Updated habit: ${data.title}`,
+        { habit_id: id, changes: updates }
+      );
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast({
         title: "Success!",
         description: "Habit updated successfully!",
@@ -117,6 +152,13 @@ export const useHabits = () => {
     mutationFn: async (habitId: string) => {
       if (!user) throw new Error('User not authenticated');
 
+      // Get habit title for logging
+      const { data: habit } = await supabase
+        .from('habits')
+        .select('title')
+        .eq('id', habitId)
+        .single();
+
       const { error } = await supabase
         .from('habits')
         .update({ is_active: false })
@@ -124,9 +166,21 @@ export const useHabits = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Log activity
+      if (habit) {
+        await logActivity(
+          user.id,
+          'habit',
+          'Habit Deleted',
+          `Deleted habit: ${habit.title}`,
+          { habit_id: habitId }
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast({
         title: "Success!",
         description: "Habit deleted successfully!",
@@ -164,6 +218,13 @@ export const useHabits = () => {
         throw new Error('Habit already completed today');
       }
 
+      // Get habit title for logging
+      const { data: habit } = await supabase
+        .from('habits')
+        .select('title')
+        .eq('id', habitId)
+        .single();
+
       const { data, error } = await supabase
         .from('habit_completions')
         .insert([{
@@ -176,11 +237,32 @@ export const useHabits = () => {
         .single();
 
       if (error) throw error;
+
+      // Log activity
+      if (habit) {
+        const activityContent = notes 
+          ? `Completed ${habit.title} with note: ${notes.substring(0, 100)}${notes.length > 100 ? '...' : ''}`
+          : `Completed ${habit.title}`;
+        
+        await logActivity(
+          user.id,
+          'habit',
+          'Habit Completed',
+          activityContent,
+          { 
+            habit_id: habitId, 
+            mood_rating: moodRating, 
+            has_notes: !!notes 
+          }
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       queryClient.invalidateQueries({ queryKey: ['habit-completions'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
     },
     onError: (error) => {
       toast({
