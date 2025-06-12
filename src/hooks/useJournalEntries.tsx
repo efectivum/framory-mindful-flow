@@ -1,9 +1,9 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useMoodAnalysis } from '@/hooks/useMoodAnalysis';
+import { useCoachingLogic } from '@/hooks/useCoachingLogic';
 
 export interface JournalEntry {
   id: string;
@@ -27,6 +27,7 @@ export const useJournalEntries = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { analyzeMood, calculateMoodAlignment } = useMoodAnalysis();
+  const { determineResponseLevel, generateCoachingResponse, createInteraction } = useCoachingLogic();
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['journal-entries', user?.id],
@@ -105,11 +106,39 @@ export const useJournalEntries = () => {
         console.log('Quick analysis failed, but entry was saved:', analysisError);
       }
 
+      // Generate coaching response
+      try {
+        const allEntries = await supabase
+          .from('journal_entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (allEntries.data) {
+          const responseLevel = determineResponseLevel(data, allEntries.data);
+          const coachingResponse = generateCoachingResponse(responseLevel, data, allEntries.data);
+
+          // Store coaching interaction
+          await createInteraction({
+            entry_id: data.id,
+            response_level: responseLevel,
+            response_type: coachingResponse.type,
+            response_content: coachingResponse.content,
+            pattern_detected: coachingResponse.pattern_detected,
+            confidence_score: responseLevel === 2 ? 0.8 : responseLevel === 3 ? 0.9 : 0.5,
+            user_engaged: false,
+          });
+        }
+      } catch (coachingError) {
+        console.log('Coaching response failed, but entry was saved:', coachingError);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       queryClient.invalidateQueries({ queryKey: ['quick-analysis'] });
+      queryClient.invalidateQueries({ queryKey: ['coaching-interactions'] });
       toast({
         title: "Success!",
         description: "Journal entry saved with AI analysis!",

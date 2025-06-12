@@ -45,6 +45,86 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_interactions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          entry_id: string | null
+          id: string
+          pattern_detected: string | null
+          response_content: string
+          response_level: number
+          response_type: string
+          user_engaged: boolean | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          entry_id?: string | null
+          id?: string
+          pattern_detected?: string | null
+          response_content: string
+          response_level: number
+          response_type: string
+          user_engaged?: boolean | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          entry_id?: string | null
+          id?: string
+          pattern_detected?: string | null
+          response_content?: string
+          response_level?: number
+          response_type?: string
+          user_engaged?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_interactions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_state: {
+        Row: {
+          id: string
+          last_level_2_response: string | null
+          last_level_3_response: string | null
+          level_2_count_this_week: number
+          level_3_count_this_week: number
+          updated_at: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          id?: string
+          last_level_2_response?: string | null
+          last_level_3_response?: string | null
+          level_2_count_this_week?: number
+          level_3_count_this_week?: number
+          updated_at?: string
+          user_id: string
+          week_start_date?: string
+        }
+        Update: {
+          id?: string
+          last_level_2_response?: string | null
+          last_level_3_response?: string | null
+          level_2_count_this_week?: number
+          level_3_count_this_week?: number
+          updated_at?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       entry_quick_analysis: {
         Row: {
           action_suggestions: string[] | null
@@ -319,6 +399,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_patterns: {
+        Row: {
+          confidence_level: number
+          created_at: string
+          id: string
+          last_detected_at: string
+          occurrence_count: number
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          user_id: string
+        }
+        Insert: {
+          confidence_level?: number
+          created_at?: string
+          id?: string
+          last_detected_at?: string
+          occurrence_count?: number
+          pattern_key: string
+          pattern_type: string
+          pattern_value?: Json
+          user_id: string
+        }
+        Update: {
+          confidence_level?: number
+          created_at?: string
+          id?: string
+          last_detected_at?: string
+          occurrence_count?: number
+          pattern_key?: string
+          pattern_type?: string
+          pattern_value?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string
@@ -448,6 +564,10 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_signups: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      reset_weekly_coaching_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

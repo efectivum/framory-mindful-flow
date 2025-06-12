@@ -1,9 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Mic, Plus, Paperclip, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActivitySelector } from './ActivitySelector';
 import { ChatMessage } from './ChatMessage';
+import { CoachingResponse } from './CoachingResponse';
+import { useCoachingLogic } from '@/hooks/useCoachingLogic';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -12,6 +14,14 @@ interface Message {
   content: string;
   activityType?: string;
   timestamp: Date;
+  coachingResponse?: {
+    level: 1 | 2 | 3;
+    content: string;
+    type: string;
+    action?: string;
+    actionLabel?: string;
+    patternDetected?: string;
+  };
 }
 
 export const ChatInterface = () => {
@@ -30,6 +40,9 @@ export const ChatInterface = () => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const { entries, createEntry } = useJournalEntries();
+  const { determineResponseLevel, generateCoachingResponse } = useCoachingLogic();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,19 +64,57 @@ export const ChatInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
+
+    // If it's a journal entry, create it and generate coaching response
+    if (selectedActivity === 'journal' || !selectedActivity) {
+      createEntry({
+        content: inputText,
+        title: selectedActivity ? `${selectedActivity} entry` : undefined,
+      });
+
+      // Generate coaching response
+      setTimeout(() => {
+        const responseLevel = determineResponseLevel(
+          { content: inputText } as any, 
+          entries
+        );
+        const coachingResponse = generateCoachingResponse(
+          responseLevel, 
+          { content: inputText } as any, 
+          entries
+        );
+
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: "Got it! I've recorded your entry.",
+          timestamp: new Date(),
+          coachingResponse: {
+            level: responseLevel,
+            content: coachingResponse.content,
+            type: coachingResponse.type,
+            action: coachingResponse.action,
+            actionLabel: coachingResponse.actionLabel,
+            patternDetected: coachingResponse.pattern_detected,
+          }
+        };
+        setMessages(prev => [...prev, botResponse]);
+      }, 1000);
+    } else {
+      // Regular chat response
+      setTimeout(() => {
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: "Thanks for sharing that with me. Is there anything else you'd like to add?",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botResponse]);
+      }, 1000);
+    }
+
     setInputText('');
     setSelectedActivity(null);
-
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: "Got it! I've recorded your entry. Is there anything else you'd like to add?",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -100,7 +151,19 @@ export const ChatInterface = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
         {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+          <div key={message.id}>
+            <ChatMessage message={message} />
+            {message.coachingResponse && (
+              <CoachingResponse
+                level={message.coachingResponse.level}
+                content={message.coachingResponse.content}
+                type={message.coachingResponse.type}
+                action={message.coachingResponse.action}
+                actionLabel={message.coachingResponse.actionLabel}
+                patternDetected={message.coachingResponse.patternDetected}
+              />
+            )}
+          </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
