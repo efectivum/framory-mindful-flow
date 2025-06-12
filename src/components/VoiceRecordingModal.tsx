@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import { VoiceRecordingButton } from './VoiceRecordingButton';
@@ -55,6 +55,13 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-gray-900 border-gray-700 max-w-md mx-auto h-screen sm:h-auto sm:max-h-[600px] flex flex-col">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Voice Recording</DialogTitle>
+          <DialogDescription>
+            Record your voice message and it will be transcribed to text automatically.
+          </DialogDescription>
+        </DialogHeader>
+        
         <div className="flex-1 flex flex-col items-center justify-center space-y-8 p-6">
           <VoiceRecordingControls
             language={language}
