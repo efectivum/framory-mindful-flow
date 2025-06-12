@@ -3,3 +3,6 @@ project_id = "declymxlblaoeexpgfzq"
 
 [functions.whatsapp-webhook]
 verify_jwt = false
+
+[functions.generate-weekly-insights]
+verify_jwt = false
