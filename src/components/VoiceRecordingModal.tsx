@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Square, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -233,6 +232,19 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
     return (recordingTime / MAX_RECORDING_TIME) * 100;
   };
 
+  const getCloseButtonText = () => {
+    switch (status) {
+      case 'ready': return 'Close';
+      case 'error': return 'Cancel';
+      default: return 'Close';
+    }
+  };
+
+  const shouldShowCloseButton = () => {
+    // Hide close button during recording and processing
+    return status !== 'recording' && status !== 'processing';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-gray-900 border-gray-700 max-w-md mx-auto h-screen sm:h-auto sm:max-h-[600px] flex flex-col">
@@ -327,13 +339,15 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
               </Button>
             )}
             
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
-            >
-              Cancel
-            </Button>
+            {shouldShowCloseButton() && (
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+              >
+                {getCloseButtonText()}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
