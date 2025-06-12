@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -76,13 +77,42 @@ export const useJournalEntries = () => {
         .single();
 
       if (error) throw error;
+
+      // Auto-trigger quick analysis
+      try {
+        const analysisResponse = await supabase.functions.invoke('analyze-journal-summary', {
+          body: { 
+            entries: [data], 
+            analysisType: 'quick' 
+          }
+        });
+
+        if (analysisResponse.data && !analysisResponse.error) {
+          // Store quick analysis in database
+          await supabase
+            .from('entry_quick_analysis')
+            .insert([{
+              entry_id: data.id,
+              user_id: user.id,
+              quick_takeaways: analysisResponse.data.quick_takeaways || [],
+              emotional_insights: analysisResponse.data.emotional_insights || [],
+              growth_indicators: analysisResponse.data.growth_indicators || [],
+              action_suggestions: analysisResponse.data.action_suggestions || [],
+              confidence_score: analysisResponse.data.confidence_score || 0,
+            }]);
+        }
+      } catch (analysisError) {
+        console.log('Quick analysis failed, but entry was saved:', analysisError);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['quick-analysis'] });
       toast({
         title: "Success!",
-        description: "Journal entry saved with AI mood analysis!",
+        description: "Journal entry saved with AI analysis!",
       });
     },
     onError: (error) => {

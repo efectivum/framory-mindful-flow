@@ -14,12 +14,8 @@ interface QuickInsightsProps {
 
 export const QuickInsights = ({ entry }: QuickInsightsProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { getQuickAnalysis, generateQuickAnalysis, isGenerating } = useQuickAnalysis();
+  const { getQuickAnalysis } = useQuickAnalysis();
   const { data: analysis, isLoading } = getQuickAnalysis(entry.id);
-
-  const handleGenerateAnalysis = () => {
-    generateQuickAnalysis(entry);
-  };
 
   if (isLoading) {
     return (
@@ -32,16 +28,10 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
 
   if (!analysis) {
     return (
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={handleGenerateAnalysis}
-        disabled={isGenerating}
-        className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
-      >
-        <Brain className="w-4 h-4 mr-1" />
-        {isGenerating ? 'Analyzing...' : 'Generate AI Insights'}
-      </Button>
+      <div className="flex items-center gap-2 text-gray-400 text-sm">
+        <Brain className="w-4 h-4" />
+        <span>Analysis will appear automatically after saving</span>
+      </div>
     );
   }
 
@@ -59,14 +49,16 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
             )}
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-400 hover:text-white p-1 h-auto"
-        >
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </Button>
+        {(analysis.emotional_insights?.length > 0 || analysis.quick_takeaways.length > 1) && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-white p-1 h-auto"
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
+        )}
       </div>
 
       {/* Expanded Analysis */}

@@ -1,26 +1,35 @@
 
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Brain } from 'lucide-react';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { MoodDisplay } from '@/components/MoodDisplay';
 import { QuickInsights } from '@/components/QuickInsights';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
-  onAnalyze?: (entry: JournalEntry) => void;
 }
 
-export const JournalEntryCard = ({ entry, onAnalyze }: JournalEntryCardProps) => {
+export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/journal/entry/${entry.id}`);
+  };
+
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors group">
+    <Card 
+      className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors cursor-pointer group"
+      onClick={handleClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             {entry.title && (
-              <h3 className="text-lg font-semibold text-white mb-1">{entry.title}</h3>
+              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">
+                {entry.title}
+              </h3>
             )}
             <p className="text-sm text-gray-400">
               {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
@@ -34,20 +43,6 @@ export const JournalEntryCard = ({ entry, onAnalyze }: JournalEntryCardProps) =>
               aiConfidence={entry.ai_confidence_level}
               alignmentScore={entry.mood_alignment_score}
             />
-            {onAnalyze && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAnalyze(entry);
-                }}
-              >
-                <Brain className="w-4 h-4 mr-1" />
-                Deep Analysis
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
@@ -55,7 +50,9 @@ export const JournalEntryCard = ({ entry, onAnalyze }: JournalEntryCardProps) =>
         <p className="text-gray-300 whitespace-pre-wrap line-clamp-3">{entry.content}</p>
         
         {/* Quick AI Insights */}
-        <QuickInsights entry={entry} />
+        <div onClick={(e) => e.stopPropagation()}>
+          <QuickInsights entry={entry} />
+        </div>
         
         {entry.tags && entry.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">

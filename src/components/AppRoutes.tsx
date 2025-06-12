@@ -6,6 +6,7 @@ import Auth from "../pages/Auth";
 import CompleteSignup from "../pages/CompleteSignup";
 import Goals from "../pages/Goals";
 import Journal from "../pages/Journal";
+import JournalEntry from "../pages/JournalEntry";
 import Insights from "../pages/Insights";
 import Resources from "../pages/Resources";
 import Profile from "../pages/Profile";
@@ -26,6 +27,11 @@ export const AppRoutes = () => {
       <Route path="/journal" element={
         <ProtectedRoute>
           <Journal />
+        </ProtectedRoute>
+      } />
+      <Route path="/journal/entry/:id" element={
+        <ProtectedRoute>
+          <JournalEntry />
         </ProtectedRoute>
       } />
       <Route path="/insights" element={
