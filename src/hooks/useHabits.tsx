@@ -79,6 +79,68 @@ export const useHabits = () => {
     },
   });
 
+  const updateHabitMutation = useMutation({
+    mutationFn: async ({ id, updates }: { 
+      id: string; 
+      updates: Partial<Omit<Habit, 'id' | 'created_at' | 'updated_at' | 'current_streak' | 'longest_streak'>>
+    }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('habits')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      toast({
+        title: "Success!",
+        description: "Habit updated successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update habit: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteHabitMutation = useMutation({
+    mutationFn: async (habitId: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('habits')
+        .update({ is_active: false })
+        .eq('id', habitId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      toast({
+        title: "Success!",
+        description: "Habit deleted successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete habit: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   const completeHabitMutation = useMutation({
     mutationFn: async ({ habitId, notes, moodRating }: { 
       habitId: string; 
@@ -153,9 +215,13 @@ export const useHabits = () => {
     isLoading,
     error,
     createHabit: createHabitMutation.mutate,
+    updateHabit: updateHabitMutation.mutate,
+    deleteHabit: deleteHabitMutation.mutate,
     completeHabit: completeHabitMutation.mutate,
     todayCompletions,
     isCreating: createHabitMutation.isPending,
+    isUpdating: updateHabitMutation.isPending,
+    isDeleting: deleteHabitMutation.isPending,
     isCompleting: completeHabitMutation.isPending,
   };
 };

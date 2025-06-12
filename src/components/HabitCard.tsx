@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Habit } from '@/hooks/useHabits';
 
@@ -15,6 +16,7 @@ interface HabitCardProps {
   onEdit?: (habit: Habit) => void;
   onDelete?: (habitId: string) => void;
   isCompleting?: boolean;
+  isDeleting?: boolean;
 }
 
 export const HabitCard = ({ 
@@ -23,7 +25,8 @@ export const HabitCard = ({
   onComplete, 
   onEdit, 
   onDelete,
-  isCompleting = false 
+  isCompleting = false,
+  isDeleting = false
 }: HabitCardProps) => {
   const isMobile = useIsMobile();
   const progress = Math.min((habit.current_streak / habit.target_days) * 100, 100);
@@ -68,10 +71,32 @@ export const HabitCard = ({
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
-                    <DropdownMenuItem onClick={() => onDelete(habit.id)} className="text-red-600">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Habit</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{habit.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => onDelete(habit.id)}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { Activity, Flame } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,14 +7,18 @@ import { useHabits } from '@/hooks/useHabits';
 import { useAuth } from '@/hooks/useAuth';
 import { HabitCard } from '@/components/HabitCard';
 import { CreateHabitDialog } from '@/components/CreateHabitDialog';
+import { EditHabitDialog } from '@/components/EditHabitDialog';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import type { Habit } from '@/hooks/useHabits';
 
 const Goals = () => {
   const { user } = useAuth();
-  const { habits, isLoading, completeHabit, todayCompletions, isCompleting } = useHabits();
+  const { habits, isLoading, completeHabit, updateHabit, deleteHabit, todayCompletions, isCompleting, isUpdating, isDeleting } = useHabits();
   const isMobile = useIsMobile();
+  
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   const handleCompleteHabit = (habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
@@ -25,6 +29,20 @@ const Goals = () => {
     }
 
     completeHabit({ habitId });
+  };
+
+  const handleEditHabit = (habit: Habit) => {
+    setEditingHabit(habit);
+  };
+
+  const handleUpdateHabit = (updates: Partial<Habit>) => {
+    if (editingHabit) {
+      updateHabit({ id: editingHabit.id, updates });
+    }
+  };
+
+  const handleDeleteHabit = (habitId: string) => {
+    deleteHabit(habitId);
   };
 
   const content = (
@@ -58,10 +76,23 @@ const Goals = () => {
               habit={habit}
               isCompleted={todayCompletions.includes(habit.id)}
               onComplete={handleCompleteHabit}
+              onEdit={handleEditHabit}
+              onDelete={handleDeleteHabit}
               isCompleting={isCompleting}
+              isDeleting={isDeleting}
             />
           ))}
         </div>
+      )}
+
+      {editingHabit && (
+        <EditHabitDialog
+          habit={editingHabit}
+          open={!!editingHabit}
+          onOpenChange={(open) => !open && setEditingHabit(null)}
+          onSave={handleUpdateHabit}
+          isUpdating={isUpdating}
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
