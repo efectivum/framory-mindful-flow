@@ -13,13 +13,17 @@ export const useConversationalAI = () => {
   const [isDetectingIntent, setIsDetectingIntent] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
 
-  const detectIntent = async (message: string, activityType?: string) => {
+  const detectIntent = async (message: string, activityType?: string, conversationHistory?: ConversationMessage[]) => {
     if (!user) return null;
 
     setIsDetectingIntent(true);
     try {
       const { data, error } = await supabase.functions.invoke('detect-intent', {
-        body: { message, activityType }
+        body: { 
+          message, 
+          activityType,
+          conversationHistory: conversationHistory?.slice(-3) // Only send recent context
+        }
       });
 
       if (error) throw error;
@@ -32,7 +36,11 @@ export const useConversationalAI = () => {
     }
   };
 
-  const generateResponse = async (message: string, conversationHistory: ConversationMessage[] = []) => {
+  const generateResponse = async (
+    message: string, 
+    conversationHistory: ConversationMessage[] = [],
+    isJournalEntry: boolean = false
+  ) => {
     if (!user) return null;
 
     setIsGeneratingResponse(true);
@@ -41,7 +49,8 @@ export const useConversationalAI = () => {
         body: { 
           message, 
           conversationHistory,
-          userId: user.id 
+          userId: user.id,
+          isJournalEntry
         }
       });
 

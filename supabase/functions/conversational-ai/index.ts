@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, userId } = await req.json();
+    const { message, conversationHistory, userId, isJournalEntry, coachingMode } = await req.json();
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -39,11 +39,53 @@ serve(async (req) => {
 
     console.log('User context for AI:', userContext);
 
-    // Build conversation context
-    const messages = [
-      {
-        role: 'system',
-        content: `You are Framory Assistant, a personal growth companion. You provide personalized guidance based on the user's context.
+    let systemPrompt = '';
+    
+    if (isJournalEntry) {
+      // Journal entry response - provide immediate contextual coaching
+      systemPrompt = `You are Framory Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.
+
+USER CONTEXT:
+${userContext.preferences ? `
+Preferences:
+- Tone: ${userContext.preferences.tone_of_voice}
+- Growth Focus: ${userContext.preferences.growth_focus}
+` : ''}
+
+${userContext.recentEntries.length > 0 ? `
+Recent Journal Patterns:
+${userContext.recentEntries.slice(0, 3).map((entry, i) => 
+  `${i + 1}. ${entry.created_at.split('T')[0]}: "${entry.content.substring(0, 100)}..." (Mood: ${entry.mood_after || 'N/A'})`
+).join('\n')}
+` : ''}
+
+${userContext.patterns.length > 0 ? `
+Detected Patterns:
+${userContext.patterns.map(p => 
+  `- ${p.pattern_type}: ${p.pattern_key} (confidence: ${Math.round(p.confidence_level * 100)}%)`
+).join('\n')}
+` : ''}
+
+${userContext.habits.length > 0 ? `
+Active Habits:
+${userContext.habits.map(h => 
+  `- ${h.title}: ${h.current_streak} day streak`
+).join('\n')}
+` : ''}
+
+RESPONSE STYLE:
+- Use a ${userContext.preferences?.tone_of_voice || 'supportive'} tone
+- Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
+- Be encouraging and insightful
+- Reference their patterns and progress when relevant
+- Keep responses concise but meaningful (2-3 sentences)
+- If you notice concerning patterns, gently suggest reflection or action
+- Celebrate positive moments and progress
+
+Respond naturally to their journal entry with personalized coaching insights.`;
+    } else {
+      // Conversational chat response
+      systemPrompt = `You are Framory Assistant, a personal growth companion. You provide helpful, conversational responses based on the user's context.
 
 USER CONTEXT:
 ${userContext.preferences ? `
@@ -79,12 +121,14 @@ PERSONALITY:
 - Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
 - Be conversational and engaging
 - Reference their patterns and progress when relevant
-- Provide actionable advice
-- If they seem to be sharing something journal-worthy, gently suggest: "This sounds like something worth saving to your journal. Would you like me to help you log this?"
+- Provide actionable advice when asked
+- If they share something meaningful during chat, you can suggest: "This sounds like something worth reflecting on. Would you like me to help you save this as a journal entry?"
 
-Keep responses concise but warm and helpful.`
-      }
-    ];
+Keep responses helpful, personalized, and conversational.`;
+    }
+
+    // Build conversation messages
+    const messages = [{ role: 'system', content: systemPrompt }];
 
     // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
@@ -103,8 +147,8 @@ Keep responses concise but warm and helpful.`
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages,
-        temperature: 0.7,
-        max_tokens: 500,
+        temperature: isJournalEntry ? 0.6 : 0.7,
+        max_tokens: isJournalEntry ? 300 : 500,
       }),
     });
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Check, BookOpen, MessageCircle } from 'lucide-react';
+import { Clock, Check, BookOpen } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -55,7 +55,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               : 'bg-gray-700 text-gray-100 rounded-bl-lg'
           }`}
         >
-          <p className="text-sm leading-relaxed">{message.content}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
 
         {/* Timestamp */}
