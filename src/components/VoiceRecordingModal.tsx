@@ -28,8 +28,12 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
     stopRecording,
     cleanup
   } = useVoiceRecording({
-    onTranscriptionComplete,
+    onTranscriptionComplete: (text: string) => {
+      console.log('Voice transcription completed:', text);
+      onTranscriptionComplete(text);
+    },
     onSuccess: () => {
+      console.log('Voice recording successful');
       onClose();
       toast({
         title: "Success!",
@@ -38,22 +42,45 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
     }
   });
 
+  // Handle modal open/close
   useEffect(() => {
     if (open) {
-      checkMicrophonePermission();
+      console.log('Voice recording modal opened');
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        checkMicrophonePermission();
+      }, 100);
     } else {
+      console.log('Voice recording modal closed');
+      // Only cleanup when modal is actually closed
       cleanup();
     }
-    
-    return cleanup;
-  }, [open, checkMicrophonePermission, cleanup]);
+  }, [open]);
+
+  // Handle modal close cleanup
+  useEffect(() => {
+    return () => {
+      if (!open) {
+        cleanup();
+      }
+    };
+  }, [open, cleanup]);
 
   const handleStartRecording = () => {
+    console.log('Starting recording with language:', language);
     startRecording(language);
   };
 
+  const handleClose = () => {
+    console.log('Closing voice recording modal');
+    if (isRecording) {
+      stopRecording();
+    }
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-gray-900 border-gray-700 max-w-md mx-auto h-screen sm:h-auto sm:max-h-[600px] flex flex-col">
         <DialogHeader className="sr-only">
           <DialogTitle>Voice Recording</DialogTitle>
@@ -72,7 +99,7 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
             status={status}
             errorMessage={errorMessage}
             onRetry={checkMicrophonePermission}
-            onClose={onClose}
+            onClose={handleClose}
           />
 
           <VoiceRecordingButton

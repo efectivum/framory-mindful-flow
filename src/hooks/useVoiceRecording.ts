@@ -32,42 +32,64 @@ export const useVoiceRecording = ({
 
   const cleanup = useCallback(() => {
     console.log('Cleaning up voice recording...');
-    if (mediaRecorderRef.current && isRecording) {
+    
+    // Stop recording if in progress
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
+    
+    // Clear intervals and animations
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
-    }
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
+      intervalRef.current = null;
     }
     
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    
+    // Close audio context
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped audio track:', track.kind);
+      });
+      streamRef.current = null;
+    }
+    
+    // Reset state
     setIsRecording(false);
     setRecordingTime(0);
     setAudioLevel(0);
-    setStatus('idle');
-    setErrorMessage('');
+    analyserRef.current = null;
+    mediaRecorderRef.current = null;
+    chunksRef.current = [];
+  }, []); // Remove dependencies to prevent premature cleanup
+
+  const updateAudioLevel = useCallback(() => {
+    if (analyserRef.current && isRecording) {
+      const level = calculateAudioLevel(analyserRef.current);
+      setAudioLevel(level);
+      animationRef.current = requestAnimationFrame(updateAudioLevel);
+    }
   }, [isRecording]);
 
   const startAudioLevelMonitoring = useCallback(() => {
-    if (!analyserRef.current) return;
+    if (!analyserRef.current) {
+      console.warn('No analyser available for audio level monitoring');
+      return;
+    }
     
-    const updateAudioLevel = () => {
-      if (analyserRef.current && isRecording) {
-        const level = calculateAudioLevel(analyserRef.current);
-        setAudioLevel(level);
-      }
-      animationRef.current = requestAnimationFrame(updateAudioLevel);
-    };
-    
+    console.log('Starting audio level monitoring...');
     updateAudioLevel();
-  }, [isRecording]);
+  }, [updateAudioLevel]);
 
   const checkMicrophonePermission = useCallback(async () => {
     console.log('Checking microphone permission...');
@@ -75,6 +97,13 @@ export const useVoiceRecording = ({
     setErrorMessage('');
     
     try {
+      // First check if we already have a stream
+      if (streamRef.current) {
+        console.log('Reusing existing stream');
+        setStatus('ready');
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -83,23 +112,33 @@ export const useVoiceRecording = ({
         } 
       });
       
-      console.log('Microphone permission granted');
+      console.log('Microphone permission granted, stream created');
       streamRef.current = stream;
-      const { audioContext, analyser } = setupAudioAnalyser(stream);
-      audioContextRef.current = audioContext;
-      analyserRef.current = analyser;
-      startAudioLevelMonitoring();
+      
+      // Set up audio analyser for visual feedback
+      try {
+        const { audioContext, analyser } = setupAudioAnalyser(stream);
+        audioContextRef.current = audioContext;
+        analyserRef.current = analyser;
+        console.log('Audio analyser set up successfully');
+      } catch (analyserError) {
+        console.warn('Failed to set up audio analyser:', analyserError);
+        // Continue without analyser - recording will still work
+      }
+      
       setStatus('ready');
     } catch (error) {
       console.error('Microphone permission error:', error);
       setStatus('error');
       setErrorMessage('Microphone access denied. Please allow microphone access and try again.');
     }
-  }, [startAudioLevelMonitoring]);
+  }, []);
 
   const handleRecordingComplete = useCallback(async (language: string) => {
     if (chunksRef.current.length === 0) {
       console.warn('No audio chunks to process');
+      setStatus('error');
+      setErrorMessage('No audio data recorded. Please try again.');
       return;
     }
     
@@ -108,15 +147,24 @@ export const useVoiceRecording = ({
     
     try {
       const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-      console.log('Audio blob size:', audioBlob.size, 'bytes');
+      console.log('Audio blob created, size:', audioBlob.size, 'bytes');
+      
+      if (audioBlob.size === 0) {
+        throw new Error('Audio blob is empty');
+      }
       
       const base64Audio = await blobToBase64(audioBlob);
-      console.log('Converting to base64 complete');
+      console.log('Converting to base64 complete, length:', base64Audio.length);
+      
+      const base64Data = base64Audio.split(',')[1];
+      if (!base64Data) {
+        throw new Error('Failed to extract base64 data');
+      }
       
       console.log('Calling speech-to-text function...');
       const { data, error } = await supabase.functions.invoke('speech-to-text', {
         body: { 
-          audio: base64Audio.split(',')[1],
+          audio: base64Data,
           language: language 
         }
       });
@@ -130,6 +178,7 @@ export const useVoiceRecording = ({
       if (data?.text) {
         onTranscriptionComplete(data.text);
         onSuccess();
+        setStatus('idle');
       } else {
         throw new Error('No transcription received');
       }
@@ -144,59 +193,92 @@ export const useVoiceRecording = ({
   const startRecording = useCallback(async (language: string) => {
     if (!streamRef.current) {
       console.error('No stream available for recording');
+      setStatus('error');
+      setErrorMessage('No microphone stream available. Please check permissions.');
       return;
     }
     
     console.log('Starting recording with language:', language);
+    
     try {
+      // Reset chunks array
       chunksRef.current = [];
-      mediaRecorderRef.current = new MediaRecorder(streamRef.current);
       
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      // Create MediaRecorder
+      const mediaRecorder = new MediaRecorder(streamRef.current, {
+        mimeType: 'audio/webm'
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      
+      // Set up event handlers
+      mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log('Audio chunk received, size:', event.data.size);
           chunksRef.current.push(event.data);
         }
       };
       
-      mediaRecorderRef.current.onstop = () => {
-        console.log('Recording stopped, processing...');
+      mediaRecorder.onstop = () => {
+        console.log('MediaRecorder stopped, processing...');
         handleRecordingComplete(language);
       };
       
-      mediaRecorderRef.current.start();
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        setStatus('error');
+        setErrorMessage('Recording error occurred. Please try again.');
+      };
+      
+      // Start recording
+      mediaRecorder.start(100); // Collect data every 100ms
       setIsRecording(true);
       setStatus('recording');
       setRecordingTime(0);
       
+      // Start audio level monitoring
+      startAudioLevelMonitoring();
+      
+      // Start timer
       intervalRef.current = setInterval(() => {
         setRecordingTime(prev => {
-          if (prev >= maxRecordingTime) {
+          const newTime = prev + 1;
+          if (newTime >= maxRecordingTime) {
             console.log('Max recording time reached, stopping...');
             stopRecording();
-            return prev;
+            return newTime;
           }
-          return prev + 1;
+          return newTime;
         });
       }, 1000);
+      
+      console.log('Recording started successfully');
       
     } catch (error) {
       console.error('Recording start error:', error);
       setStatus('error');
       setErrorMessage('Failed to start recording. Please try again.');
     }
-  }, [handleRecordingComplete, maxRecordingTime]);
+  }, [handleRecordingComplete, maxRecordingTime, startAudioLevelMonitoring]);
 
   const stopRecording = useCallback(() => {
     console.log('Stopping recording...');
-    if (mediaRecorderRef.current && isRecording) {
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
     }
-  }, [isRecording]);
+    
+    setIsRecording(false);
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  }, []);
 
   return {
     isRecording,
