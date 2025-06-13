@@ -5,9 +5,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { MoodDisplay } from '@/components/MoodDisplay';
-import { QuickInsights } from '@/components/QuickInsights';
-import { CoachingResponse } from '@/components/CoachingResponse';
-import { useCoachingInteractions } from '@/hooks/useCoachingInteractions';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -15,17 +12,9 @@ interface JournalEntryCardProps {
 
 export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
   const navigate = useNavigate();
-  const { getLatestInteraction } = useCoachingInteractions(entry.id);
-
-  const latestCoaching = getLatestInteraction();
 
   const handleClick = () => {
     navigate(`/journal/entry/${entry.id}`);
-  };
-
-  const handleCoachingEngagement = (engaged: boolean) => {
-    // Update the coaching interaction engagement status
-    console.log('Coaching engagement:', engaged);
   };
 
   return (
@@ -58,24 +47,6 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-gray-300 whitespace-pre-wrap line-clamp-3">{entry.content}</p>
-        
-        {/* Coaching Response */}
-        {latestCoaching && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <CoachingResponse
-              level={latestCoaching.response_level as 1 | 2 | 3}
-              content={latestCoaching.response_content}
-              type={latestCoaching.response_type}
-              patternDetected={latestCoaching.pattern_detected}
-              onEngagement={handleCoachingEngagement}
-            />
-          </div>
-        )}
-        
-        {/* Quick AI Insights */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <QuickInsights entry={entry} />
-        </div>
         
         {entry.tags && entry.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">

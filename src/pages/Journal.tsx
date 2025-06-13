@@ -1,206 +1,178 @@
 
-import { BookOpen, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Mic, History, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { CreateJournalDialog } from '@/components/CreateJournalDialog';
-import { JournalEntryCard } from '@/components/JournalEntryCard';
-import { VoiceButton } from '@/components/VoiceButton';
-import { WeeklyInsightCard } from '@/components/WeeklyInsightCard';
+import { Card, CardContent } from '@/components/ui/card';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useWeeklyInsights } from '@/hooks/useWeeklyInsights';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
-import { useState } from 'react';
+import { FocusedWritingMode } from '@/components/FocusedWritingMode';
+import { JournalEntryAnalysisPage } from '@/components/JournalEntryAnalysisPage';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Journal = () => {
   const isMobile = useIsMobile();
-  const { entries, isLoading, createEntry, stats } = useJournalEntries();
-  const { getLatestInsight } = useWeeklyInsights();
-  const [quickContent, setQuickContent] = useState('');
-  const [quickMood, setQuickMood] = useState('');
+  const navigate = useNavigate();
+  const { createEntry, isCreating } = useJournalEntries();
+  const [isWritingMode, setIsWritingMode] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
 
-  const handleQuickEntry = () => {
-    if (!quickContent.trim()) return;
-    
-    createEntry({
-      content: quickContent.trim(),
-      mood_after: quickMood ? parseInt(quickMood) : undefined,
-    });
-
-    setQuickContent('');
-    setQuickMood('');
-  };
-
-  const handleVoiceTranscription = (text: string) => {
-    if (quickContent.trim()) {
-      setQuickContent(prev => prev + ' ' + text);
-    } else {
-      setQuickContent(text);
+  const handleSaveEntry = async (content: string, mood?: number) => {
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        createEntry(
+          { content, mood_after: mood },
+          {
+            onSuccess: (data) => resolve(data),
+            onError: (error) => reject(error)
+          }
+        );
+      });
+      
+      setCurrentEntryId(result.id);
+      setIsWritingMode(false);
+      setShowAnalysis(true);
+    } catch (error) {
+      console.error('Failed to save entry:', error);
     }
   };
 
-  const latestInsight = getLatestInsight();
-  const isWeeklyAvailable = latestInsight && new Date(latestInsight.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const prompts = [
+    "What am I grateful for today?",
+    "How am I feeling right now?",
+    "What did I learn today?",
+    "What challenged me today?",
+    "What made me smile today?",
+    "How can I improve tomorrow?"
+  ];
+
+  const handlePromptClick = (prompt: string) => {
+    // For now, just open writing mode
+    setIsWritingMode(true);
+  };
+
+  if (showAnalysis && currentEntryId) {
+    return (
+      <JournalEntryAnalysisPage 
+        entryId={currentEntryId} 
+      />
+    );
+  }
 
   const content = (
-    <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-      <div className="lg:col-span-2">
-        {/* Quick Reflection Card */}
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Quick Reflection
-              </CardTitle>
-              <CreateJournalDialog />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Textarea
-                placeholder="What's on your mind today? AI will analyze your emotional state and provide insights automatically..."
-                className="min-h-32 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 pr-12"
-                value={quickContent}
-                onChange={(e) => setQuickContent(e.target.value)}
-              />
-              <div className="absolute top-2 right-2">
-                <VoiceButton onTranscription={handleVoiceTranscription} />
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-2xl space-y-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <h1 className="text-3xl font-bold text-white mb-3">
+            What's on your mind?
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Take a moment to reflect and capture your thoughts
+          </p>
+        </motion.div>
+
+        {/* Main Writing Interface */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-gray-800/30 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-300">
+            <CardContent className="p-8">
+              <div 
+                className="min-h-32 w-full p-4 bg-transparent border-2 border-dashed border-gray-600 rounded-lg cursor-text hover:border-gray-500 transition-colors flex items-center justify-center"
+                onClick={() => setIsWritingMode(true)}
+              >
+                <div className="text-center">
+                  <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-400 text-lg">Click here to start writing</p>
+                  <p className="text-gray-500 text-sm mt-2">Or use voice to capture your thoughts</p>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-between items-center mt-4">
-              <select 
-                className="bg-gray-700 border-gray-600 text-white rounded px-3 py-1 text-sm"
-                value={quickMood}
-                onChange={(e) => setQuickMood(e.target.value)}
-              >
-                <option value="">Select your mood</option>
-                <option value="5">😄 Excellent</option>
-                <option value="4">😊 Good</option>
-                <option value="3">😐 Neutral</option>
-                <option value="2">😕 Low</option>
-                <option value="1">😞 Very Low</option>
-              </select>
-              <Button 
-                size="sm" 
-                onClick={handleQuickEntry}
-                disabled={!quickContent.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Save & Analyze
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Weekly Insight Card - only show if available */}
-        {isWeeklyAvailable && (
-          <div className="mb-6">
-            <WeeklyInsightCard insight={latestInsight} isLatest={true} />
-          </div>
-        )}
-
-        {/* Weekly Analysis Coming Soon */}
-        {!isWeeklyAvailable && (
-          <Card className="bg-gradient-to-br from-purple-500/10 to-indigo-600/10 border-gray-700/50 backdrop-blur-sm mb-6">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Weekly Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 text-sm">
-                Your personalized weekly analysis will be available every Sunday morning at 8:00 AM. 
-                Keep journaling to get better insights!
-              </p>
+              
+              <div className="flex items-center justify-center mt-6 gap-4">
+                <Button
+                  onClick={() => setIsWritingMode(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                  disabled={isCreating}
+                >
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  Start Writing
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setIsWritingMode(true)}
+                  className="border-gray-600 text-gray-300 hover:text-white px-8 py-3"
+                  disabled={isCreating}
+                >
+                  <Mic className="w-5 h-5 mr-2" />
+                  Voice Note
+                </Button>
+              </div>
             </CardContent>
           </Card>
-        )}
+        </motion.div>
 
-        {/* Journal Entries */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-white">Recent Entries</h2>
-          {isLoading ? (
-            <div className="text-gray-400">Loading entries...</div>
-          ) : entries.length > 0 ? (
-            <div className="space-y-4">
-              {entries.slice(0, 10).map((entry) => (
-                <JournalEntryCard 
-                  key={entry.id} 
-                  entry={entry} 
-                />
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardContent className="p-8 text-center">
-                <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No entries yet</h3>
-                <p className="text-gray-400 mb-4">Start your journaling journey with AI-powered insights.</p>
-                <CreateJournalDialog />
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Writing Prompts */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-center gap-2 text-gray-400">
+            <Lightbulb className="w-4 h-4" />
+            <span className="text-sm">Need inspiration? Try one of these prompts:</span>
+          </div>
+          
+          <div className="grid gap-3">
+            {prompts.slice(0, 3).map((prompt, index) => (
+              <button
+                key={index}
+                onClick={() => handlePromptClick(prompt)}
+                className="text-left p-4 bg-gray-800/20 hover:bg-gray-800/40 rounded-lg border border-gray-700/50 hover:border-gray-600 transition-all group"
+              >
+                <span className="text-gray-300 group-hover:text-white">
+                  {prompt}
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex justify-center"
+        >
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/journal/history')}
+            className="text-gray-400 hover:text-white"
+          >
+            <History className="w-4 h-4 mr-2" />
+            View Past Entries
+          </Button>
+        </motion.div>
       </div>
 
-      <div className="space-y-6">
-        {/* Mood Insights */}
-        <Card className="bg-gradient-to-br from-blue-500/10 to-teal-600/10 border-gray-700/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-white text-lg">Your Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400">This Week</span>
-              <span className="text-white font-medium">{stats.thisWeekCount} entries</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Current Streak</span>
-              <span className="text-white font-medium">{stats.currentStreak} days</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Total Entries</span>
-              <span className="text-white font-medium">{stats.totalCount}</span>
-            </div>
-            {stats.averageMood > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-400">Average Mood</span>
-                <span className="text-white font-medium">{stats.averageMood.toFixed(1)}/5</span>
-              </div>
-            )}
-            {stats.averageAlignment > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-400">Mood Alignment</span>
-                <span className="text-white font-medium">{Math.round(stats.averageAlignment * 100)}%</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Today's Prompt */}
-        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-gray-700/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-white text-lg">Today's Prompt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 mb-4">
-              "What three things brought you joy today, and how can you create more moments like these?"
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full"
-              onClick={() => setQuickContent("What three things brought me joy today: ")}
-            >
-              Use This Prompt
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Focused Writing Mode */}
+      <FocusedWritingMode
+        isOpen={isWritingMode}
+        onClose={() => setIsWritingMode(false)}
+        onSave={handleSaveEntry}
+      />
     </div>
   );
 
@@ -209,11 +181,11 @@ const Journal = () => {
     return <MobileLayout>{content}</MobileLayout>;
   }
 
-  // Use PageLayout for desktop
+  // Use PageLayout for desktop - but minimal header
   return (
-    <PageLayout title="Journaling" subtitle="Capture thoughts and discover patterns with AI insights">
+    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {content}
-    </PageLayout>
+    </div>
   );
 };
 
