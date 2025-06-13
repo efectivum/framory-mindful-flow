@@ -9,6 +9,7 @@ import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
 import { FocusedWritingMode } from '@/components/FocusedWritingMode';
 import { JournalEntryAnalysisPage } from '@/components/JournalEntryAnalysisPage';
+import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -17,6 +18,7 @@ const Journal = () => {
   const navigate = useNavigate();
   const { createEntry, isCreating } = useJournalEntries();
   const [isWritingMode, setIsWritingMode] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
 
@@ -38,6 +40,14 @@ const Journal = () => {
     } catch (error) {
       console.error('Failed to save entry:', error);
     }
+  };
+
+  const handleVoiceTranscription = (text: string) => {
+    console.log('Voice transcription received:', text);
+    setIsVoiceMode(false);
+    setIsWritingMode(true);
+    // We'll pass the transcribed text to the writing mode
+    // For now, we'll just open writing mode and the user can paste it
   };
 
   const prompts = [
@@ -110,7 +120,7 @@ const Journal = () => {
                 
                 <Button
                   variant="outline"
-                  onClick={() => setIsWritingMode(true)}
+                  onClick={() => setIsVoiceMode(true)}
                   className="border-gray-600 text-gray-300 hover:text-white px-8 py-3"
                   disabled={isCreating}
                 >
@@ -172,6 +182,13 @@ const Journal = () => {
         isOpen={isWritingMode}
         onClose={() => setIsWritingMode(false)}
         onSave={handleSaveEntry}
+      />
+
+      {/* Voice Recording Modal */}
+      <VoiceRecordingModal
+        open={isVoiceMode}
+        onClose={() => setIsVoiceMode(false)}
+        onTranscriptionComplete={handleVoiceTranscription}
       />
     </div>
   );

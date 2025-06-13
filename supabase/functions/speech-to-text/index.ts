@@ -9,6 +9,7 @@ const corsHeaders = {
 
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
+  console.log('Processing base64 string of length:', base64String.length);
   const chunks: Uint8Array[] = [];
   let position = 0;
   
@@ -26,6 +27,7 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
   }
 
   const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  console.log('Total audio bytes:', totalLength);
   const result = new Uint8Array(totalLength);
   let offset = 0;
 
@@ -43,13 +45,22 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Speech-to-text function called');
     const { audio, language } = await req.json()
     
     if (!audio) {
+      console.error('No audio data provided');
       throw new Error('No audio data provided')
     }
 
-    console.log('Processing audio transcription request...')
+    console.log('Processing audio transcription request for language:', language);
+
+    // Check if OpenAI API key is available
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) {
+      console.error('OpenAI API key not found');
+      throw new Error('OpenAI API key not configured');
+    }
 
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio)
@@ -64,23 +75,24 @@ serve(async (req) => {
       formData.append('language', language)
     }
 
+    console.log('Sending request to OpenAI...');
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: formData,
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('OpenAI API error:', errorText)
-      throw new Error(`OpenAI API error: ${errorText}`)
+      console.error('OpenAI API error:', response.status, errorText)
+      throw new Error(`OpenAI API error (${response.status}): ${errorText}`)
     }
 
     const result = await response.json()
-    console.log('Transcription successful')
+    console.log('Transcription successful, text length:', result.text?.length || 0);
 
     return new Response(
       JSON.stringify({ text: result.text }),

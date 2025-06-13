@@ -31,6 +31,7 @@ export const useVoiceRecording = ({
   const animationRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
+    console.log('Cleaning up voice recording...');
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
     }
@@ -69,6 +70,7 @@ export const useVoiceRecording = ({
   }, [isRecording]);
 
   const checkMicrophonePermission = useCallback(async () => {
+    console.log('Checking microphone permission...');
     setStatus('checking');
     setErrorMessage('');
     
@@ -81,6 +83,7 @@ export const useVoiceRecording = ({
         } 
       });
       
+      console.log('Microphone permission granted');
       streamRef.current = stream;
       const { audioContext, analyser } = setupAudioAnalyser(stream);
       audioContextRef.current = audioContext;
@@ -95,14 +98,22 @@ export const useVoiceRecording = ({
   }, [startAudioLevelMonitoring]);
 
   const handleRecordingComplete = useCallback(async (language: string) => {
-    if (chunksRef.current.length === 0) return;
+    if (chunksRef.current.length === 0) {
+      console.warn('No audio chunks to process');
+      return;
+    }
     
+    console.log('Processing recording with', chunksRef.current.length, 'chunks');
     setStatus('processing');
     
     try {
       const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-      const base64Audio = await blobToBase64(audioBlob);
+      console.log('Audio blob size:', audioBlob.size, 'bytes');
       
+      const base64Audio = await blobToBase64(audioBlob);
+      console.log('Converting to base64 complete');
+      
+      console.log('Calling speech-to-text function...');
       const { data, error } = await supabase.functions.invoke('speech-to-text', {
         body: { 
           audio: base64Audio.split(',')[1],
@@ -111,9 +122,11 @@ export const useVoiceRecording = ({
       });
 
       if (error) {
+        console.error('Speech-to-text error:', error);
         throw new Error(error.message || 'Transcription failed');
       }
 
+      console.log('Transcription result:', data);
       if (data?.text) {
         onTranscriptionComplete(data.text);
         onSuccess();
@@ -129,19 +142,27 @@ export const useVoiceRecording = ({
   }, [onTranscriptionComplete, onSuccess]);
 
   const startRecording = useCallback(async (language: string) => {
-    if (!streamRef.current) return;
+    if (!streamRef.current) {
+      console.error('No stream available for recording');
+      return;
+    }
     
+    console.log('Starting recording with language:', language);
     try {
       chunksRef.current = [];
       mediaRecorderRef.current = new MediaRecorder(streamRef.current);
       
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          console.log('Audio chunk received, size:', event.data.size);
           chunksRef.current.push(event.data);
         }
       };
       
-      mediaRecorderRef.current.onstop = () => handleRecordingComplete(language);
+      mediaRecorderRef.current.onstop = () => {
+        console.log('Recording stopped, processing...');
+        handleRecordingComplete(language);
+      };
       
       mediaRecorderRef.current.start();
       setIsRecording(true);
@@ -151,6 +172,7 @@ export const useVoiceRecording = ({
       intervalRef.current = setInterval(() => {
         setRecordingTime(prev => {
           if (prev >= maxRecordingTime) {
+            console.log('Max recording time reached, stopping...');
             stopRecording();
             return prev;
           }
@@ -166,6 +188,7 @@ export const useVoiceRecording = ({
   }, [handleRecordingComplete, maxRecordingTime]);
 
   const stopRecording = useCallback(() => {
+    console.log('Stopping recording...');
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
