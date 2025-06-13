@@ -6,6 +6,7 @@ import { ChatMessage } from './ChatMessage';
 import { CoachingResponse } from './CoachingResponse';
 import { useCoachingLogic } from '@/hooks/useCoachingLogic';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
+import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -14,6 +15,7 @@ interface Message {
   content: string;
   activityType?: string;
   timestamp: Date;
+  isJournalEntry?: boolean;
   coachingResponse?: {
     level: 1 | 2 | 3;
     content: string;
@@ -29,7 +31,7 @@ export const ChatInterface = () => {
     {
       id: '1',
       type: 'bot',
-      content: "Hi! I'm here to help you with your personal growth journey. What would you like to do today?",
+      content: "Hi! I'm here to help you with your personal growth journey. You can chat with me about anything or log activities using the + button. What would you like to do today?",
       timestamp: new Date(),
     },
   ]);
@@ -37,12 +39,14 @@ export const ChatInterface = () => {
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
   const { entries, createEntry } = useJournalEntries();
   const { determineResponseLevel, generateCoachingResponse } = useCoachingLogic();
+  const { detectIntent, generateResponse, isDetectingIntent, isGeneratingResponse } = useConversationalAI();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,7 +56,7 @@ export const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
     const newMessage: Message = {
@@ -64,30 +68,39 @@ export const ChatInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
+    const currentInput = inputText;
+    setInputText('');
 
-    // If it's a journal entry, create it and generate coaching response
-    if (selectedActivity === 'journal' || !selectedActivity) {
+    // Detect intent using AI
+    const intentResult = await detectIntent(currentInput, selectedActivity);
+    console.log('Intent detection result:', intentResult);
+
+    if (intentResult?.intent === 'journal' || selectedActivity) {
+      // Handle as journal entry
+      newMessage.isJournalEntry = true;
+      setMessages(prev => prev.map(msg => msg.id === newMessage.id ? newMessage : msg));
+
       createEntry({
-        content: inputText,
+        content: currentInput,
         title: selectedActivity ? `${selectedActivity} entry` : undefined,
       });
 
       // Generate coaching response
       setTimeout(() => {
         const responseLevel = determineResponseLevel(
-          { content: inputText } as any, 
+          { content: currentInput } as any, 
           entries
         );
         const coachingResponse = generateCoachingResponse(
           responseLevel, 
-          { content: inputText } as any, 
+          { content: currentInput } as any, 
           entries
         );
 
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          content: "Got it! I've recorded your entry.",
+          content: "I've saved that to your journal.",
           timestamp: new Date(),
           coachingResponse: {
             level: responseLevel,
@@ -101,19 +114,33 @@ export const ChatInterface = () => {
         setMessages(prev => [...prev, botResponse]);
       }, 1000);
     } else {
-      // Regular chat response
-      setTimeout(() => {
+      // Handle as conversation
+      const updatedHistory = [...conversationHistory, { role: 'user' as const, content: currentInput }];
+      setConversationHistory(updatedHistory);
+
+      const aiResponse = await generateResponse(currentInput, conversationHistory);
+      
+      if (aiResponse) {
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          content: "Thanks for sharing that with me. Is there anything else you'd like to add?",
+          content: aiResponse,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, botResponse]);
-      }, 1000);
+        setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
+      } else {
+        // Fallback response
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: "I'm sorry, I'm having trouble responding right now. Please try again.",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botResponse]);
+      }
     }
 
-    setInputText('');
     setSelectedActivity(null);
   };
 
@@ -165,6 +192,18 @@ export const ChatInterface = () => {
             )}
           </div>
         ))}
+        
+        {/* Loading indicators */}
+        {(isDetectingIntent || isGeneratingResponse) && (
+          <div className="flex justify-start">
+            <div className="bg-gray-700 text-gray-100 px-4 py-3 rounded-2xl rounded-bl-lg">
+              <div className="flex items-center gap-2">
+                <div className="animate-pulse">Thinking...</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
@@ -207,9 +246,10 @@ export const ChatInterface = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
+              placeholder="Ask me anything or log an activity..."
               className="w-full max-h-32 min-h-12 px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pr-20 shadow-sm"
               rows={1}
+              disabled={isDetectingIntent || isGeneratingResponse}
             />
             
             {/* Input Controls */}
@@ -235,7 +275,8 @@ export const ChatInterface = () => {
           {inputText.trim() ? (
             <Button
               onClick={handleSend}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0 shadow-sm"
+              disabled={isDetectingIntent || isGeneratingResponse}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0 shadow-sm disabled:opacity-50"
             >
               <Send className="w-5 h-5" />
             </Button>
