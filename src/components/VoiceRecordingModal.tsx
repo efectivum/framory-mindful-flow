@@ -71,6 +71,11 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
     startRecording(language);
   };
 
+  const handleStopRecording = () => {
+    console.log('Stopping recording manually');
+    stopRecording();
+  };
+
   const handleClose = () => {
     console.log('Closing voice recording modal');
     if (isRecording) {
@@ -100,6 +105,7 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
             errorMessage={errorMessage}
             onRetry={checkMicrophonePermission}
             onClose={handleClose}
+            onStop={handleStopRecording}
           />
 
           <VoiceRecordingButton
@@ -109,7 +115,7 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
             recordingTime={recordingTime}
             maxRecordingTime={maxRecordingTime}
             onStart={handleStartRecording}
-            onStop={stopRecording}
+            onStop={handleStopRecording}
           />
         </div>
       </DialogContent>

@@ -1,5 +1,5 @@
 
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RecordingStatus } from '@/hooks/useVoiceRecording';
@@ -15,6 +15,7 @@ interface VoiceRecordingControlsProps {
   errorMessage: string;
   onRetry: () => void;
   onClose: () => void;
+  onStop: () => void;
 }
 
 export const VoiceRecordingControls = ({
@@ -26,7 +27,8 @@ export const VoiceRecordingControls = ({
   status,
   errorMessage,
   onRetry,
-  onClose
+  onClose,
+  onStop
 }: VoiceRecordingControlsProps) => {
   const getStatusMessage = () => {
     switch (status) {
@@ -49,6 +51,10 @@ export const VoiceRecordingControls = ({
 
   const shouldShowCloseButton = () => {
     return status !== 'recording' && status !== 'processing';
+  };
+
+  const shouldShowFinishButton = () => {
+    return status === 'recording';
   };
 
   return (
@@ -92,6 +98,17 @@ export const VoiceRecordingControls = ({
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Try Again
+          </Button>
+        )}
+        
+        {shouldShowFinishButton() && (
+          <Button
+            variant="outline"
+            onClick={onStop}
+            className="bg-red-600 border-red-500 text-white hover:bg-red-700"
+          >
+            <Square className="w-4 h-4 mr-2" />
+            Finish Recording
           </Button>
         )}
         
