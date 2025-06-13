@@ -201,22 +201,45 @@ export const useHabits = () => {
       notes?: string; 
       moodRating?: number;
     }) => {
-      if (!user) throw new Error('User not authenticated');
+      console.log('completeHabitMutation: Starting completion for habit:', habitId);
+      
+      if (!user) {
+        console.log('completeHabitMutation: No user found');
+        throw new Error('User not authenticated');
+      }
 
-      // Check if already completed today
-      const today = new Date().toISOString().split('T')[0];
-      const { data: existingCompletion } = await supabase
+      // Get current date in user's timezone
+      const now = new Date();
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('completeHabitMutation: User timezone:', userTimezone);
+      
+      // Create start and end of day in user's timezone
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      
+      console.log('completeHabitMutation: Checking for existing completion between:', startOfDay.toISOString(), 'and', endOfDay.toISOString());
+
+      // Check if already completed today with better date handling
+      const { data: existingCompletion, error: checkError } = await supabase
         .from('habit_completions')
         .select('id')
         .eq('habit_id', habitId)
         .eq('user_id', user.id)
-        .gte('completed_at', `${today}T00:00:00Z`)
-        .lt('completed_at', `${today}T23:59:59Z`)
-        .single();
+        .gte('completed_at', startOfDay.toISOString())
+        .lte('completed_at', endOfDay.toISOString())
+        .maybeSingle();
+
+      if (checkError) {
+        console.log('completeHabitMutation: Error checking existing completion:', checkError);
+        throw checkError;
+      }
 
       if (existingCompletion) {
+        console.log('completeHabitMutation: Habit already completed today');
         throw new Error('Habit already completed today');
       }
+
+      console.log('completeHabitMutation: No existing completion found, proceeding with insert');
 
       // Get habit title for logging
       const { data: habit } = await supabase
@@ -225,6 +248,7 @@ export const useHabits = () => {
         .eq('id', habitId)
         .single();
 
+      // Insert the completion
       const { data, error } = await supabase
         .from('habit_completions')
         .insert([{
@@ -232,11 +256,17 @@ export const useHabits = () => {
           user_id: user.id,
           notes,
           mood_rating: moodRating,
+          completed_at: now.toISOString()
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.log('completeHabitMutation: Error inserting completion:', error);
+        throw error;
+      }
+
+      console.log('completeHabitMutation: Successfully inserted completion:', data);
 
       // Log activity
       if (habit) {
@@ -259,15 +289,34 @@ export const useHabits = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      console.log('completeHabitMutation: Success callback called');
+      
+      // Immediately update the todayCompletions cache
+      queryClient.setQueryData(['habit-completions', user?.id, new Date().toDateString()], (oldData: string[] = []) => {
+        const newData = [...oldData, variables.habitId];
+        console.log('completeHabitMutation: Updated todayCompletions cache:', newData);
+        return newData;
+      });
+
+      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       queryClient.invalidateQueries({ queryKey: ['habit-completions'] });
       queryClient.invalidateQueries({ queryKey: ['activities'] });
+      
+      toast({
+        title: "Great job! 🎉",
+        description: "Habit completed successfully!",
+      });
     },
     onError: (error) => {
+      console.log('completeHabitMutation: Error callback called:', error);
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Couldn't complete habit",
+        description: error.message === 'Habit already completed today' 
+          ? "You've already completed this habit today!"
+          : `Failed to complete habit: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -276,18 +325,35 @@ export const useHabits = () => {
   const { data: todayCompletions = [] } = useQuery({
     queryKey: ['habit-completions', user?.id, new Date().toDateString()],
     queryFn: async () => {
-      if (!user) return [];
+      console.log('todayCompletions query: Starting fetch');
       
-      const today = new Date().toISOString().split('T')[0];
+      if (!user) {
+        console.log('todayCompletions query: No user found');
+        return [];
+      }
+      
+      // Get current date in user's timezone
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      
+      console.log('todayCompletions query: Fetching completions between:', startOfDay.toISOString(), 'and', endOfDay.toISOString());
+
       const { data, error } = await supabase
         .from('habit_completions')
         .select('habit_id')
         .eq('user_id', user.id)
-        .gte('completed_at', `${today}T00:00:00Z`)
-        .lt('completed_at', `${today}T23:59:59Z`);
+        .gte('completed_at', startOfDay.toISOString())
+        .lte('completed_at', endOfDay.toISOString());
 
-      if (error) throw error;
-      return data.map(completion => completion.habit_id);
+      if (error) {
+        console.log('todayCompletions query: Error:', error);
+        throw error;
+      }
+      
+      const completions = data.map(completion => completion.habit_id);
+      console.log('todayCompletions query: Found completions:', completions);
+      return completions;
     },
     enabled: !!user,
   });
