@@ -30,6 +30,13 @@
   --app-space-2xl: 3rem;
   --app-space-3xl: 4rem;
   
+  /* Mobile Spacing Scale */
+  --app-mobile-space-xs: 0.25rem;
+  --app-mobile-space-sm: 0.5rem;
+  --app-mobile-space-md: 0.75rem;
+  --app-mobile-space-lg: 1rem;
+  --app-mobile-space-xl: 1.25rem;
+  
   /* Border Radius */
   --app-radius-sm: 0.5rem;
   --app-radius-md: 0.75rem;
@@ -71,6 +78,15 @@
   padding: var(--app-space-lg);
 }
 
+/* Mobile Content Adjustments */
+@media (max-width: 768px) {
+  .app-content,
+  .app-content-centered,
+  .app-content-wide {
+    padding: var(--app-mobile-space-lg);
+  }
+}
+
 /* Card Components */
 .app-card {
   background: var(--app-bg-card);
@@ -102,6 +118,25 @@
 .app-card-header {
   padding: var(--app-space-xl);
   border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+/* Mobile Card Adjustments */
+@media (max-width: 768px) {
+  .app-card-content {
+    padding: var(--app-mobile-space-lg);
+  }
+  
+  .app-card-header {
+    padding: var(--app-mobile-space-lg);
+  }
+  
+  .app-card-compact {
+    border-radius: var(--app-radius-md);
+  }
+  
+  .app-card-compact .app-card-content {
+    padding: var(--app-mobile-space-md);
+  }
 }
 
 /* Header Components */
@@ -136,6 +171,29 @@
   max-width: 28rem;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Mobile Header Adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    margin-bottom: var(--app-mobile-space-xl);
+  }
+  
+  .app-header-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--app-mobile-space-md);
+  }
+  
+  .app-header-title {
+    font-size: 1.75rem;
+    margin-bottom: var(--app-mobile-space-sm);
+  }
+  
+  .app-header-subtitle {
+    font-size: 1rem;
+    padding: 0 var(--app-mobile-space-md);
+  }
 }
 
 /* Button Styles */
@@ -173,6 +231,21 @@
   background: rgba(59, 130, 246, 0.1);
 }
 
+/* Mobile Button Adjustments */
+@media (max-width: 768px) {
+  .app-button-primary,
+  .app-button-secondary {
+    padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
+    font-size: 0.875rem;
+  }
+  
+  .app-button-compact {
+    padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
+    font-size: 0.75rem;
+    border-radius: var(--app-radius-sm);
+  }
+}
+
 /* Grid Layouts */
 .app-grid {
   display: grid;
@@ -191,11 +264,33 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* Mobile Grid Adjustments */
 @media (max-width: 768px) {
+  .app-grid {
+    gap: var(--app-mobile-space-md);
+  }
+  
   .app-grid-2,
   .app-grid-3,
   .app-grid-4 {
     grid-template-columns: 1fr;
+  }
+  
+  .app-grid-mobile-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--app-mobile-space-sm);
+  }
+  
+  .app-grid-mobile-scroll {
+    display: flex;
+    gap: var(--app-mobile-space-sm);
+    overflow-x: auto;
+    padding-bottom: var(--app-mobile-space-sm);
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .app-grid-mobile-scroll::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -227,6 +322,38 @@
   color: var(--app-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Mobile Statistics Cards */
+@media (max-width: 768px) {
+  .app-stat-card {
+    padding: var(--app-mobile-space-md);
+    border-radius: var(--app-radius-md);
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+  
+  .app-stat-card-compact {
+    padding: var(--app-mobile-space-sm);
+    min-width: 100px;
+  }
+  
+  .app-stat-value {
+    font-size: 1.5rem;
+    margin-bottom: var(--app-mobile-space-xs);
+  }
+  
+  .app-stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .app-stat-card-compact .app-stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .app-stat-card-compact .app-stat-label {
+    font-size: 0.625rem;
+  }
 }
 
 /* Form Elements */
@@ -297,6 +424,24 @@
   }
 }
 
+/* Mobile Animation Adjustments */
+@media (max-width: 768px) {
+  .app-fade-in {
+    animation: appFadeInMobile 0.4s ease-out;
+  }
+  
+  @keyframes appFadeInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
 /* Utility Classes */
 .app-text-center { text-align: center; }
 .app-text-left { text-align: left; }
@@ -319,6 +464,24 @@
 .app-p-md { padding: var(--app-space-md); }
 .app-p-lg { padding: var(--app-space-lg); }
 .app-p-xl { padding: var(--app-space-xl); }
+
+/* Mobile Utility Classes */
+@media (max-width: 768px) {
+  .app-mobile-mb-xs { margin-bottom: var(--app-mobile-space-xs); }
+  .app-mobile-mb-sm { margin-bottom: var(--app-mobile-space-sm); }
+  .app-mobile-mb-md { margin-bottom: var(--app-mobile-space-md); }
+  .app-mobile-mb-lg { margin-bottom: var(--app-mobile-space-lg); }
+  
+  .app-mobile-mt-xs { margin-top: var(--app-mobile-space-xs); }
+  .app-mobile-mt-sm { margin-top: var(--app-mobile-space-sm); }
+  .app-mobile-mt-md { margin-top: var(--app-mobile-space-md); }
+  .app-mobile-mt-lg { margin-top: var(--app-mobile-space-lg); }
+  
+  .app-mobile-p-xs { padding: var(--app-mobile-space-xs); }
+  .app-mobile-p-sm { padding: var(--app-mobile-space-sm); }
+  .app-mobile-p-md { padding: var(--app-mobile-space-md); }
+  .app-mobile-p-lg { padding: var(--app-mobile-space-lg); }
+}
 
 /* Loading States */
 .app-loading {
@@ -356,6 +519,19 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto var(--app-space-lg) auto;
+}
+
+/* Mobile Empty State */
+@media (max-width: 768px) {
+  .app-empty-state {
+    padding: var(--app-mobile-space-xl);
+  }
+  
+  .app-empty-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--app-mobile-space-md);
+  }
 }
 
 /* Success States */

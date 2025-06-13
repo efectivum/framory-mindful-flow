@@ -98,44 +98,48 @@ const Goals = () => {
               </AppCardContent>
             </AppCard>
           ) : (
-            <div className="space-y-8">
-              {/* Quick Stats */}
-              <div className="app-grid app-grid-4 app-slide-up">
+            <div className="space-y-6 md:space-y-8">
+              {/* Quick Stats - Mobile Horizontal Scroll */}
+              <div className={`app-slide-up ${isMobile ? 'app-grid-mobile-scroll' : 'app-grid app-grid-4'}`}>
                 <AppStatCard
                   value={stats.activeHabits}
-                  label="Active Habits"
-                  icon={<Target className="w-5 h-5 text-blue-400" />}
+                  label="Active"
+                  icon={<Target className="w-4 h-4 text-blue-400" />}
+                  className={isMobile ? 'app-stat-card-compact' : ''}
                 />
                 <AppStatCard
                   value={stats.completedToday}
-                  label="Completed Today"
-                  icon={<TrendingUp className="w-5 h-5 text-green-400" />}
+                  label="Today"
+                  icon={<TrendingUp className="w-4 h-4 text-green-400" />}
                   color="success"
+                  className={isMobile ? 'app-stat-card-compact' : ''}
                 />
                 <AppStatCard
                   value={stats.totalStreaks}
-                  label="Total Streak Days"
-                  icon={<Flame className="w-5 h-5 text-orange-400" />}
+                  label="Total Days"
+                  icon={<Flame className="w-4 h-4 text-orange-400" />}
                   color="warning"
+                  className={isMobile ? 'app-stat-card-compact' : ''}
                 />
                 <AppStatCard
                   value={stats.bestStreak}
                   label="Best Streak"
-                  icon={<Flame className="w-5 h-5 text-purple-400" />}
+                  icon={<Flame className="w-4 h-4 text-purple-400" />}
+                  className={isMobile ? 'app-stat-card-compact' : ''}
                 />
               </div>
 
               {/* Main Content Area */}
-              <AppCard variant="glass" className="app-slide-up">
-                <AppCardHeader>
+              <AppCard variant="glass" className={`app-slide-up ${isMobile ? 'app-card-compact' : ''}`}>
+                <AppCardHeader className={isMobile ? 'app-mobile-p-md' : ''}>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-medium text-white">Today's Habits</h2>
+                    <h2 className={`font-medium text-white ${isMobile ? 'text-lg' : 'text-xl'}`}>Today's Habits</h2>
                     <CreateHabitDialog />
                   </div>
                 </AppCardHeader>
                 
-                <AppCardContent>
-                  <div className="app-grid app-grid-2">
+                <AppCardContent className={isMobile ? 'app-mobile-p-md' : ''}>
+                  <div className={isMobile ? 'space-y-3' : 'app-grid app-grid-2'}>
                     {habits.map((habit) => (
                       <HabitCard
                         key={habit.id}
@@ -146,6 +150,7 @@ const Goals = () => {
                         onDelete={handleDeleteHabit}
                         isCompleting={isCompleting}
                         isDeleting={isDeleting}
+                        isMobile={isMobile}
                       />
                     ))}
                   </div>
@@ -155,13 +160,15 @@ const Goals = () => {
               {/* Best Streak Highlight */}
               {stats.bestStreak > 0 && (
                 <div className="app-text-center">
-                  <AppCard variant="glass" className="inline-block">
-                    <AppCardContent>
+                  <AppCard variant="glass" className={`inline-block ${isMobile ? 'app-card-compact' : ''}`}>
+                    <AppCardContent className={isMobile ? 'app-mobile-p-md' : ''}>
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <Flame className="w-5 h-5 text-orange-400" />
                         <span className="text-orange-400 font-medium">{stats.bestStreak} day streak</span>
                       </div>
-                      <p className="text-gray-300 text-sm">You're building amazing momentum! 🎉</p>
+                      <p className={`text-gray-300 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        You're building amazing momentum! 🎉
+                      </p>
                     </AppCardContent>
                   </AppCard>
                 </div>
