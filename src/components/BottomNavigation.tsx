@@ -24,6 +24,12 @@ export const BottomNavigation: React.FC = () => {
 
   const currentPageId = getCurrentPageId();
 
+  // Debounced navigation to prevent rapid taps
+  const handleNavigation = React.useCallback((path: string, label: string) => {
+    console.log(`Bottom nav clicked: ${label} (${path})`);
+    navigate(path);
+  }, [navigate]);
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 md:hidden safe-area-pb">
       <div className="flex items-center justify-around py-2 px-4">
@@ -34,13 +40,19 @@ export const BottomNavigation: React.FC = () => {
           return (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavigation(item.path, item.label)}
               className={cn(
-                "flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 min-w-16 min-h-12",
+                "flex flex-col items-center justify-center p-3 rounded-lg transition-colors duration-200 min-w-16 min-h-12 touch-manipulation",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                "active:scale-95 transition-transform",
                 isActive 
                   ? "text-blue-600" 
-                  : "text-gray-400 hover:text-gray-600"
+                  : "text-gray-400 active:text-gray-600"
               )}
+              style={{
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation'
+              }}
             >
               <Icon className={cn("w-5 h-5 mb-1", isActive && "stroke-2")} />
               <span className="text-xs font-medium">{item.label}</span>

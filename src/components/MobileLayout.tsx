@@ -23,20 +23,31 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const currentIndex = pages.findIndex(page => page.path === location.pathname);
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => {
+    onSwipedLeft: (eventData) => {
+      // Add stricter conditions to prevent accidental navigation
+      if (eventData.absX < 120 || eventData.velocity < 0.3) return;
+      
       const nextIndex = Math.min(currentIndex + 1, pages.length - 1);
       if (nextIndex !== currentIndex && nextIndex >= 0) {
+        console.log(`Swipe navigation: ${pages[currentIndex]?.name} -> ${pages[nextIndex].name}`);
         navigate(pages[nextIndex].path);
       }
     },
-    onSwipedRight: () => {
+    onSwipedRight: (eventData) => {
+      // Add stricter conditions to prevent accidental navigation
+      if (eventData.absX < 120 || eventData.velocity < 0.3) return;
+      
       const prevIndex = Math.max(currentIndex - 1, 0);
       if (prevIndex !== currentIndex && prevIndex >= 0) {
+        console.log(`Swipe navigation: ${pages[currentIndex]?.name} -> ${pages[prevIndex].name}`);
         navigate(pages[prevIndex].path);
       }
     },
-    preventScrollOnSwipe: false,
+    preventScrollOnSwipe: true,
     trackMouse: false,
+    delta: 100, // Minimum distance for swipe recognition
+    swipeDuration: 500, // Maximum time for swipe
+    touchEventOptions: { passive: false },
   });
 
   return (
