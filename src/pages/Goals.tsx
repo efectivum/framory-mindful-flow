@@ -94,24 +94,32 @@ const Goals = () => {
             </Card>
           ) : (
             <>
-              {/* Clean Statistics Row */}
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                <div className="bg-gray-800/50 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
-                  <div className="text-lg font-bold text-white">{stats.activeHabits}</div>
-                  <div className="text-xs text-gray-400">Active</div>
-                </div>
-                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
-                  <div className="text-lg font-bold text-green-400">{stats.completedToday}</div>
-                  <div className="text-xs text-gray-400">Today</div>
-                </div>
-                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
-                  <div className="text-lg font-bold text-orange-400">{stats.totalStreaks}</div>
-                  <div className="text-xs text-gray-400">Total Days</div>
-                </div>
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
-                  <div className="text-lg font-bold text-purple-400">{stats.bestStreak}</div>
-                  <div className="text-xs text-gray-400">Best Streak</div>
-                </div>
+              {/* Stats Grid - 2x2 Layout */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-white mb-1">{stats.activeHabits}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Active</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-500/10 border-green-500/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400 mb-1">{stats.completedToday}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Today</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-orange-500/10 border-orange-500/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-400 mb-1">{stats.totalStreaks}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Total Days</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-purple-500/10 border-purple-500/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-400 mb-1">{stats.bestStreak}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Best Streak</div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Habits Section */}

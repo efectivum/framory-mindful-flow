@@ -63,125 +63,120 @@ export const HabitCard = ({
     onComplete(habit.id);
   };
 
-  const getButtonText = () => {
-    if (isMobile) {
-      if (isCompleting) return 'Completing...';
-      if (isCompleted) return 'Done ✓';
-      return 'Complete';
-    }
-    
-    if (isCompleting) return 'Completing...';
-    if (isCompleted) return 'Completed Today! ✓';
-    return 'Mark Complete';
-  };
-
-  const getButtonClasses = () => {
-    const baseClasses = isMobile ? 'app-button-compact touch-manipulation' : '';
-    if (isCompleted || justCompleted) {
-      return `app-success border-0 ${baseClasses}`;
-    }
-    return `app-button-primary ${baseClasses}`;
-  };
-
-  // Mobile-optimized layout - Clean and simple
+  // Mobile-optimized layout - Vertical with clean structure
   if (isMobile) {
     return (
       <Card className="bg-gray-800/50 border-gray-700">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            {/* Left: Icon and Info */}
+          {/* Header with title and menu */}
+          <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 w-10 h-10">
-                <Target className="text-white w-5 h-5" />
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 w-8 h-8">
+                <Target className="text-white w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-white truncate">
+                <h3 className="font-medium text-white text-base leading-tight">
                   {habit.title}
                 </h3>
-                <div className="flex items-center gap-3 mt-1">
-                  <div className="flex items-center gap-1">
-                    <Flame className="text-orange-400 w-4 h-4" />
-                    <span className="text-orange-400 font-medium text-sm">{habit.current_streak} days</span>
-                  </div>
-                  <div className="text-gray-400 text-sm">
-                    {Math.round(progress)}% complete
-                  </div>
-                </div>
+                {habit.description && (
+                  <p className="text-sm text-gray-400 mt-1 line-clamp-2">{habit.description}</p>
+                )}
               </div>
             </div>
+            
+            {/* Menu button */}
+            {(onEdit || onDelete) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-700 h-6 w-6 flex-shrink-0"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                  {onEdit && (
+                    <DropdownMenuItem onClick={() => onEdit(habit)} className="text-gray-300 hover:bg-gray-700">
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-gray-300 hover:bg-gray-700">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-gray-800 border-gray-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-white">Delete Habit</AlertDialogTitle>
+                          <AlertDialogDescription className="text-gray-400">
+                            Are you sure you want to delete "{habit.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-gray-700 text-gray-300 hover:bg-gray-600">Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => onDelete(habit.id)}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
 
-            {/* Right: Complete Button and Menu */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button 
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                  isCompleted || justCompleted
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                <CheckCircle className="w-4 h-4" />
-                {isCompleting ? 'Completing...' : isCompleted ? 'Done ✓' : 'Complete'}
-              </button>
-              
-              {(onEdit || onDelete) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
-                    {onEdit && (
-                      <DropdownMenuItem onClick={() => onEdit(habit)} className="text-gray-300 hover:bg-gray-700">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                    )}
-                    {onDelete && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-gray-300 hover:bg-gray-700">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-gray-800 border-gray-700">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Delete Habit</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-400">
-                              Are you sure you want to delete "{habit.title}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-700 text-gray-300 hover:bg-gray-600">Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => onDelete(habit.id)}
-                              disabled={isDeleting}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              {isDeleting ? 'Deleting...' : 'Delete'}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+          {/* Stats row */}
+          <div className="flex items-center justify-between text-sm mb-3">
+            <div className="flex items-center gap-1">
+              <Flame className="text-orange-400 w-4 h-4" />
+              <span className="text-orange-400 font-medium">{habit.current_streak} days</span>
+            </div>
+            <div className="text-gray-400">
+              {Math.round(progress)}% complete
             </div>
           </div>
+
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <Progress 
+              value={progress} 
+              className="h-2 bg-gray-700"
+            />
+            <div className="text-xs text-gray-500 mt-1 text-center">
+              {habit.current_streak} of {habit.target_days} days
+            </div>
+          </div>
+
+          {/* Complete Button - Full Width */}
+          <button 
+            onClick={handleComplete}
+            disabled={isCompleting}
+            className={`w-full h-12 transition-all duration-200 flex items-center justify-center gap-2 font-medium rounded-lg text-sm touch-manipulation ${
+              isCompleted || justCompleted
+                ? 'bg-green-600 text-white' 
+                : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white'
+            }`}
+          >
+            <CheckCircle className="w-4 h-4" />
+            {isCompleting ? 'Completing...' : isCompleted ? 'Completed Today! ✓' : 'Mark Complete'}
+          </button>
         </CardContent>
       </Card>
     );
   }
 
-  // Desktop layout (existing code)
+  // Desktop layout (keep existing code)
   return (
     <Card className="bg-gray-800/50 border-gray-700 hover:border-blue-500/30 hover:shadow-lg transition-all duration-200">
       <CardContent className="p-6">
