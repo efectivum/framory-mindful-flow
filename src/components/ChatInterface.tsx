@@ -1,12 +1,13 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Plus, Paperclip, Smile } from 'lucide-react';
+import { Send, Mic, Plus, Paperclip, Smile, Loader2 } from 'lucide-react'; // Added Loader2
 import { Button } from '@/components/ui/button';
 import { ActivitySelector } from './ActivitySelector';
 import { ChatMessage } from './ChatMessage';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Added Avatar for header
+import { Textarea } from '@/components/ui/textarea'; // Added Textarea
 
 interface Message {
   id: string;
@@ -60,6 +61,7 @@ export const ChatInterface = () => {
     setMessages(prev => [...prev, newMessage]);
     const currentInput = inputText;
     setInputText('');
+    textAreaRef.current?.focus(); // Keep focus after send
 
     // Detect intent using AI
     const intentResult = await detectIntent(currentInput, selectedActivity, conversationHistory);
@@ -95,9 +97,10 @@ export const ChatInterface = () => {
     } else {
       // Handle as conversation
       const updatedHistory = [...conversationHistory, { role: 'user' as const, content: currentInput }];
-      setConversationHistory(updatedHistory);
+      // Do not set conversation history here, set it after getting response
+      // setConversationHistory(updatedHistory); 
 
-      const aiResponse = await generateResponse(currentInput, conversationHistory, false);
+      const aiResponse = await generateResponse(currentInput, updatedHistory, false); // Pass updatedHistory directly
       
       if (aiResponse) {
         const botResponse: Message = {
@@ -117,6 +120,7 @@ export const ChatInterface = () => {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, botResponse]);
+        // Optionally, don't add this failed exchange to history or add a specific marker
       }
     }
 
@@ -141,33 +145,40 @@ export const ChatInterface = () => {
     // TODO: Implement voice recording
   };
 
+
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-100"> {/* Changed background */}
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-white border-b border-gray-100">
-        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-          <span className="text-white font-semibold text-lg">F</span>
-        </div>
+      <div className="flex items-center gap-3 p-3 bg-white border-b border-gray-200 shadow-sm"> {/* Reduced padding, added shadow */}
+        <Avatar className="w-9 h-9"> {/* Used Avatar component */}
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
+            AI
+          </AvatarFallback>
+        </Avatar>
         <div>
-          <h1 className="text-gray-900 font-semibold">Framory Assistant</h1>
-          <p className="text-gray-600 text-sm">Your personal growth companion</p>
+          <h1 className="text-gray-800 font-semibold text-base">Framory Assistant</h1> {/* Adjusted text color and size */}
+          <p className="text-green-500 text-xs font-medium">Online</p> {/* Example status */}
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4"> {/* Kept padding for messages */}
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
         ))}
         
         {/* Loading indicators */}
         {(isDetectingIntent || isGeneratingResponse) && (
-          <div className="flex justify-start">
-            <div className="bg-gray-700 text-gray-100 px-4 py-3 rounded-2xl rounded-bl-lg">
+           <div className="flex items-center gap-3 self-start py-2">
+            <Avatar className="w-8 h-8">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">AI</AvatarFallback>
+            </Avatar>
+            <div className="bg-white text-gray-700 px-4 py-2.5 rounded-xl rounded-bl-md border border-gray-200 shadow-sm">
               <div className="flex items-center gap-2">
-                <div className="animate-pulse">
-                  {isDetectingIntent ? 'Understanding...' : 'Thinking...'}
-                </div>
+                <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  {isDetectingIntent ? 'Understanding...' : (isGeneratingResponse ? 'Thinking...' : 'Processing...')}
+                </span>
               </div>
             </div>
           </div>
@@ -177,94 +188,101 @@ export const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-100 p-4 md:bottom-0">
+      <div className="bg-white border-t border-gray-200 p-3 md:p-4"> {/* Consistent padding, slightly more on md */}
         {/* Activity Type Indicator */}
         {selectedActivity && (
-          <div className="mb-3 flex items-center justify-between">
-            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-100">
+          <div className="mb-2 flex items-center justify-between"> {/* Reduced margin */}
+            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200"> {/* Updated style */}
               Logging as: {selectedActivity}
             </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedActivity(null)}
-              className="text-gray-500 text-xs"
+              className="text-gray-500 hover:text-gray-700 text-xs h-auto py-0.5 px-1.5" // Made cancel smaller
             >
               Cancel
             </Button>
           </div>
         )}
 
-        <div className="flex items-end gap-3 relative">
+        <div className="flex items-end gap-2"> {/* Reduced gap */}
           {/* Activity Selector Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowActivitySelector(!showActivitySelector)}
-            className={cn(
-              "text-gray-500 hover:text-gray-700 p-2 shrink-0 rounded-full",
-              showActivitySelector && "text-blue-600 bg-blue-50"
-            )}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
-
-          {/* Activity Selector Popup */}
-          <ActivitySelector
-            isOpen={showActivitySelector}
-            onSelect={handleActivitySelect}
-            onClose={() => setShowActivitySelector(false)}
-          />
-
-          {/* Text Input */}
-          <div className="flex-1 relative">
-            <textarea
-              ref={textAreaRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Ask me anything or log an activity..."}
-              className="w-full max-h-32 min-h-12 px-4 py-3 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pr-20 shadow-sm"
-              rows={1}
-              disabled={isDetectingIntent || isGeneratingResponse}
+          <div className="relative"> {/* Wrapper for positioning popup */}
+            <Button
+              variant="ghost"
+              size="icon" // Changed to icon size
+              onClick={() => setShowActivitySelector(!showActivitySelector)}
+              className={cn(
+                "text-gray-500 hover:text-blue-600 hover:bg-blue-50 h-10 w-10 shrink-0 rounded-full", // Standardized size
+                showActivitySelector && "text-blue-600 bg-blue-100"
+              )}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+            {/* Activity Selector Popup */}
+            <ActivitySelector
+              isOpen={showActivitySelector}
+              onSelect={handleActivitySelect}
+              onClose={() => setShowActivitySelector(false)}
             />
-            
-            {/* Input Controls */}
-            <div className="absolute right-2 bottom-2 flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full"
-              >
-                <Smile className="w-4 h-4" />
-              </Button>
-            </div>
           </div>
 
+          {/* Text Input */}
+          <Textarea
+            ref={textAreaRef}
+            value={inputText}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              // Auto-resize logic (simple version)
+              e.target.rows = 1;
+              const newRows = Math.min(Math.ceil(e.target.scrollHeight / 24), 5); // 24px approx line height, max 5 rows
+              e.target.rows = newRows;
+            }}
+            onKeyPress={handleKeyPress}
+            placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Type your message..."} // Updated placeholder
+            className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3.5 text-sm" // Shadcn textarea with custom styling
+            rows={1}
+            disabled={isDetectingIntent || isGeneratingResponse}
+          />
+            
+          {/* Input Controls - Moved outside textarea */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-10 w-10 rounded-full shrink-0"
+          >
+            <Paperclip className="w-5 h-5" />
+          </Button>
+          {/* Smile button can be added here if needed, or kept minimal */}
+          {/* <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-10 w-10 rounded-full shrink-0"
+          >
+            <Smile className="w-5 h-5" />
+          </Button> */}
+
+
           {/* Send/Voice Button */}
-          {inputText.trim() ? (
+          {inputText.trim() || selectedActivity ? ( // Show send if text or activity selected
             <Button
               onClick={handleSend}
-              disabled={isDetectingIntent || isGeneratingResponse}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shrink-0 shadow-sm disabled:opacity-50"
+              disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !selectedActivity)}
+              size="icon"
+              className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60"
             >
               <Send className="w-5 h-5" />
             </Button>
           ) : (
             <Button
               onClick={toggleRecording}
+              size="icon"
               className={cn(
-                "p-3 rounded-full shrink-0 transition-colors shadow-sm",
+                "h-10 w-10 rounded-full shrink-0 transition-colors shadow-sm",
                 isRecording
                   ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600" // Updated non-recording style
               )}
             >
               <Mic className="w-5 h-5" />
