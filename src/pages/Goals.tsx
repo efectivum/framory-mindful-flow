@@ -1,7 +1,5 @@
-
 import { useState } from 'react';
 import { Target, Plus, Flame, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useHabits } from '@/hooks/useHabits';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,11 +9,11 @@ import { EditHabitDialog } from '@/components/EditHabitDialog';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { Habit } from '@/hooks/useHabits';
 import { AppContainer } from '@/components/layouts/AppContainer';
 import { AppPageHeader } from '@/components/ui/AppPageHeader';
-import { AppCard, AppCardContent, AppCardHeader } from '@/components/ui/AppCard';
 import { AppStatCard } from '@/components/ui/AppStatCard';
-import type { Habit } from '@/hooks/useHabits';
 
 const Goals = () => {
   const { user } = useAuth();
@@ -63,86 +61,68 @@ const Goals = () => {
   };
 
   const mobileContent = (
-    <div className="app-mobile-page">
-      <TooltipProvider>
-        <div className="app-fade-in">
-          {/* Compact Mobile Header */}
-          <div className="app-mobile-section">
-            <AppPageHeader
-              icon={<Target className="w-6 h-6 text-white" />}
-              title="Your Habits"
-              subtitle="Daily actions for lasting change"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+      <div className="p-4 space-y-6">
+        <TooltipProvider>
+          {/* Simple Header */}
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-xl font-semibold mb-1">Your Habits</h1>
+            <p className="text-sm text-gray-400">Daily actions for lasting change</p>
           </div>
 
           {!user ? (
-            <div className="app-empty-state">
-              <p className="text-base">Please sign in to manage your habits.</p>
+            <div className="text-center py-12">
+              <p className="text-gray-400">Please sign in to manage your habits.</p>
             </div>
           ) : isLoading ? (
-            <div className="app-empty-state">
-              <div className="app-pulse">
-                <div className="w-6 h-6 bg-gray-700 rounded-full mx-auto mb-3"></div>
-                <p className="text-sm">Loading habits...</p>
-              </div>
+            <div className="text-center py-12">
+              <div className="w-6 h-6 bg-gray-700 rounded-full mx-auto mb-3 animate-pulse"></div>
+              <p className="text-sm text-gray-400">Loading habits...</p>
             </div>
           ) : habits.length === 0 ? (
-            <div className="app-mobile-section">
-              <AppCard variant="glass" className="app-card-compact">
-                <AppCardContent>
-                  <div className="app-empty-state">
-                    <div className="app-empty-icon">
-                      <Plus className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-white mb-2">Start Your Journey</h3>
-                    <p className="text-gray-400 mb-4 text-sm">Create your first habit to begin building positive routines.</p>
-                    <CreateHabitDialog />
-                  </div>
-                </AppCardContent>
-              </AppCard>
-            </div>
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-6 h-6 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">Start Your Journey</h3>
+                <p className="text-gray-400 mb-4 text-sm">Create your first habit to begin building positive routines.</p>
+                <CreateHabitDialog />
+              </CardContent>
+            </Card>
           ) : (
             <>
-              {/* Compact Statistics - Horizontal Pill Scroll */}
-              <div className="app-mobile-section">
-                <div className="app-stats-scroll">
-                  <AppStatCard
-                    value={stats.activeHabits}
-                    label="Active"
-                    icon={<Target className="w-3 h-3 text-blue-400" />}
-                    className="app-stat-card-compact"
-                  />
-                  <AppStatCard
-                    value={stats.completedToday}
-                    label="Today"
-                    icon={<TrendingUp className="w-3 h-3 text-green-400" />}
-                    color="success"
-                    className="app-stat-card-compact"
-                  />
-                  <AppStatCard
-                    value={stats.totalStreaks}
-                    label="Total Days"
-                    icon={<Flame className="w-3 h-3 text-orange-400" />}
-                    color="warning"
-                    className="app-stat-card-compact"
-                  />
-                  <AppStatCard
-                    value={stats.bestStreak}
-                    label="Best Streak"
-                    icon={<Flame className="w-3 h-3 text-purple-400" />}
-                    className="app-stat-card-compact"
-                  />
+              {/* Clean Statistics Row */}
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                <div className="bg-gray-800/50 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
+                  <div className="text-lg font-bold text-white">{stats.activeHabits}</div>
+                  <div className="text-xs text-gray-400">Active</div>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
+                  <div className="text-lg font-bold text-green-400">{stats.completedToday}</div>
+                  <div className="text-xs text-gray-400">Today</div>
+                </div>
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
+                  <div className="text-lg font-bold text-orange-400">{stats.totalStreaks}</div>
+                  <div className="text-xs text-gray-400">Total Days</div>
+                </div>
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 min-w-[80px] text-center flex-shrink-0">
+                  <div className="text-lg font-bold text-purple-400">{stats.bestStreak}</div>
+                  <div className="text-xs text-gray-400">Best Streak</div>
                 </div>
               </div>
 
-              {/* Habits List - Compact Mobile Cards */}
-              <div className="app-mobile-section flex-1">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-medium text-white">Today's Habits</h2>
+              {/* Habits Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-white">Today's Habits</h2>
                   <CreateHabitDialog />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {habits.map((habit) => (
                     <HabitCard
                       key={habit.id}
@@ -161,9 +141,9 @@ const Goals = () => {
 
               {/* Best Streak Highlight */}
               {stats.bestStreak > 0 && (
-                <div className="app-mobile-section app-text-center">
-                  <AppCard variant="glass" className="app-card-compact inline-block">
-                    <AppCardContent>
+                <div className="text-center">
+                  <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20 inline-block">
+                    <CardContent className="p-4">
                       <div className="flex items-center justify-center gap-2 mb-1">
                         <Flame className="w-4 h-4 text-orange-400" />
                         <span className="text-orange-400 font-medium text-sm">{stats.bestStreak} day streak</span>
@@ -171,8 +151,8 @@ const Goals = () => {
                       <p className="text-gray-300 text-xs">
                         You're building amazing momentum! 🎉
                       </p>
-                    </AppCardContent>
-                  </AppCard>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </>
@@ -187,8 +167,8 @@ const Goals = () => {
               isUpdating={isUpdating}
             />
           )}
-        </div>
-      </TooltipProvider>
+        </TooltipProvider>
+      </div>
     </div>
   );
 

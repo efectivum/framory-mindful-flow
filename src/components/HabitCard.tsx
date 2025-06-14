@@ -1,4 +1,3 @@
-
 import { Target, CheckCircle, Flame, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -6,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { AppCard, AppCardContent } from '@/components/ui/AppCard';
+import { Card, CardContent } from '@/components/ui/card';
 import type { Habit } from '@/hooks/useHabits';
 import { useState, useEffect } from 'react';
 
@@ -84,42 +83,46 @@ export const HabitCard = ({
     return `app-button-primary ${baseClasses}`;
   };
 
-  // Mobile-optimized compact layout
+  // Mobile-optimized layout - Clean and simple
   if (isMobile) {
     return (
-      <AppCard className="app-card-list touch-manipulation">
-        <AppCardContent>
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardContent className="p-4">
           <div className="flex items-center justify-between">
             {/* Left: Icon and Info */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center flex-shrink-0 w-8 h-8">
-                <Target className="text-white w-4 h-4" />
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 w-10 h-10">
+                <Target className="text-white w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-white truncate text-sm">
+                <h3 className="font-medium text-white truncate">
                   {habit.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-3 mt-1">
                   <div className="flex items-center gap-1">
-                    <Flame className="text-orange-400 w-3 h-3" />
-                    <span className="text-orange-400 font-medium text-xs">{habit.current_streak}</span>
+                    <Flame className="text-orange-400 w-4 h-4" />
+                    <span className="text-orange-400 font-medium text-sm">{habit.current_streak} days</span>
                   </div>
-                  <div className="text-gray-500 text-xs">
-                    {Math.round(progress)}%
+                  <div className="text-gray-400 text-sm">
+                    {Math.round(progress)}% complete
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: Actions */}
+            {/* Right: Complete Button and Menu */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button 
                 onClick={handleComplete}
                 disabled={isCompleting}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 flex items-center gap-1 min-h-[36px] touch-manipulation ${getButtonClasses()}`}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                  isCompleted || justCompleted
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
               >
-                <CheckCircle className="w-3 h-3" />
-                {getButtonText()}
+                <CheckCircle className="w-4 h-4" />
+                {isCompleting ? 'Completing...' : isCompleted ? 'Done ✓' : 'Complete'}
               </button>
               
               {(onEdit || onDelete) && (
@@ -128,9 +131,9 @@ export const HabitCard = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="flex-shrink-0 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation h-6 w-6"
+                      className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700"
                     >
-                      <MoreVertical className="h-3 w-3" />
+                      <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
@@ -173,16 +176,16 @@ export const HabitCard = ({
               )}
             </div>
           </div>
-        </AppCardContent>
-      </AppCard>
+        </CardContent>
+      </Card>
     );
   }
 
   // Desktop layout (existing code)
   return (
-    <AppCard hover={!isMobile}>
-      <AppCardContent>
-        <div className="flex items-start justify-between app-mb-lg">
+    <Card className="bg-gray-800/50 border-gray-700 hover:border-blue-500/30 hover:shadow-lg transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 w-10 h-10">
               <Target className="text-white w-5 h-5" />
@@ -203,7 +206,7 @@ export const HabitCard = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-shrink-0 ml-2 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation h-8 w-8"
+                  className="flex-shrink-0 ml-2 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 h-8 w-8"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -260,7 +263,7 @@ export const HabitCard = ({
 
           {/* Progress Bar */}
           <div>
-            <div className="flex justify-between text-sm app-mb-sm">
+            <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-400">Progress to goal</span>
               <span className="text-white font-medium">{Math.round(progress)}%</span>
             </div>
@@ -268,7 +271,7 @@ export const HabitCard = ({
               value={progress} 
               className="h-2 bg-gray-700"
             />
-            <div className="text-xs text-gray-500 app-mt-sm">
+            <div className="text-xs text-gray-500 mt-2">
               {habit.current_streak} of {habit.target_days} days
             </div>
           </div>
@@ -279,10 +282,14 @@ export const HabitCard = ({
               <button 
                 onClick={handleComplete}
                 disabled={isCompleting}
-                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg h-10 text-sm ${getButtonClasses()}`}
+                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg h-10 text-sm ${
+                  isCompleted || justCompleted
+                    ? 'bg-green-600 text-white border-0' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
               >
                 <CheckCircle className="w-4 h-4" />
-                {getButtonText()}
+                {isCompleting ? 'Completing...' : isCompleted ? 'Completed Today! ✓' : 'Mark Complete'}
               </button>
             </TooltipTrigger>
             <TooltipContent className="bg-gray-800 border-gray-700 text-gray-300">
@@ -295,7 +302,7 @@ export const HabitCard = ({
             </TooltipContent>
           </Tooltip>
         </div>
-      </AppCardContent>
-    </AppCard>
+      </CardContent>
+    </Card>
   );
 };
