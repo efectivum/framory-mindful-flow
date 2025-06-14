@@ -1,32 +1,25 @@
 
 import React from 'react';
 import { ChatInterface } from '@/components/ChatInterface';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Chat = () => {
   const isMobile = useIsMobile();
 
-  const content = (
-    <div className="h-[calc(100vh-12rem)]">
-      <ChatInterface />
-    </div>
-  );
-
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop
   return (
-    <PageLayout title="AI Chat" subtitle="Get personalized guidance and insights" showHeader={false}>
-      <div className="h-[calc(100vh-8rem)]">
+    <div className="relative w-full h-screen bg-white">
+      <div className={isMobile ? 'pb-20 h-full' : 'h-full'}>
         <ChatInterface />
       </div>
-    </PageLayout>
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <BottomNavigation />
+        </div>
+      )}
+    </div>
   );
 };
 
 export default Chat;
+
