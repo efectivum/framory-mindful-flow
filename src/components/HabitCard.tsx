@@ -77,7 +77,7 @@ export const HabitCard = ({
   };
 
   const getButtonClasses = () => {
-    const baseClasses = isMobile ? 'app-button-compact' : '';
+    const baseClasses = isMobile ? 'app-button-compact touch-manipulation' : '';
     if (isCompleted || justCompleted) {
       return `app-success border-0 ${baseClasses}`;
     }
@@ -85,11 +85,11 @@ export const HabitCard = ({
   };
 
   return (
-    <AppCard hover={true} className={isMobile ? 'app-card-compact' : ''}>
-      <AppCardContent className={isMobile ? 'app-mobile-p-md' : ''}>
-        <div className={`flex items-start justify-between ${isMobile ? 'app-mobile-mb-sm' : 'app-mb-lg'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
+    <AppCard hover={!isMobile} className={isMobile ? 'app-card-compact touch-manipulation' : ''}>
+      <AppCardContent>
+        <div className={`flex items-start justify-between ${isMobile ? 'mb-3' : 'app-mb-lg'}`}>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className={`bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
               <Target className={`text-white ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
             </div>
             <div className="flex-1 min-w-0">
@@ -108,7 +108,7 @@ export const HabitCard = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`}
+                  className={`flex-shrink-0 ml-2 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`}
                 >
                   <MoreVertical className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
                 </Button>
@@ -199,7 +199,7 @@ export const HabitCard = ({
               <button 
                 onClick={handleComplete}
                 disabled={isCompleting}
-                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg ${isMobile ? 'h-8 text-xs' : 'h-10 text-sm'} ${getButtonClasses()}`}
+                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg ${isMobile ? 'h-9 text-xs min-h-[44px]' : 'h-10 text-sm'} ${getButtonClasses()}`}
               >
                 <CheckCircle className={isMobile ? 'w-3 h-3' : 'w-4 h-4'} />
                 {getButtonText()}

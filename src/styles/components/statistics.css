@@ -35,29 +35,31 @@
   .app-stat-card {
     padding: var(--app-mobile-space-md);
     border-radius: var(--app-radius-md);
-    min-width: 120px;
+    min-width: 90px;
     flex-shrink: 0;
   }
   
   .app-stat-card-compact {
     padding: var(--app-mobile-space-sm);
-    min-width: 100px;
+    min-width: 80px;
   }
   
   .app-stat-value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     margin-bottom: var(--app-mobile-space-xs);
+    line-height: 1.3;
   }
   
   .app-stat-label {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
+    line-height: 1.4;
   }
   
   .app-stat-card-compact .app-stat-value {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
   
   .app-stat-card-compact .app-stat-label {
-    font-size: 0.625rem;
+    font-size: 0.575rem;
   }
 }

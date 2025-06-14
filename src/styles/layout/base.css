@@ -30,6 +30,12 @@
   .app-content,
   .app-content-centered,
   .app-content-wide {
-    padding: var(--app-mobile-space-lg);
+    padding: var(--app-mobile-space-md);
+  }
+
+  /* Mobile-specific container that reduces padding conflicts */
+  .app-content-mobile {
+    padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
+    max-width: 100%;
   }
 }

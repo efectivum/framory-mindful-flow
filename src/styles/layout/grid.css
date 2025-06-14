@@ -40,12 +40,22 @@
     gap: var(--app-mobile-space-sm);
     overflow-x: auto;
     padding-bottom: var(--app-mobile-space-sm);
+    padding-left: var(--app-mobile-space-sm);
+    padding-right: var(--app-mobile-space-sm);
+    margin-left: calc(-1 * var(--app-mobile-space-sm));
+    margin-right: calc(-1 * var(--app-mobile-space-sm));
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    scroll-snap-type: x mandatory;
   }
   
   .app-grid-mobile-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  .app-grid-mobile-scroll > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
   }
 }

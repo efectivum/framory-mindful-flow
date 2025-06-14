@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Target, Plus, Flame, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -98,7 +97,7 @@ const Goals = () => {
               </AppCardContent>
             </AppCard>
           ) : (
-            <div className="space-y-6 md:space-y-8">
+            <div className={`${isMobile ? 'space-y-4' : 'space-y-6 md:space-y-8'}`}>
               {/* Quick Stats - Mobile Horizontal Scroll */}
               <div className={`app-slide-up ${isMobile ? 'app-grid-mobile-scroll' : 'app-grid app-grid-4'}`}>
                 <AppStatCard
@@ -131,14 +130,14 @@ const Goals = () => {
 
               {/* Main Content Area */}
               <AppCard variant="glass" className={`app-slide-up ${isMobile ? 'app-card-compact' : ''}`}>
-                <AppCardHeader className={isMobile ? 'app-mobile-p-md' : ''}>
+                <AppCardHeader>
                   <div className="flex items-center justify-between">
                     <h2 className={`font-medium text-white ${isMobile ? 'text-lg' : 'text-xl'}`}>Today's Habits</h2>
                     <CreateHabitDialog />
                   </div>
                 </AppCardHeader>
                 
-                <AppCardContent className={isMobile ? 'app-mobile-p-md' : ''}>
+                <AppCardContent>
                   <div className={isMobile ? 'space-y-3' : 'app-grid app-grid-2'}>
                     {habits.map((habit) => (
                       <HabitCard
@@ -161,7 +160,7 @@ const Goals = () => {
               {stats.bestStreak > 0 && (
                 <div className="app-text-center">
                   <AppCard variant="glass" className={`inline-block ${isMobile ? 'app-card-compact' : ''}`}>
-                    <AppCardContent className={isMobile ? 'app-mobile-p-md' : ''}>
+                    <AppCardContent>
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <Flame className="w-5 h-5 text-orange-400" />
                         <span className="text-orange-400 font-medium">{stats.bestStreak} day streak</span>

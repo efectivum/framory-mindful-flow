@@ -50,4 +50,8 @@
   .app-card-compact .app-card-content {
     padding: var(--app-mobile-space-md);
   }
+
+  .app-card-compact .app-card-header {
+    padding: var(--app-mobile-space-md);
+  }
 }

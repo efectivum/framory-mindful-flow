@@ -1,51 +1,50 @@
 
-/* Button Styles */
+/* Button Components */
 
 .app-button-primary {
   background: linear-gradient(135deg, var(--app-accent-primary), var(--app-accent-secondary));
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: white;
-  border: none;
-  border-radius: var(--app-radius-md);
   padding: var(--app-space-sm) var(--app-space-lg);
+  border-radius: var(--app-radius-md);
   font-weight: 500;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: var(--app-shadow-md);
 }
 
 .app-button-primary:hover {
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   box-shadow: var(--app-shadow-lg);
+  transform: translateY(-1px);
 }
 
-.app-button-secondary {
-  background: var(--app-bg-card);
-  color: var(--app-text-primary);
-  border: 1px solid rgba(51, 65, 85, 0.3);
-  border-radius: var(--app-radius-md);
-  padding: var(--app-space-sm) var(--app-space-lg);
-  font-weight: 500;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  backdrop-filter: var(--app-backdrop);
-}
-
-.app-button-secondary:hover {
-  border-color: rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.1);
+.app-button-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Mobile Button Adjustments */
 @media (max-width: 768px) {
-  .app-button-primary,
-  .app-button-secondary {
-    padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
-    font-size: 0.875rem;
-  }
-  
   .app-button-compact {
-    padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
-    font-size: 0.75rem;
+    padding: var(--app-mobile-space-xs) var(--app-mobile-space-md);
+    font-size: 0.875rem;
     border-radius: var(--app-radius-sm);
+    min-height: 36px;
+  }
+
+  /* Improve touch targets */
+  .app-button-primary {
+    min-height: 44px;
+    padding: var(--app-mobile-space-sm) var(--app-mobile-space-lg);
+  }
+
+  /* Remove hover effects on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    .app-button-primary:hover {
+      background: linear-gradient(135deg, var(--app-accent-primary), var(--app-accent-secondary));
+      box-shadow: var(--app-shadow-lg);
+      transform: none;
+    }
   }
 }
