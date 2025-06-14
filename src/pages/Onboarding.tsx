@@ -53,9 +53,9 @@ const Onboarding = () => {
   const handleSubmit = async () => {
     updatePreferences(
       {
-        tone_of_voice: tone,
-        growth_focus: focus,
-        notification_frequency: frequency,
+        tone_of_voice: tone as "calm" | "motivational" | "supportive" | "direct" | "gentle",
+        growth_focus: focus as "habits" | "mindfulness" | "goals" | "journaling",
+        notification_frequency: frequency as "daily" | "weekly" | "custom" | "none",
         notification_time: time,
         push_notifications_enabled: frequency !== "none",
         whatsapp_enabled: false,
