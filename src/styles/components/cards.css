@@ -33,25 +33,54 @@
   border-bottom: 1px solid rgba(51, 65, 85, 0.3);
 }
 
-/* Mobile Card Adjustments */
+/* Mobile Card Adjustments - More compact and structured */
 @media (max-width: 768px) {
+  .app-card {
+    border-radius: var(--app-radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
   .app-card-content {
-    padding: var(--app-mobile-space-lg);
+    padding: var(--app-mobile-space-md);
   }
   
   .app-card-header {
-    padding: var(--app-mobile-space-lg);
+    padding: var(--app-mobile-space-md);
+    border-bottom: 1px solid rgba(51, 65, 85, 0.2);
   }
   
   .app-card-compact {
-    border-radius: var(--app-radius-md);
+    border-radius: var(--app-radius-sm);
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(51, 65, 85, 0.3);
   }
-  
+
   .app-card-compact .app-card-content {
-    padding: var(--app-mobile-space-md);
+    padding: var(--app-mobile-space-sm);
   }
 
   .app-card-compact .app-card-header {
-    padding: var(--app-mobile-space-md);
+    padding: var(--app-mobile-space-sm);
+    border-bottom: 1px solid rgba(51, 65, 85, 0.2);
+  }
+
+  /* List-style card for mobile habits */
+  .app-card-list {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.2);
+    border-radius: var(--app-radius-sm);
+    backdrop-filter: blur(4px);
+    margin-bottom: var(--app-mobile-space-xs);
+  }
+
+  .app-card-list .app-card-content {
+    padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
+  }
+
+  /* Remove hover effects on mobile */
+  .app-card:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 }

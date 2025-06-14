@@ -35,19 +35,18 @@
     gap: var(--app-mobile-space-sm);
   }
   
+  /* Enhanced mobile horizontal scroll for statistics */
   .app-grid-mobile-scroll {
     display: flex;
     gap: var(--app-mobile-space-sm);
     overflow-x: auto;
-    padding-bottom: var(--app-mobile-space-sm);
-    padding-left: var(--app-mobile-space-sm);
-    padding-right: var(--app-mobile-space-sm);
-    margin-left: calc(-1 * var(--app-mobile-space-sm));
-    margin-right: calc(-1 * var(--app-mobile-space-sm));
+    padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
+    margin: 0 calc(-1 * var(--app-mobile-space-sm));
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
   }
   
   .app-grid-mobile-scroll::-webkit-scrollbar {
@@ -57,5 +56,25 @@
   .app-grid-mobile-scroll > * {
     scroll-snap-align: start;
     flex-shrink: 0;
+  }
+
+  /* Stats specific scroll container */
+  .app-stats-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 16px;
+    margin: 0 -16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+
+  .app-stats-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-stats-scroll > * {
+    scroll-snap-align: center;
   }
 }

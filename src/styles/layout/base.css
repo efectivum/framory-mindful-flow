@@ -25,17 +25,35 @@
   padding: var(--app-space-lg);
 }
 
-/* Mobile Content Adjustments */
+/* Mobile Content Adjustments - Zero padding override */
 @media (max-width: 768px) {
   .app-content,
   .app-content-centered,
   .app-content-wide {
-    padding: var(--app-mobile-space-md);
+    padding: 0;
+    max-width: 100%;
   }
 
-  /* Mobile-specific container that reduces padding conflicts */
+  /* Mobile-specific container with proper spacing */
   .app-content-mobile {
+    padding: var(--app-mobile-space-md);
+    max-width: 100%;
+  }
+
+  /* Mobile page container - structured layout */
+  .app-mobile-page {
     padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
     max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-mobile-section {
+    margin-bottom: var(--app-mobile-space-lg);
+  }
+
+  .app-mobile-section:last-child {
+    margin-bottom: 0;
   }
 }

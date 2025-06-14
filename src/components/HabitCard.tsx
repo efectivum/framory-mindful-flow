@@ -84,19 +84,114 @@ export const HabitCard = ({
     return `app-button-primary ${baseClasses}`;
   };
 
+  // Mobile-optimized compact layout
+  if (isMobile) {
+    return (
+      <AppCard className="app-card-list touch-manipulation">
+        <AppCardContent>
+          <div className="flex items-center justify-between">
+            {/* Left: Icon and Info */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center flex-shrink-0 w-8 h-8">
+                <Target className="text-white w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-white truncate text-sm">
+                  {habit.title}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1">
+                    <Flame className="text-orange-400 w-3 h-3" />
+                    <span className="text-orange-400 font-medium text-xs">{habit.current_streak}</span>
+                  </div>
+                  <div className="text-gray-500 text-xs">
+                    {Math.round(progress)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button 
+                onClick={handleComplete}
+                disabled={isCompleting}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 flex items-center gap-1 min-h-[36px] touch-manipulation ${getButtonClasses()}`}
+              >
+                <CheckCircle className="w-3 h-3" />
+                {getButtonText()}
+              </button>
+              
+              {(onEdit || onDelete) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-shrink-0 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation h-6 w-6"
+                    >
+                      <MoreVertical className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                    {onEdit && (
+                      <DropdownMenuItem onClick={() => onEdit(habit)} className="text-gray-300 hover:bg-gray-700">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-gray-300 hover:bg-gray-700">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-gray-800 border-gray-700">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-white">Delete Habit</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400">
+                              Are you sure you want to delete "{habit.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-gray-700 text-gray-300 hover:bg-gray-600">Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => onDelete(habit.id)}
+                              disabled={isDeleting}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Delete'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+        </AppCardContent>
+      </AppCard>
+    );
+  }
+
+  // Desktop layout (existing code)
   return (
-    <AppCard hover={!isMobile} className={isMobile ? 'app-card-compact touch-manipulation' : ''}>
+    <AppCard hover={!isMobile}>
       <AppCardContent>
-        <div className={`flex items-start justify-between ${isMobile ? 'mb-3' : 'app-mb-lg'}`}>
+        <div className="flex items-start justify-between app-mb-lg">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className={`bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}>
-              <Target className={`text-white ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 w-10 h-10">
+              <Target className="text-white w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className={`font-medium text-white truncate ${isMobile ? 'text-sm' : 'text-base'}`}>
+              <h3 className="font-medium text-white truncate text-base">
                 {habit.title}
               </h3>
-              {habit.description && !isMobile && (
+              {habit.description && (
                 <p className="text-sm text-gray-400 mt-1 truncate">{habit.description}</p>
               )}
             </div>
@@ -108,9 +203,9 @@ export const HabitCard = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`flex-shrink-0 ml-2 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`}
+                  className="flex-shrink-0 ml-2 p-0 text-gray-400 hover:text-gray-300 hover:bg-gray-700 touch-manipulation h-8 w-8"
                 >
-                  <MoreVertical className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
@@ -153,45 +248,30 @@ export const HabitCard = ({
           )}
         </div>
 
-        <div className={`space-y-3 ${isMobile ? 'space-y-2' : 'space-y-4'}`}>
+        <div className="space-y-4">
           {/* Streak Display */}
-          <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1">
-              <Flame className={`text-orange-400 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+              <Flame className="text-orange-400 w-4 h-4" />
               <span className="text-gray-400">Streak</span>
             </div>
             <span className="font-medium text-orange-400">{habit.current_streak} days</span>
           </div>
 
-          {/* Progress Bar - Simplified for mobile */}
-          {!isMobile && (
-            <div>
-              <div className="flex justify-between text-sm app-mb-sm">
-                <span className="text-gray-400">Progress to goal</span>
-                <span className="text-white font-medium">{Math.round(progress)}%</span>
-              </div>
-              <Progress 
-                value={progress} 
-                className="h-2 bg-gray-700"
-              />
-              <div className="text-xs text-gray-500 app-mt-sm">
-                {habit.current_streak} of {habit.target_days} days
-              </div>
+          {/* Progress Bar */}
+          <div>
+            <div className="flex justify-between text-sm app-mb-sm">
+              <span className="text-gray-400">Progress to goal</span>
+              <span className="text-white font-medium">{Math.round(progress)}%</span>
             </div>
-          )}
-
-          {/* Mobile simplified progress */}
-          {isMobile && (
-            <div>
-              <Progress 
-                value={progress} 
-                className="h-1.5 bg-gray-700"
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                {habit.current_streak}/{habit.target_days} days ({Math.round(progress)}%)
-              </div>
+            <Progress 
+              value={progress} 
+              className="h-2 bg-gray-700"
+            />
+            <div className="text-xs text-gray-500 app-mt-sm">
+              {habit.current_streak} of {habit.target_days} days
             </div>
-          )}
+          </div>
 
           {/* Complete Button */}
           <Tooltip>
@@ -199,9 +279,9 @@ export const HabitCard = ({
               <button 
                 onClick={handleComplete}
                 disabled={isCompleting}
-                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg ${isMobile ? 'h-9 text-xs min-h-[44px]' : 'h-10 text-sm'} ${getButtonClasses()}`}
+                className={`w-full transition-all duration-300 flex items-center justify-center gap-2 font-medium rounded-lg h-10 text-sm ${getButtonClasses()}`}
               >
-                <CheckCircle className={isMobile ? 'w-3 h-3' : 'w-4 h-4'} />
+                <CheckCircle className="w-4 h-4" />
                 {getButtonText()}
               </button>
             </TooltipTrigger>
