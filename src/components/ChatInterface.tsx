@@ -8,6 +8,9 @@ import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Added Avatar for header
 import { Textarea } from '@/components/ui/textarea'; // Added Textarea
+import { VoiceButton } from './VoiceButton';
+import { useToast } from '@/hooks/use-toast';
+// Added Textarea
 
 interface Message {
   id: string;
@@ -16,6 +19,8 @@ interface Message {
   activityType?: string;
   timestamp: Date;
   isJournalEntry?: boolean;
+  attachmentUrl?: string;
+  attachmentType?: string;
 }
 
 export const ChatInterface = () => {
@@ -32,6 +37,8 @@ export const ChatInterface = () => {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
+  const [fileAttachment, setFileAttachment] = useState<File | null>(null);
+  const { toast } = useToast();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -47,8 +54,31 @@ export const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Only allow image or PDF for now
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      toast({
+        title: "Unsupported file",
+        description: "Only images and PDFs are supported in this preview.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setFileAttachment(file);
+    textAreaRef.current?.focus();
+  };
+
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() && !fileAttachment) return;
+    // Convert attachment to preview URL for now (use actual external upload for production)
+    let attachmentUrl: string | undefined = undefined;
+    let attachmentType: string | undefined = undefined;
+    if (fileAttachment) {
+      attachmentUrl = URL.createObjectURL(fileAttachment);
+      attachmentType = fileAttachment.type;
+    }
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -56,15 +86,20 @@ export const ChatInterface = () => {
       content: inputText,
       activityType: selectedActivity || undefined,
       timestamp: new Date(),
+      ...(attachmentUrl ? { attachmentUrl, attachmentType } : {}),
     };
 
     setMessages(prev => [...prev, newMessage]);
-    const currentInput = inputText;
+    // Reset input state
     setInputText('');
-    textAreaRef.current?.focus(); // Keep focus after send
+    setFileAttachment(null);
+    textAreaRef.current?.focus();
+
+    // If just file attachment, skip AI
+    if (attachmentUrl && !inputText.trim()) return;
 
     // Detect intent using AI
-    const intentResult = await detectIntent(currentInput, selectedActivity, conversationHistory);
+    const intentResult = await detectIntent(inputText, selectedActivity, conversationHistory);
     console.log('Intent detection result:', intentResult);
 
     if (intentResult?.intent === 'journal' && intentResult.confidence > 0.7) {
@@ -74,12 +109,12 @@ export const ChatInterface = () => {
 
       // Create journal entry
       createEntry({
-        content: currentInput,
+        content: inputText,
         title: selectedActivity ? `${selectedActivity} entry` : undefined,
       });
 
       // Generate immediate coaching response for the journal entry
-      const aiResponse = await generateResponse(currentInput, conversationHistory, true);
+      const aiResponse = await generateResponse(inputText, conversationHistory, true);
       
       if (aiResponse) {
         const botResponse: Message = {
@@ -90,17 +125,17 @@ export const ChatInterface = () => {
         };
         setMessages(prev => [...prev, botResponse]);
         setConversationHistory(prev => [...prev, 
-          { role: 'user', content: currentInput },
+          { role: 'user', content: inputText },
           { role: 'assistant', content: aiResponse }
         ]);
       }
     } else {
       // Handle as conversation
-      const updatedHistory = [...conversationHistory, { role: 'user' as const, content: currentInput }];
+      const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
       // Do not set conversation history here, set it after getting response
       // setConversationHistory(updatedHistory); 
 
-      const aiResponse = await generateResponse(currentInput, updatedHistory, false); // Pass updatedHistory directly
+      const aiResponse = await generateResponse(inputText, updatedHistory, false); // Pass updatedHistory directly
       
       if (aiResponse) {
         const botResponse: Message = {
@@ -145,12 +180,16 @@ export const ChatInterface = () => {
     // TODO: Implement voice recording
   };
 
+  const handleVoiceTranscription = (transcribedText: string) => {
+    setInputText(transcribedText);
+    textAreaRef.current?.focus();
+  };
+
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-3 bg-[#171c26] border-b border-gray-800 shadow-sm">
-        {/* ... keep existing header code ... */}
         <Avatar className="w-9 h-9">
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
             AI
@@ -190,7 +229,6 @@ export const ChatInterface = () => {
 
       {/* Input Area */}
       <div className="bg-[#161c26] border-t border-gray-800 p-3 md:p-4 pb-6">
-        {/* ... keep existing input area code ... */}
         {selectedActivity && (
           <div className="mb-2 flex items-center justify-between">
             <span className="inline-block px-3 py-1 bg-blue-900 text-blue-300 text-xs rounded-full border border-blue-700">
@@ -208,7 +246,51 @@ export const ChatInterface = () => {
         )}
 
         <div className="flex items-end gap-2">
-          {/* ... keep existing control code ... */}
+          <label className="relative">
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={isDetectingIntent || isGeneratingResponse}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-10 w-10 rounded-full shrink-0"
+              type="button"
+              tabIndex={-1}
+            >
+              <Paperclip className="w-5 h-5" />
+            </Button>
+          </label>
+
+          {fileAttachment && (
+            <div className="flex items-center gap-2 ml-2">
+              {fileAttachment.type.startsWith('image/') ? (
+                <img
+                  src={URL.createObjectURL(fileAttachment)}
+                  alt="preview"
+                  className="w-12 h-12 rounded border border-gray-700 object-contain"
+                />
+              ) : (
+                <span className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-gray-200 text-xs">
+                  {fileAttachment.name}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFileAttachment(null)}
+                className="text-gray-400 hover:text-red-400"
+                tabIndex={-1}
+                type="button"
+              >
+                ✕
+              </Button>
+            </div>
+          )}
+
           <div className="relative">
             <Button
               variant="ghost"
@@ -243,19 +325,16 @@ export const ChatInterface = () => {
             rows={1}
             disabled={isDetectingIntent || isGeneratingResponse}
           />
+          <VoiceButton
+            onTranscription={handleVoiceTranscription}
+            disabled={isDetectingIntent || isGeneratingResponse}
+            className="ml-1"
+          />
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-10 w-10 rounded-full shrink-0"
-          >
-            <Paperclip className="w-5 h-5" />
-          </Button>
-        
-          {inputText.trim() || selectedActivity ? (
+          {(inputText.trim() || selectedActivity || fileAttachment) ? (
             <Button
               onClick={handleSend}
-              disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !selectedActivity)}
+              disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !selectedActivity && !fileAttachment)}
               size="icon"
               className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60"
             >

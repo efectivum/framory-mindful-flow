@@ -11,6 +11,8 @@ interface Message {
   activityType?: string;
   timestamp: Date;
   isJournalEntry?: boolean;
+  attachmentUrl?: string;
+  attachmentType?: string;
 }
 
 interface ChatMessageProps {
@@ -57,7 +59,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </div>
         )}
 
-        {/* Message Bubble */}
+        {/* Message Bubble and Attachment */}
         <div
           className={`px-4 py-2.5 rounded-xl shadow-sm ${
             isUser
@@ -65,6 +67,24 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               : 'bg-[#242c3a] text-gray-100 border border-gray-800 rounded-bl-md'
           }`}
         >
+          {/* Render attachment (image/pdf) if exists */}
+          {message.attachmentUrl && message.attachmentType?.startsWith('image/') && (
+            <img
+              src={message.attachmentUrl}
+              alt="attachment"
+              className="w-40 h-auto mb-1 rounded shadow border border-gray-700 object-contain"
+            />
+          )}
+          {message.attachmentUrl && message.attachmentType === 'application/pdf' && (
+            <a
+              href={message.attachmentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-xs text-blue-300 underline mb-1"
+            >
+              View PDF
+            </a>
+          )}
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
 
