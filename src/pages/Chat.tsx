@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChatInterface } from '@/components/ChatInterface';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -8,7 +7,7 @@ const Chat = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="relative w-full h-screen bg-white">
+    <div className="relative w-full h-screen bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_100%)] text-slate-100">
       <div className={isMobile ? 'pb-20 h-full' : 'h-full'}>
         <ChatInterface />
       </div>
@@ -22,4 +21,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

@@ -147,9 +147,9 @@ export const ChatInterface = () => {
 
 
   return (
-    <div className="flex flex-col h-full w-full"> {/* Removed bg-gray-100 */}
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <div className="flex items-center gap-3 p-3 bg-white border-b border-gray-200 shadow-sm">
+      <div className="flex items-center gap-3 p-3 bg-[#171c26] border-b border-gray-800 shadow-sm">
         {/* ... keep existing header code ... */}
         <Avatar className="w-9 h-9">
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
@@ -157,13 +157,13 @@ export const ChatInterface = () => {
           </AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-gray-800 font-semibold text-base">Framory Assistant</h1>
-          <p className="text-green-500 text-xs font-medium">Online</p>
+          <h1 className="text-gray-100 font-semibold text-base">Framory Assistant</h1>
+          <p className="text-green-400 text-xs font-medium">Online</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4"> {/* Kept padding for messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#202734]">
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
         ))}
@@ -174,10 +174,10 @@ export const ChatInterface = () => {
             <Avatar className="w-8 h-8">
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">AI</AvatarFallback>
             </Avatar>
-            <div className="bg-white text-gray-700 px-4 py-2.5 rounded-xl rounded-bl-md border border-gray-200 shadow-sm">
+            <div className="bg-[#161c26] text-gray-200 px-4 py-2.5 rounded-xl rounded-bl-md border border-gray-700 shadow-sm">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-400">
                   {isDetectingIntent ? 'Understanding...' : (isGeneratingResponse ? 'Thinking...' : 'Processing...')}
                 </span>
               </div>
@@ -189,18 +189,18 @@ export const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 p-3 md:p-4 pb-6"> {/* Add extra bottom padding so input is not blocked */}
+      <div className="bg-[#161c26] border-t border-gray-800 p-3 md:p-4 pb-6">
         {/* ... keep existing input area code ... */}
         {selectedActivity && (
           <div className="mb-2 flex items-center justify-between">
-            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
+            <span className="inline-block px-3 py-1 bg-blue-900 text-blue-300 text-xs rounded-full border border-blue-700">
               Logging as: {selectedActivity}
             </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedActivity(null)}
-              className="text-gray-500 hover:text-gray-700 text-xs h-auto py-0.5 px-1.5"
+              className="text-gray-400 hover:text-gray-200 text-xs h-auto py-0.5 px-1.5"
             >
               Cancel
             </Button>
@@ -215,8 +215,8 @@ export const ChatInterface = () => {
               size="icon"
               onClick={() => setShowActivitySelector(!showActivitySelector)}
               className={cn(
-                "text-gray-500 hover:text-blue-600 hover:bg-blue-50 h-10 w-10 shrink-0 rounded-full",
-                showActivitySelector && "text-blue-600 bg-blue-100"
+                "text-gray-400 hover:text-blue-300 hover:bg-blue-900 h-10 w-10 shrink-0 rounded-full",
+                showActivitySelector && "text-blue-400 bg-blue-950"
               )}
             >
               <Plus className="w-5 h-5" />
@@ -239,15 +239,15 @@ export const ChatInterface = () => {
             }}
             onKeyPress={handleKeyPress}
             placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Type your message..."}
-            className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3.5 text-sm"
+            className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-xl border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3.5 text-sm text-gray-100 placeholder:text-gray-400"
             rows={1}
             disabled={isDetectingIntent || isGeneratingResponse}
           />
-            
+
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-10 w-10 rounded-full shrink-0"
+            className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-10 w-10 rounded-full shrink-0"
           >
             <Paperclip className="w-5 h-5" />
           </Button>
@@ -269,7 +269,7 @@ export const ChatInterface = () => {
                 "h-10 w-10 rounded-full shrink-0 transition-colors shadow-sm",
                 isRecording
                   ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                  : "bg-[#232b3a] hover:bg-[#2b3750] text-gray-300"
               )}
             >
               <Mic className="w-5 h-5" />
