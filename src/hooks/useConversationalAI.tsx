@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +12,11 @@ export const useConversationalAI = () => {
   const [isDetectingIntent, setIsDetectingIntent] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
 
-  const detectIntent = async (message: string, activityType?: string, conversationHistory?: ConversationMessage[]) => {
+  const detectIntent = async (
+    message: string,
+    activityType?: string,
+    conversationHistory?: ConversationMessage[]
+  ) => {
     if (!user) return null;
 
     setIsDetectingIntent(true);
@@ -36,21 +39,24 @@ export const useConversationalAI = () => {
     }
   };
 
+  // Add optional "mode" param for onboarding & normal chat
   const generateResponse = async (
-    message: string, 
+    message: string,
     conversationHistory: ConversationMessage[] = [],
-    isJournalEntry: boolean = false
+    isJournalEntry: boolean = false,
+    mode: "onboarding" | "chat" = "chat"
   ) => {
     if (!user) return null;
 
     setIsGeneratingResponse(true);
     try {
       const { data, error } = await supabase.functions.invoke('conversational-ai', {
-        body: { 
-          message, 
+        body: {
+          message,
           conversationHistory,
           userId: user.id,
-          isJournalEntry
+          isJournalEntry,
+          onboarding: mode === "onboarding",
         }
       });
 

@@ -13,6 +13,7 @@ import Profile from "../pages/Profile";
 import NotFound from "../pages/NotFound";
 import Chat from "../pages/Chat";
 import Onboarding from "../pages/Onboarding";
+import ConversationalOnboarding from "../pages/ConversationalOnboarding";
 
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuth } from '@/hooks/useAuth';
@@ -47,22 +48,28 @@ const RequireOnboarding = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
-        <ProtectedRoute>
-          <RequireOnboarding>
-            <Index />
-          </RequireOnboarding>
-        </ProtectedRoute>
-      } />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarding>
+              <Index />
+            </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
       <Route path="/auth" element={<Auth />} />
       <Route path="/complete-signup" element={<CompleteSignup />} />
-      <Route path="/goals" element={
-        <ProtectedRoute>
-          <RequireOnboarding>
-            <Goals />
-          </RequireOnboarding>
-        </ProtectedRoute>
-      } />
+      <Route
+        path="/goals"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarding>
+              <Goals />
+            </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/journal"
         element={
@@ -93,33 +100,46 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/insights" element={
-        <ProtectedRoute>
-          <RequireOnboarding>
-            <Insights />
-          </RequireOnboarding>
-        </ProtectedRoute>
-      } />
+      <Route
+        path="/insights"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarding>
+              <Insights />
+            </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
       <Route path="/resources" element={<Resources />} />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <RequireOnboarding>
-            <Profile />
-          </RequireOnboarding>
-        </ProtectedRoute>
-      } />
-      <Route path="/chat" element={
-        <ProtectedRoute>
-          <RequireOnboarding>
-            <Chat />
-          </RequireOnboarding>
-        </ProtectedRoute>
-      } />
-      <Route path="/onboarding" element={
-        <ProtectedRoute>
-          <Onboarding />
-        </ProtectedRoute>
-      } />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarding>
+              <Profile />
+            </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <RequireOnboarding>
+              <Chat />
+            </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
+      {/* Use conversational onboarding for onboarding route */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <ConversationalOnboarding />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
