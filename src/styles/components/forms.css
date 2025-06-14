@@ -1,0 +1,38 @@
+
+/* Form Elements */
+
+.app-input {
+  background: var(--app-bg-card);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-sm) var(--app-space-md);
+  color: var(--app-text-primary);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: var(--app-backdrop);
+}
+
+.app-input:focus {
+  outline: none;
+  border-color: var(--app-accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.app-textarea {
+  background: var(--app-bg-card);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-md);
+  color: var(--app-text-primary);
+  font-size: 1rem;
+  min-height: 8rem;
+  resize: vertical;
+  transition: all 0.3s ease;
+  backdrop-filter: var(--app-backdrop);
+}
+
+.app-textarea:focus {
+  outline: none;
+  border-color: var(--app-accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}

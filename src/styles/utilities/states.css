@@ -1,0 +1,51 @@
+
+/* Empty States */
+
+.app-empty-state {
+  text-align: center;
+  padding: var(--app-space-3xl);
+  color: var(--app-text-muted);
+}
+
+.app-empty-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--app-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--app-space-lg) auto;
+}
+
+/* Mobile Empty State */
+@media (max-width: 768px) {
+  .app-empty-state {
+    padding: var(--app-mobile-space-xl);
+  }
+  
+  .app-empty-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--app-mobile-space-md);
+  }
+}
+
+/* Success States */
+.app-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--app-accent-success);
+}
+
+.app-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--app-accent-warning);
+}
+
+.app-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--app-accent-error);
+}

@@ -1,0 +1,51 @@
+
+/* Grid Layouts */
+
+.app-grid {
+  display: grid;
+  gap: var(--app-space-lg);
+}
+
+.app-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.app-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.app-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Mobile Grid Adjustments */
+@media (max-width: 768px) {
+  .app-grid {
+    gap: var(--app-mobile-space-md);
+  }
+  
+  .app-grid-2,
+  .app-grid-3,
+  .app-grid-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-grid-mobile-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--app-mobile-space-sm);
+  }
+  
+  .app-grid-mobile-scroll {
+    display: flex;
+    gap: var(--app-mobile-space-sm);
+    overflow-x: auto;
+    padding-bottom: var(--app-mobile-space-sm);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .app-grid-mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

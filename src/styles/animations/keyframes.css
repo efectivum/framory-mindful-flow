@@ -1,0 +1,70 @@
+
+/* Animations */
+
+.app-fade-in {
+  animation: appFadeIn 0.6s ease-out;
+}
+
+.app-slide-up {
+  animation: appSlideUp 0.6s ease-out;
+}
+
+@keyframes appFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Animation Adjustments */
+@media (max-width: 768px) {
+  .app-fade-in {
+    animation: appFadeInMobile 0.4s ease-out;
+  }
+  
+  @keyframes appFadeInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Loading States */
+.app-loading {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.app-pulse {
+  animation: appPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes appPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

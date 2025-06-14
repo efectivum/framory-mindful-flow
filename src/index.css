@@ -2,7 +2,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import './styles/design-system.css';
+
+/* Import Design System Modules */
+@import './styles/foundations/variables.css';
+@import './styles/layout/base.css';
+@import './styles/layout/grid.css';
+@import './styles/components/cards.css';
+@import './styles/components/headers.css';
+@import './styles/components/buttons.css';
+@import './styles/components/statistics.css';
+@import './styles/components/forms.css';
+@import './styles/animations/keyframes.css';
+@import './styles/utilities/spacing.css';
+@import './styles/utilities/states.css';
 
 @layer base {
   :root {

@@ -1,0 +1,53 @@
+
+/* Card Components */
+
+.app-card {
+  background: var(--app-bg-card);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: var(--app-radius-lg);
+  backdrop-filter: var(--app-backdrop);
+  box-shadow: var(--app-shadow-lg);
+  transition: all 0.3s ease;
+}
+
+.app-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: var(--app-shadow-xl);
+  transform: translateY(-2px);
+}
+
+.app-card-glass {
+  background: var(--app-bg-glass);
+  border: 1px solid rgba(248, 250, 252, 0.1);
+  border-radius: var(--app-radius-xl);
+  backdrop-filter: var(--app-backdrop);
+  box-shadow: var(--app-shadow-xl);
+}
+
+.app-card-content {
+  padding: var(--app-space-xl);
+}
+
+.app-card-header {
+  padding: var(--app-space-xl);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+/* Mobile Card Adjustments */
+@media (max-width: 768px) {
+  .app-card-content {
+    padding: var(--app-mobile-space-lg);
+  }
+  
+  .app-card-header {
+    padding: var(--app-mobile-space-lg);
+  }
+  
+  .app-card-compact {
+    border-radius: var(--app-radius-md);
+  }
+  
+  .app-card-compact .app-card-content {
+    padding: var(--app-mobile-space-md);
+  }
+}

@@ -1,0 +1,58 @@
+
+/* Header Components */
+
+.app-header {
+  text-align: center;
+  margin-bottom: var(--app-space-3xl);
+}
+
+.app-header-icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, var(--app-accent-primary), var(--app-accent-secondary));
+  border-radius: var(--app-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--app-space-lg) auto;
+  box-shadow: var(--app-shadow-lg);
+}
+
+.app-header-title {
+  font-size: 2.25rem;
+  font-weight: 300;
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-space-md);
+  letter-spacing: -0.025em;
+}
+
+.app-header-subtitle {
+  font-size: 1.125rem;
+  color: var(--app-text-secondary);
+  max-width: 28rem;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Mobile Header Adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    margin-bottom: var(--app-mobile-space-xl);
+  }
+  
+  .app-header-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: var(--app-mobile-space-md);
+  }
+  
+  .app-header-title {
+    font-size: 1.75rem;
+    margin-bottom: var(--app-mobile-space-sm);
+  }
+  
+  .app-header-subtitle {
+    font-size: 1rem;
+    padding: 0 var(--app-mobile-space-md);
+  }
+}

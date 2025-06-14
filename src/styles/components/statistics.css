@@ -1,0 +1,63 @@
+
+/* Statistics Cards */
+
+.app-stat-card {
+  background: var(--app-bg-card);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-lg);
+  text-align: center;
+  backdrop-filter: var(--app-backdrop);
+  transition: all 0.3s ease;
+}
+
+.app-stat-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+}
+
+.app-stat-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-space-xs);
+}
+
+.app-stat-label {
+  font-size: 0.875rem;
+  color: var(--app-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Mobile Statistics Cards */
+@media (max-width: 768px) {
+  .app-stat-card {
+    padding: var(--app-mobile-space-md);
+    border-radius: var(--app-radius-md);
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+  
+  .app-stat-card-compact {
+    padding: var(--app-mobile-space-sm);
+    min-width: 100px;
+  }
+  
+  .app-stat-value {
+    font-size: 1.5rem;
+    margin-bottom: var(--app-mobile-space-xs);
+  }
+  
+  .app-stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .app-stat-card-compact .app-stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .app-stat-card-compact .app-stat-label {
+    font-size: 0.625rem;
+  }
+}

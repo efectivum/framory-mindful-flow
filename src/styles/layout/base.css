@@ -1,0 +1,35 @@
+
+/* Base Layout Classes */
+
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--app-bg-primary) 0%, var(--app-bg-secondary) 100%);
+  color: var(--app-text-primary);
+}
+
+.app-content {
+  max-width: 4xl;
+  margin: 0 auto;
+  padding: var(--app-space-lg);
+}
+
+.app-content-centered {
+  max-width: 2xl;
+  margin: 0 auto;
+  padding: var(--app-space-lg);
+}
+
+.app-content-wide {
+  max-width: 6xl;
+  margin: 0 auto;
+  padding: var(--app-space-lg);
+}
+
+/* Mobile Content Adjustments */
+@media (max-width: 768px) {
+  .app-content,
+  .app-content-centered,
+  .app-content-wide {
+    padding: var(--app-mobile-space-lg);
+  }
+}
