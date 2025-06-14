@@ -108,10 +108,10 @@ const Journal = () => {
                 </div>
               </div>
               
-              <div className="flex items-center justify-center mt-6 gap-4">
+              <div className="flex items-center justify-center mt-6 gap-3"> {/* Adjusted gap from gap-4 to gap-3 */}
                 <Button
                   onClick={() => setIsWritingMode(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3" /* Adjusted padding from px-8 */
                   disabled={isCreating}
                 >
                   <BookOpen className="w-5 h-5 mr-2" />
@@ -119,13 +119,13 @@ const Journal = () => {
                 </Button>
                 
                 <Button
-                  variant="outline"
+                  size="icon" /* Use icon size for a compact button */
                   onClick={() => setIsVoiceMode(true)}
-                  className="border-gray-600 text-gray-300 hover:text-white px-8 py-3"
+                  className="bg-blue-600 hover:bg-blue-700 text-white" /* Standardized blue color */
                   disabled={isCreating}
+                  title="Voice Note" /* Accessibility title */
                 >
-                  <Mic className="w-5 h-5 mr-2" />
-                  Voice Note
+                  <Mic className="w-5 h-5" /> {/* Removed mr-2 as it's icon-only */}
                 </Button>
               </div>
             </CardContent>
@@ -207,3 +207,4 @@ const Journal = () => {
 };
 
 export default Journal;
+
