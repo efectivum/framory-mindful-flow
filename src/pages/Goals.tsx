@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Target, Plus, Flame, TrendingUp } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -12,8 +13,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Habit } from '@/hooks/useHabits';
 import { AppContainer } from '@/components/layouts/AppContainer';
-import { AppPageHeader } from '@/components/ui/AppPageHeader';
-import { AppStatCard } from '@/components/ui/AppStatCard';
 
 const Goals = () => {
   const { user } = useAuth();
@@ -175,77 +174,73 @@ const Goals = () => {
   const desktopContent = (
     <AppContainer width="centered">
       <TooltipProvider>
-        <div className="app-fade-in">
+        <div className="space-y-8">
           {/* Header Section */}
-          <AppPageHeader
-            icon={<Target className="w-8 h-8 text-white" />}
-            title="Your Habits"
-            subtitle="Small daily actions that create lasting change"
-          />
+          <div className="text-center mb-12">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Target className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-light text-white mb-4">Your Habits</h1>
+            <p className="text-lg text-gray-400">Small daily actions that create lasting change</p>
+          </div>
 
           {!user ? (
-            <div className="app-empty-state">
-              <p className="text-lg">Please sign in to manage your habits.</p>
+            <div className="text-center py-20">
+              <p className="text-lg text-gray-400">Please sign in to manage your habits.</p>
             </div>
           ) : isLoading ? (
-            <div className="app-empty-state">
-              <div className="app-pulse">
-                <div className="w-8 h-8 bg-gray-700 rounded-full mx-auto mb-4"></div>
-                <p>Loading your habits...</p>
-              </div>
+            <div className="text-center py-20">
+              <div className="w-8 h-8 bg-gray-700 rounded-full mx-auto mb-4 animate-pulse"></div>
+              <p className="text-gray-400">Loading your habits...</p>
             </div>
           ) : habits.length === 0 ? (
-            <AppCard variant="glass" className="app-slide-up">
-              <AppCardContent>
-                <div className="app-empty-state">
-                  <div className="app-empty-icon">
-                    <Plus className="w-8 h-8 text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-medium text-white mb-3">Start Your Journey</h3>
-                  <p className="text-gray-400 mb-6">Create your first habit to begin building positive routines.</p>
-                  <CreateHabitDialog />
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Plus className="w-8 h-8 text-blue-400" />
                 </div>
-              </AppCardContent>
-            </AppCard>
+                <h3 className="text-xl font-medium text-white mb-3">Start Your Journey</h3>
+                <p className="text-gray-400 mb-6">Create your first habit to begin building positive routines.</p>
+                <CreateHabitDialog />
+              </CardContent>
+            </Card>
           ) : (
-            <div className="space-y-6 md:space-y-8">
+            <div className="space-y-8">
               {/* Quick Stats */}
-              <div className="app-slide-up app-grid app-grid-4">
-                <AppStatCard
-                  value={stats.activeHabits}
-                  label="Active"
-                  icon={<Target className="w-4 h-4 text-blue-400" />}
-                />
-                <AppStatCard
-                  value={stats.completedToday}
-                  label="Today"
-                  icon={<TrendingUp className="w-4 h-4 text-green-400" />}
-                  color="success"
-                />
-                <AppStatCard
-                  value={stats.totalStreaks}
-                  label="Total Days"
-                  icon={<Flame className="w-4 h-4 text-orange-400" />}
-                  color="warning"
-                />
-                <AppStatCard
-                  value={stats.bestStreak}
-                  label="Best Streak"
-                  icon={<Flame className="w-4 h-4 text-purple-400" />}
-                />
+              <div className="grid grid-cols-4 gap-6">
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur text-center p-6">
+                  <Target className="w-4 h-4 text-blue-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-white mb-1">{stats.activeHabits}</div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wide">Active</div>
+                </Card>
+                <Card className="bg-green-500/10 border-green-500/30 backdrop-blur text-center p-6">
+                  <TrendingUp className="w-4 h-4 text-green-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-green-400 mb-1">{stats.completedToday}</div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wide">Today</div>
+                </Card>
+                <Card className="bg-orange-500/10 border-orange-500/30 backdrop-blur text-center p-6">
+                  <Flame className="w-4 h-4 text-orange-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-orange-400 mb-1">{stats.totalStreaks}</div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wide">Total Days</div>
+                </Card>
+                <Card className="bg-purple-500/10 border-purple-500/30 backdrop-blur text-center p-6">
+                  <Flame className="w-4 h-4 text-purple-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-purple-400 mb-1">{stats.bestStreak}</div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wide">Best Streak</div>
+                </Card>
               </div>
 
               {/* Main Content Area */}
-              <AppCard variant="glass" className="app-slide-up">
-                <AppCardHeader>
+              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+                <CardHeader>
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-medium text-white">Today's Habits</h2>
                     <CreateHabitDialog />
                   </div>
-                </AppCardHeader>
+                </CardHeader>
                 
-                <AppCardContent>
-                  <div className="app-grid app-grid-2">
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-6">
                     {habits.map((habit) => (
                       <HabitCard
                         key={habit.id}
@@ -260,14 +255,14 @@ const Goals = () => {
                       />
                     ))}
                   </div>
-                </AppCardContent>
-              </AppCard>
+                </CardContent>
+              </Card>
 
               {/* Best Streak Highlight */}
               {stats.bestStreak > 0 && (
-                <div className="app-text-center">
-                  <AppCard variant="glass" className="inline-block">
-                    <AppCardContent>
+                <div className="text-center">
+                  <Card className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20 backdrop-blur inline-block">
+                    <CardContent className="p-6">
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <Flame className="w-5 h-5 text-orange-400" />
                         <span className="text-orange-400 font-medium">{stats.bestStreak} day streak</span>
@@ -275,8 +270,8 @@ const Goals = () => {
                       <p className="text-gray-300 text-sm">
                         You're building amazing momentum! 🎉
                       </p>
-                    </AppCardContent>
-                  </AppCard>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
