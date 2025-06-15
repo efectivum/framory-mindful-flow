@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,7 @@ import { useTodayContent } from "@/hooks/useTodayContent";
 import React from 'react';
 import { TodayProgressCards } from "@/components/TodayProgressCards";
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -124,6 +126,9 @@ const Index = () => {
       {todayContent.suggestion && (
         <div className="text-sm text-gray-400 my-2 text-center">{todayContent.suggestion}</div>
       )}
+
+      {/* NEW DYNAMIC FEATURES */}
+      <DynamicHomepageFeatures />
 
       {/* Reflection summary block for midday/evening */}
       {todayContent.showReflectionSummary && (
