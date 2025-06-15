@@ -88,7 +88,7 @@ export const TodayProgressCards: React.FC = () => {
       icon: <CircleCheck className="w-5 h-5 text-sky-400" />,
       color:
         completedHabitsToday.length === activeHabits.length && activeHabits.length > 0
-          ? "success"
+          ? "success" as const
           : undefined,
     },
   ];
