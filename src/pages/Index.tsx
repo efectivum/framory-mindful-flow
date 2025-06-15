@@ -173,7 +173,7 @@ const Index = () => {
                     habit.is_active ? 'bg-gradient-to-r from-green-900 to-green-800 border-green-700 text-green-100' : 'bg-gray-800 border-gray-700 text-gray-400'
                   }`}
                 >
-                  {habit.name}
+                  {habit.title}
                   {habit.current_streak ? <span className="ml-2 text-xs">🔥{habit.current_streak}d</span> : ""}
                 </div>
               ))
@@ -204,7 +204,7 @@ const Index = () => {
 
   // Use PageLayout for desktop with Today View as main content
   return (
-    <PageLayout>
+    <PageLayout title="Today">
       {todayView}
     </PageLayout>
   );
