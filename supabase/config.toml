@@ -6,3 +6,7 @@ verify_jwt = false
 
 [functions.generate-weekly-insights]
 verify_jwt = false
+
+[functions.schedule-notifications]
+verify_jwt = true
+

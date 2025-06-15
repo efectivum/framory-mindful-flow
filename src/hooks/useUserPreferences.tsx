@@ -51,10 +51,31 @@ export const useUserPreferences = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-preferences'] });
-      toast({
-        title: "Success!",
-        description: "Preferences updated successfully!",
-      });
+      
+      if (user) {
+        supabase.functions.invoke('schedule-notifications', {
+          body: { userId: user.id },
+        }).then(({ error }) => {
+          if (error) {
+            console.error('Failed to schedule notifications:', error);
+            toast({
+              title: "Preferences saved, but...",
+              description: `We couldn't update your notification schedule. Error: ${error.message}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Success!",
+              description: "Preferences and notification schedule updated successfully!",
+            });
+          }
+        });
+      } else {
+          toast({
+            title: "Success!",
+            description: "Preferences updated successfully!",
+          });
+      }
     },
     onError: (error) => {
       toast({
@@ -72,3 +93,4 @@ export const useUserPreferences = () => {
     isUpdating: updatePreferencesMutation.isPending,
   };
 };
+

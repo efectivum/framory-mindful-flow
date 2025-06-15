@@ -300,6 +300,48 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          channel: string
+          content: string
+          created_at: string
+          error_message: string | null
+          id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          content: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pending_signups: {
         Row: {
           completed: boolean | null
