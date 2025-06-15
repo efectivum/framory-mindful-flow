@@ -1,4 +1,3 @@
-
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
@@ -7,6 +6,7 @@ import { ProfileOverview } from '@/components/ProfileOverview';
 import { AccountInformation } from '@/components/AccountInformation';
 import { AdditionalSettings } from '@/components/AdditionalSettings';
 import { PrivacySettings } from '@/components/PrivacySettings';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Profile = () => {
   const isMobile = useIsMobile();

@@ -13,6 +13,7 @@ import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useTodayContent } from "@/hooks/useTodayContent";
 import React from 'react';
 import { TodayProgressCards } from "@/components/TodayProgressCards";
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -201,16 +202,11 @@ const Index = () => {
     </div>
   );
 
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{todayView}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop with Today View as main content
+  // New: use ResponsiveLayout everywhere (mobile first)
   return (
-    <PageLayout title="Today">
+    <ResponsiveLayout title="Today">
       {todayView}
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 
