@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Target, Plus, Flame, TrendingUp } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -13,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Habit } from '@/hooks/useHabits';
 import { AppContainer } from '@/components/layouts/AppContainer';
+import { AppStatCard } from '@/components/ui/AppStatCard';
 
 const Goals = () => {
   const { user } = useAuth();
@@ -59,6 +59,33 @@ const Goals = () => {
     bestStreak: habits.length > 0 ? Math.max(...habits.map(h => h.current_streak)) : 0
   };
 
+  // -- New: statCards array for consistency with homepage and AppStatCard usage --
+  const statCards = [
+    {
+      value: stats.activeHabits,
+      label: "Active",
+      icon: <Target className="w-5 h-5 text-blue-400" />,
+    },
+    {
+      value: stats.completedToday,
+      label: "Today",
+      icon: <TrendingUp className="w-5 h-5 text-green-400" />,
+      color: stats.activeHabits > 0 && stats.completedToday === stats.activeHabits ? "success" as const : undefined,
+    },
+    {
+      value: stats.totalStreaks,
+      label: "Total Days",
+      icon: <Flame className="w-5 h-5 text-orange-400" />,
+      color: undefined,
+    },
+    {
+      value: stats.bestStreak,
+      label: "Best Streak",
+      icon: <Flame className="w-5 h-5 text-purple-400" />,
+      color: stats.bestStreak >= 7 ? "success" as const : undefined,
+    }
+  ];
+
   const mobileContent = (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
       <div className="p-4 space-y-6">
@@ -94,34 +121,16 @@ const Goals = () => {
             </Card>
           ) : (
             <>
-              {/* Stats Grid - 2x2 Layout */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <Card className="bg-gray-800/50 border-gray-700">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-white mb-1">{stats.activeHabits}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Active</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-500/10 border-green-500/20">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-400 mb-1">{stats.completedToday}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Today</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-orange-500/10 border-orange-500/20">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-400 mb-1">{stats.totalStreaks}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Total Days</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-purple-500/10 border-purple-500/20">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-400 mb-1">{stats.bestStreak}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Best Streak</div>
-                  </CardContent>
-                </Card>
+              {/* -- UPDATED: Horizontal scroll of stat cards -- */}
+              <div className="app-stats-scroll mb-6">
+                {statCards.map((props, idx) => (
+                  <AppStatCard
+                    key={idx}
+                    {...props}
+                    className="app-stat-card-compact"
+                  />
+                ))}
               </div>
-
               {/* Habits Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -214,30 +223,12 @@ const Goals = () => {
             </Card>
           ) : (
             <div className="space-y-8">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-6">
-                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur text-center p-6">
-                  <Target className="w-4 h-4 text-blue-400 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-white mb-1">{stats.activeHabits}</div>
-                  <div className="text-sm text-gray-400 uppercase tracking-wide">Active</div>
-                </Card>
-                <Card className="bg-green-500/10 border-green-500/30 backdrop-blur text-center p-6">
-                  <TrendingUp className="w-4 h-4 text-green-400 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-green-400 mb-1">{stats.completedToday}</div>
-                  <div className="text-sm text-gray-400 uppercase tracking-wide">Today</div>
-                </Card>
-                <Card className="bg-orange-500/10 border-orange-500/30 backdrop-blur text-center p-6">
-                  <Flame className="w-4 h-4 text-orange-400 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-orange-400 mb-1">{stats.totalStreaks}</div>
-                  <div className="text-sm text-gray-400 uppercase tracking-wide">Total Days</div>
-                </Card>
-                <Card className="bg-purple-500/10 border-purple-500/30 backdrop-blur text-center p-6">
-                  <Flame className="w-4 h-4 text-purple-400 mx-auto mb-3" />
-                  <div className="text-2xl font-bold text-purple-400 mb-1">{stats.bestStreak}</div>
-                  <div className="text-sm text-gray-400 uppercase tracking-wide">Best Streak</div>
-                </Card>
+              {/* -- UPDATED: AppStatCard Grid -- */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-4">
+                {statCards.map((props, idx) => (
+                  <AppStatCard key={idx} {...props} />
+                ))}
               </div>
-
               {/* Main Content Area */}
               <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
                 <CardHeader>
