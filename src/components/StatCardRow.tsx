@@ -9,8 +9,7 @@ interface StatCardRowProps {
 
 export const StatCardRow: React.FC<StatCardRowProps> = ({ statCards, className }) => (
   <div className={`
-    flex gap-3 overflow-x-auto pb-4 
-    md:grid md:grid-cols-5 md:gap-4 
+    flex gap-3 overflow-x-auto pb-4
     [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
     ${className || ""}
   `}>

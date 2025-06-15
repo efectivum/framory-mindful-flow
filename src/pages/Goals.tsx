@@ -10,7 +10,7 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Habit } from '@/hooks/useHabits';
 import { AppContainer } from '@/components/layouts/AppContainer';
-import { AppStatCard } from '@/components/ui/AppStatCard';
+import { StatCardRow } from '@/components/StatCardRow';
 
 const Goals = () => {
   const { user } = useAuth();
@@ -119,12 +119,8 @@ const Goals = () => {
           </Card>
         ) : (
           <div className="space-y-8">
-            {/* -- UPDATED: AppStatCard Grid -- */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-4">
-              {statCards.map((props, idx) => (
-                <AppStatCard key={idx} {...props} />
-              ))}
-            </div>
+            {/* -- UPDATED: Using StatCardRow for consistency -- */}
+            <StatCardRow statCards={statCards} />
             {/* Main Content Area */}
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
               <CardHeader>
