@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useQuickAnalysis } from '@/hooks/useQuickAnalysis';
 import { MoodDisplay } from '@/components/MoodDisplay';
-import { PageLayout } from '@/components/PageLayout';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { formatDistanceToNow, format } from 'date-fns';
 
 const JournalEntry = () => {
@@ -21,19 +20,19 @@ const JournalEntry = () => {
 
   if (!entry) {
     return (
-      <PageLayout title="Entry Not Found" subtitle="The journal entry you're looking for doesn't exist.">
+      <ResponsiveLayout title="Entry Not Found" subtitle="The journal entry you're looking for doesn't exist.">
         <div className="text-center">
           <Button onClick={() => navigate('/journal')} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Journal
           </Button>
         </div>
-      </PageLayout>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <PageLayout title="Journal Entry" subtitle={format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy')}>
+    <ResponsiveLayout title="Journal Entry" subtitle={format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy')}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Back Button */}
         <Button 
@@ -164,7 +163,7 @@ const JournalEntry = () => {
           </CardContent>
         </Card>
       </div>
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 

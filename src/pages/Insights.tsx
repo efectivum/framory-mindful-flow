@@ -1,14 +1,9 @@
-
 import { TrendingUp, Brain, Heart, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Insights = () => {
-  const isMobile = useIsMobile();
-
   const moodData = [
     { mood: 'Positive', percentage: 65, color: 'bg-green-500' },
     { mood: 'Neutral', percentage: 25, color: 'bg-yellow-500' },
@@ -154,16 +149,11 @@ const Insights = () => {
     </>
   );
 
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop
+  // Always use ResponsiveLayout, mobile first
   return (
-    <PageLayout title="Insights" subtitle="Discover patterns in your personal growth journey">
+    <ResponsiveLayout title="Insights" subtitle="Discover patterns in your personal growth journey">
       {content}
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 

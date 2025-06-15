@@ -1,14 +1,9 @@
-
 import { Library, BookOpen, Play, Star, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Resources = () => {
-  const isMobile = useIsMobile();
-
   const challenges = [
     {
       id: 1,
@@ -187,16 +182,11 @@ const Resources = () => {
     </>
   );
 
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop
+  // Always use ResponsiveLayout
   return (
-    <PageLayout title="Resources" subtitle="Curated content to support your growth journey">
+    <ResponsiveLayout title="Resources" subtitle="Curated content to support your growth journey">
       {content}
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 

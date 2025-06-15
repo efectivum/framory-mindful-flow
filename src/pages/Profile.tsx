@@ -1,6 +1,3 @@
-import { useIsMobile } from '@/hooks/use-mobile';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
 import { UserPreferencesForm } from '@/components/UserPreferencesForm';
 import { ProfileOverview } from '@/components/ProfileOverview';
 import { AccountInformation } from '@/components/AccountInformation';
@@ -9,8 +6,6 @@ import { PrivacySettings } from '@/components/PrivacySettings';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Profile = () => {
-  const isMobile = useIsMobile();
-
   const content = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Profile Overview */}
@@ -28,16 +23,11 @@ const Profile = () => {
     </div>
   );
 
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop
+  // Always use ResponsiveLayout
   return (
-    <PageLayout title="Profile" subtitle="Manage your account and preferences">
+    <ResponsiveLayout title="Profile" subtitle="Manage your account and preferences">
       {content}
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 

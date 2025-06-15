@@ -3,17 +3,14 @@ import { BookOpen, Mic, History, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
 import { FocusedWritingMode } from '@/components/FocusedWritingMode';
 import { JournalEntryAnalysisPage } from '@/components/JournalEntryAnalysisPage';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Journal = () => {
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { createEntry, isCreating } = useJournalEntries();
   const [isWritingMode, setIsWritingMode] = useState(false);
@@ -191,16 +188,11 @@ const Journal = () => {
     </div>
   );
 
-  // Use MobileLayout for mobile with swipe functionality
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
-  // Use PageLayout for desktop - but minimal header
+  // Always use ResponsiveLayout for the layout
   return (
-    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <ResponsiveLayout title="Journal">
       {content}
-    </div>
+    </ResponsiveLayout>
   );
 };
 

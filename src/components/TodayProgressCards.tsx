@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useWeeklyInsights } from "@/hooks/useWeeklyInsights";
 import { useQuickAnalysis } from "@/hooks/useQuickAnalysis";
@@ -15,13 +14,6 @@ export const TodayProgressCards: React.FC = () => {
     useProgressStats();
   const { mode } = useTimeOfDay();
   const { weeklyInsights, getLatestInsight } = useWeeklyInsights();
-  const isMobile = useIsMobile();
-
-  React.useEffect(() => {
-    console.log('[TodayProgressCards] isMobile:', isMobile, 'window.innerWidth:', typeof window !== 'undefined' ? window.innerWidth : '');
-  }, [isMobile]);
-
-  if (isMobile === undefined) return null;
 
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
@@ -76,25 +68,12 @@ export const TodayProgressCards: React.FC = () => {
 
   const latestInsight = getLatestInsight();
 
-  // Mobile: horizontal scroll of compact stat cards
-  if (isMobile) {
-    return (
-      <div className="w-full mb-4">
-        <StatCardRow statCards={statCards} />
-        <AIInsightCard quickAnalysis={quickAnalysis} />
-        <WeeklyInsightCard latestInsight={latestInsight} />
-      </div>
-    );
-  }
-
-  // Desktop/tablet: grid as before
+  // Mobile-first: horizontal scroll by default, grid at desktop via CSS only
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-8">
-      {statCards.map((props, idx) => (
-        <AppStatCard key={idx} {...props} />
-      ))}
-      {quickAnalysis && <AIInsightCard quickAnalysis={quickAnalysis} />}
-      {latestInsight && <WeeklyInsightCard latestInsight={latestInsight} />}
+    <div className="w-full mb-4">
+      <StatCardRow statCards={statCards} />
+      <AIInsightCard quickAnalysis={quickAnalysis} />
+      <WeeklyInsightCard latestInsight={latestInsight} />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -5,9 +6,6 @@ import { DashboardWidget } from '@/components/DashboardWidget';
 import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart, Clock } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { PageLayout } from '@/components/PageLayout';
-import { MobileLayout } from '@/components/MobileLayout';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useTodayContent } from "@/hooks/useTodayContent";
@@ -17,7 +15,6 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const isMobile = useIsMobile();
   const { habits } = useHabits();
   const { entries, stats } = useJournalEntries();
   const { summaryData } = useJournalAnalysis();
@@ -202,7 +199,7 @@ const Index = () => {
     </div>
   );
 
-  // New: use ResponsiveLayout everywhere (mobile first)
+  // Use ResponsiveLayout everywhere (mobile first)
   return (
     <ResponsiveLayout title="Today">
       {todayView}

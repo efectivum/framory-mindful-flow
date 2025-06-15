@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Calendar } from 'lucide-react';
@@ -6,13 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileLayout } from '@/components/MobileLayout';
-import { PageLayout } from '@/components/PageLayout';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const JournalHistory = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { entries, isLoading, stats } = useJournalEntries();
 
   const content = (
@@ -91,14 +87,11 @@ const JournalHistory = () => {
     </div>
   );
 
-  if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
-  }
-
+  // Use ResponsiveLayout always
   return (
-    <PageLayout title="Journal History" subtitle="Your personal growth journey">
+    <ResponsiveLayout title="Journal History" subtitle="Your personal growth journey">
       {content}
-    </PageLayout>
+    </ResponsiveLayout>
   );
 };
 
