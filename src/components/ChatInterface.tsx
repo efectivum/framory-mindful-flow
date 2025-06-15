@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Plus, Paperclip, Smile, Loader2 } from 'lucide-react'; // Added Loader2
+import { Send, Plus, Paperclip, Smile, Loader2 } from 'lucide-react'; // Removed Mic
 import { Button } from '@/components/ui/button';
 import { ActivitySelector } from './ActivitySelector';
 import { ChatMessage } from './ChatMessage';
@@ -35,7 +35,6 @@ export const ChatInterface = () => {
   const [inputText, setInputText] = useState('');
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [fileAttachment, setFileAttachment] = useState<File | null>(null);
   const { toast } = useToast();
@@ -173,11 +172,6 @@ export const ChatInterface = () => {
     setSelectedActivity(activity);
     setShowActivitySelector(false);
     textAreaRef.current?.focus();
-  };
-
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // TODO: Implement voice recording
   };
 
   const handleVoiceTranscription = (transcribedText: string) => {
@@ -331,29 +325,14 @@ export const ChatInterface = () => {
             className="ml-1"
           />
 
-          {(inputText.trim() || selectedActivity || fileAttachment) ? (
-            <Button
-              onClick={handleSend}
-              disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !selectedActivity && !fileAttachment)}
-              size="icon"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-          ) : (
-            <Button
-              onClick={toggleRecording}
-              size="icon"
-              className={cn(
-                "h-10 w-10 rounded-full shrink-0 transition-colors shadow-sm",
-                isRecording
-                  ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                  : "bg-[#232b3a] hover:bg-[#2b3750] text-gray-300"
-              )}
-            >
-              <Mic className="w-5 h-5" />
-            </Button>
-          )}
+          <Button
+            onClick={handleSend}
+            disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !fileAttachment)}
+            size="icon"
+            className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
         </div>
       </div>
     </div>
