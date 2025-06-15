@@ -1,19 +1,8 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Check, BookOpen } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-
-interface Message {
-  id: string;
-  type: 'user' | 'bot';
-  content: string;
-  activityType?: string;
-  timestamp: Date;
-  isJournalEntry?: boolean;
-  attachmentUrl?: string;
-  attachmentType?: string;
-}
+import { Message } from '@/types/chat';
 
 interface ChatMessageProps {
   message: Message;
