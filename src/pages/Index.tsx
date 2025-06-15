@@ -9,6 +9,9 @@ import { PageLayout } from '@/components/PageLayout';
 import { MobileLayout } from '@/components/MobileLayout';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
+import { useTimeOfDay } from "@/hooks/useTimeOfDay";
+import { useTodayContent } from "@/hooks/useTodayContent";
+import React from 'react';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -16,6 +19,11 @@ const Index = () => {
   const { habits } = useHabits();
   const { entries, stats } = useJournalEntries();
   const { summaryData } = useJournalAnalysis();
+
+  // Today View logic
+  const { greeting } = useTimeOfDay();
+  const todayContent = useTodayContent();
+  const [intentionInput, setIntentionInput] = React.useState('');
 
   // Calculate habit stats
   const activeHabits = habits.filter(habit => habit.is_active);
@@ -55,175 +63,149 @@ const Index = () => {
     );
   }
 
-  const content = (
-    <>
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
-        <Link to="/journal" className="block">
-          <Button className="h-20 lg:h-24 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-left justify-start w-full p-4">
-            <Plus className="w-6 h-6 mr-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold text-base lg:text-lg leading-tight">Add New Entry</div>
-              <div className="text-sm opacity-90 mt-1 leading-tight">Quick journal reflection</div>
-            </div>
-          </Button>
-        </Link>
-        
-        <Link to="/goals" className="block">
-          <Button variant="outline" className="h-20 lg:h-24 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full p-4">
-            <Target className="w-6 h-6 mr-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold text-base lg:text-lg leading-tight">Track Progress</div>
-              <div className="text-sm opacity-70 mt-1 leading-tight">Update your goals</div>
-            </div>
-          </Button>
-        </Link>
-        
-        <Link to="/journal" className="block md:col-span-2 xl:col-span-1">
-          <Button variant="outline" className="h-20 lg:h-24 border-gray-600 text-white hover:bg-gray-700/50 text-left justify-start w-full p-4">
-            <BookOpen className="w-6 h-6 mr-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold text-base lg:text-lg leading-tight">Daily Prompt</div>
-              <div className="text-sm opacity-70 mt-1 leading-tight">Guided reflection</div>
-            </div>
-          </Button>
-        </Link>
+  // DYNAMIC TODAY VIEW - replaces static content
+  const todayView = (
+    <div>
+      {/* Greeting & prompt */}
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{greeting}</h1>
+        <p className="text-md md:text-lg text-gray-300">{todayContent.prompt}</p>
       </div>
+      {/* Intention input for morning mode */}
+      {todayContent.showIntentionBox && (
+        <div className="my-4 flex flex-col items-center max-w-md mx-auto">
+          {todayContent.intention ? (
+            <div className="bg-green-950/60 border border-green-700 text-green-200 px-4 py-3 rounded-xl w-full text-center mb-2">
+              <span>
+                <strong>Your intention:</strong> {todayContent.intention}
+              </span>
+              <Button
+                className="ml-2 text-xs px-2 h-7"
+                variant="ghost"
+                onClick={() => todayContent.setIntention("")}
+              >
+                Change
+              </Button>
+            </div>
+          ) : (
+            <form
+              className="w-full flex flex-col gap-2"
+              onSubmit={e => {
+                e.preventDefault();
+                if (intentionInput.trim()) {
+                  todayContent.setIntention(intentionInput.trim());
+                  setIntentionInput('');
+                }
+              }}
+            >
+              <input
+                type="text"
+                className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                placeholder="e.g. Be present in every moment"
+                value={intentionInput}
+                onChange={e => setIntentionInput(e.target.value)}
+                maxLength={64}
+                autoFocus
+              />
+              <Button
+                className="w-full md:w-auto bg-blue-700 text-white rounded-lg mt-1"
+                type="submit"
+                size="sm"
+              >
+                Set Intention
+              </Button>
+            </form>
+          )}
+        </div>
+      )}
 
-      {/* Dashboard Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
-        <DashboardWidget
-          title="Current Streak"
-          value={longestStreak > 0 ? `${longestStreak} days` : "Start today!"}
-          description={activeHabits.length > 0 ? "Longest habit streak" : "Create your first habit"}
-          icon={Target}
-          gradient="from-blue-500/10 to-purple-600/10"
-        />
-        
-        <DashboardWidget
-          title="This Week"
-          value={stats.thisWeekCount}
-          description="Journal entries"
-          icon={BookOpen}
-          gradient="from-green-500/10 to-teal-600/10"
-        />
-        
-        <DashboardWidget
-          title="Mood Score"
-          value={stats.averageMood > 0 ? `${stats.averageMood.toFixed(1)}/5` : "No data"}
-          description="Average this week"
-          icon={Heart}
-          gradient="from-pink-500/10 to-red-600/10"
-        />
-        
-        <DashboardWidget
-          title="Goals Progress"
-          value={`${avgProgress}%`}
-          description="Average completion"
-          icon={TrendingUp}
-          gradient="from-yellow-500/10 to-orange-600/10"
-        />
-      </div>
+      {/* Suggestion sentence */}
+      {todayContent.suggestion && (
+        <div className="text-sm text-gray-400 my-2 text-center">{todayContent.suggestion}</div>
+      )}
 
-      {/* Recent Activity & Emotion Insights */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
-        {/* Recent Reflections */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Reflections</h3>
-          <div className="space-y-3">
-            {entries.slice(0, 3).map((entry) => (
-              <div key={entry.id} className="p-3 bg-gray-700/30 rounded-lg">
-                <div className="text-white font-medium mb-1 truncate">
-                  {entry.title || 'Journal Entry'}
-                </div>
-                <div className="text-gray-400 text-sm line-clamp-2 leading-relaxed">
-                  {entry.content.length > 80 
-                    ? `${entry.content.substring(0, 80)}...` 
-                    : entry.content}
-                </div>
-                <div className="text-gray-500 text-xs mt-2">
-                  {new Date(entry.created_at).toLocaleDateString()}
-                </div>
+      {/* Reflection summary block for midday/evening */}
+      {todayContent.showReflectionSummary && (
+        <div className="my-8">
+          <h2 className="text-lg font-semibold text-white mb-1">Recent Reflections</h2>
+          <div className="space-y-2">
+            {entries.slice(0, 2).map((entry) => (
+              <div
+                className="p-3 bg-gray-800/60 rounded-lg border border-gray-700 text-gray-200"
+                key={entry.id}
+              >
+                <div className="font-medium mb-1 truncate">{entry.title || "Journal Entry"}</div>
+                <div className="text-xs text-gray-400 line-clamp-2">{entry.content.slice(0, 75)}...</div>
+                <div className="text-xs text-gray-500 mt-1">{new Date(entry.created_at).toLocaleDateString()}</div>
               </div>
             ))}
             {entries.length === 0 && (
-              <div className="text-gray-400 text-center py-6 text-sm leading-relaxed">
-                No journal entries yet. Start writing to see your reflections here!
-              </div>
+              <div className="text-gray-500 text-center text-xs">No recent reflections. Write your first entry today!</div>
             )}
           </div>
         </div>
+      )}
 
-        {/* Emotion Landscape */}
-        {summaryData?.emotionBreakdown && (
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Emotion Landscape</h3>
-            <div className="relative min-h-[200px] flex flex-wrap items-center justify-center gap-2">
-              {Object.entries(summaryData.emotionBreakdown)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 6)
-                .map(([emotion, intensity]) => {
-                  const size = 30 + (intensity / 10) * 40;
-                  return (
-                    <div
-                      key={emotion}
-                      className="rounded-full bg-gradient-to-br from-purple-500/60 to-pink-600/60 flex items-center justify-center text-white text-xs font-medium hover:scale-110 transition-transform cursor-pointer"
-                      style={{ width: `${size}px`, height: `${size}px` }}
-                      title={`${emotion}: ${intensity.toFixed(1)}/10`}
-                    >
-                      {emotion.slice(0, 3)}
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="text-center mt-3">
-              <p className="text-gray-400 text-xs">Your recent emotional patterns</p>
-            </div>
-          </div>
-        )}
-
-        {/* Today's Focus */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 lg:p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 flex-shrink-0" />
-            Today's Focus
-          </h3>
-          <div className="space-y-4">
-            <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-lg border border-blue-500/20">
-              <div className="text-white font-medium mb-2 leading-tight">Complete Your Habits</div>
-              <div className="text-gray-400 text-sm leading-relaxed">
-                You have {activeHabits.length} active habits to track today
-              </div>
-            </div>
-            
-            <div className="p-4 bg-gradient-to-r from-green-500/10 to-teal-600/10 rounded-lg border border-green-500/20">
-              <div className="text-white font-medium mb-2 leading-tight">Daily Reflection</div>
-              <div className="text-gray-400 text-sm leading-relaxed">
-                Take a moment to journal about your day
-              </div>
-            </div>
-            
-            <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-600/10 rounded-lg border border-purple-500/20">
-              <div className="text-white font-medium mb-2 leading-tight">Growth Tip</div>
-              <div className="text-gray-400 text-sm leading-relaxed">
-                Small consistent actions lead to remarkable transformations
-              </div>
-            </div>
+      {/* Quick mood check (midday/evening) */}
+      {todayContent.showMoodCheck && (
+        <div className="my-6">
+          <h3 className="text-white mb-1 font-semibold">How's your mood?</h3>
+          {/* Simple quick mood input: emoji dropdown, to be replaced with better picker/logic */}
+          <div className="flex items-center gap-3 justify-center">
+            <span className="text-2xl cursor-pointer">😊</span>
+            <span className="text-2xl cursor-pointer">😐</span>
+            <span className="text-2xl cursor-pointer">😢</span>
+            {/* (Add onClick logic to store mood in the future) */}
           </div>
         </div>
+      )}
+
+      {/* Habit completion (evening) */}
+      {todayContent.showHabits && (
+        <div className="my-6">
+          <h3 className="text-white font-semibold mb-2">Today's Habits</h3>
+          <div className="flex flex-wrap gap-2">
+            {habits.length > 0 ? (
+              habits.map(habit => (
+                <div
+                  key={habit.id}
+                  className={`px-3 py-2 rounded-lg border text-sm font-medium ${
+                    habit.is_active ? 'bg-gradient-to-r from-green-900 to-green-800 border-green-700 text-green-100' : 'bg-gray-800 border-gray-700 text-gray-400'
+                  }`}
+                >
+                  {habit.name}
+                  {habit.current_streak ? <span className="ml-2 text-xs">🔥{habit.current_streak}d</span> : ""}
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-400">No tracked habits today</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Main actions, always */
+      }
+      <div className="mt-8 mb-10 space-y-4">
+        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" asChild>
+          <Link to="/journal">Start Journaling</Link>
+        </Button>
+        <Button className="w-full bg-gray-700 hover:bg-gray-800 text-white" asChild>
+          <Link to="/goals">Review Goals</Link>
+        </Button>
       </div>
-    </>
+    </div>
   );
 
   // Use MobileLayout for mobile with swipe functionality
   if (isMobile) {
-    return <MobileLayout>{content}</MobileLayout>;
+    return <MobileLayout>{todayView}</MobileLayout>;
   }
 
-  // Use PageLayout for desktop
+  // Use PageLayout for desktop with Today View as main content
   return (
-    <PageLayout title="Good morning! 👋" subtitle="Ready to continue your growth journey?">
-      {content}
+    <PageLayout>
+      {todayView}
     </PageLayout>
   );
 };
