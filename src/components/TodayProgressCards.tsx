@@ -1,62 +1,33 @@
+
 import React from "react";
-import { AppStatCard } from "@/components/ui/AppStatCard";
-import { useJournalEntries } from "@/hooks/useJournalEntries";
-import { useHabits } from "@/hooks/useHabits";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useWeeklyInsights } from "@/hooks/useWeeklyInsights";
 import { useQuickAnalysis } from "@/hooks/useQuickAnalysis";
-import { TrendingUp, TrendingDown, FileChartLine, CircleCheck, CircleArrowUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useProgressStats } from "@/hooks/useProgressStats";
+import { StatCardRow } from "@/components/StatCardRow";
+import { AIInsightCard, WeeklyInsightCard } from "@/components/InsightCard";
+import { CircleCheck, FileChartLine, TrendingUp, TrendingDown, CircleArrowUp } from "lucide-react";
+import { AppStatCard } from "@/components/ui/AppStatCard";
 
 export const TodayProgressCards: React.FC = () => {
-  const { stats, entries } = useJournalEntries();
-  const { habits } = useHabits();
+  const { stats, entries, activeHabits, completedHabitsToday, longestHabitStreak, moodTrend } =
+    useProgressStats();
   const { mode } = useTimeOfDay();
   const { weeklyInsights, getLatestInsight } = useWeeklyInsights();
-
-  // Detect mobile layout
   const isMobile = useIsMobile();
 
-  // DEBUG: Log the detected mobile state and location for troubleshooting
   React.useEffect(() => {
     console.log('[TodayProgressCards] isMobile:', isMobile, 'window.innerWidth:', typeof window !== 'undefined' ? window.innerWidth : '');
   }, [isMobile]);
 
-  // On initial render, isMobile will be undefined; we want to avoid rendering the wrong layout.
-  if (isMobile === undefined) {
-    // Optionally, you could return a loader/spinner here if you want
-    return null;
-  }
+  if (isMobile === undefined) return null;
 
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
   const { getQuickAnalysis } = useQuickAnalysis();
-  // Always call the hook, with suitable enabled flag
   const { data: quickAnalysis } = getQuickAnalysis(latestEntry ? latestEntry.id : "");
 
-  // Habit stats
-  const activeHabits = habits.filter((h) => h.is_active);
-  const completedHabitsToday = activeHabits.filter(
-    (h) => h.current_streak && h.current_streak > 0
-  );
-  const longestHabitStreak = Math.max(...activeHabits.map((h) => h.longest_streak || 0, 0));
-
-  // Mood trend (simple: up if mood improved in last 2 entries)
-  let moodTrend: "up" | "down" | "neutral" = "neutral";
-  if (entries.length >= 2) {
-    const prev = entries[1].mood_after ?? 0;
-    const curr = entries[0].mood_after ?? 0;
-    if (curr > prev) moodTrend = "up";
-    else if (curr < prev) moodTrend = "down";
-  }
-
-  // Latest weekly insight (if exists)
-  const latestInsight = getLatestInsight();
-
-  // Cards array for simple rendering
   const statCards = [
     {
       value: stats.currentStreak,
@@ -103,72 +74,15 @@ export const TodayProgressCards: React.FC = () => {
     },
   ];
 
+  const latestInsight = getLatestInsight();
+
   // Mobile: horizontal scroll of compact stat cards
   if (isMobile) {
     return (
       <div className="w-full mb-4">
-        <div className="app-stats-scroll">
-          {statCards.map((props, idx) => (
-            <AppStatCard
-              key={idx}
-              {...props}
-              className="app-stat-card-compact"
-            />
-          ))}
-        </div>
-
-        {/* AI Quick Insight */}
-        {quickAnalysis && quickAnalysis.quick_takeaways?.length > 0 && (
-          <Card className="bg-gray-800/60 border-gray-700/80 mt-3">
-            <CardContent className="p-4">
-              <div className="text-xs text-purple-300 font-semibold mb-1 flex items-center gap-2">
-                <FileChartLine className="w-4 h-4" /> Latest Insight
-                <Badge variant="secondary" className="ml-auto">AI</Badge>
-              </div>
-              <div className="text-gray-200 text-sm leading-snug">
-                <span>{quickAnalysis.quick_takeaways[0]}</span>
-                {quickAnalysis.quick_takeaways.length > 1 && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="ml-2 text-xs px-1 h-6"
-                    onClick={() => window.location.href = "/insights"} // Link to insights page
-                  >
-                    See all
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        {/* Weekly Insight */}
-        {latestInsight && (
-          <Card className="bg-gradient-to-br from-purple-700/20 to-pink-700/20 border-purple-700/30 mt-3">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-xs text-pink-300 font-semibold flex items-center gap-2">
-                  <FileChartLine className="w-4 h-4" />
-                  Weekly Insight
-                </div>
-                <Badge variant="outline" className="text-xs">This Week</Badge>
-              </div>
-              <div className="text-gray-200 text-xs mb-1">{latestInsight.emotional_summary}</div>
-              <div className="text-gray-400 text-xs flex flex-wrap gap-1">
-                {latestInsight.growth_observations?.slice(0, 2).map((growth, idx) => (
-                  <Badge key={idx} className="text-emerald-200 bg-emerald-800/10 border-emerald-500/20 text-xs">{growth}</Badge>
-                ))}
-              </div>
-              <Button
-                variant="link"
-                size="sm"
-                className="mt-2 text-xs p-0 h-6"
-                onClick={() => window.location.href = "/insights"}
-              >
-                View Weekly Report
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <StatCardRow statCards={statCards} />
+        <AIInsightCard quickAnalysis={quickAnalysis} />
+        <WeeklyInsightCard latestInsight={latestInsight} />
       </div>
     );
   }
@@ -179,58 +93,8 @@ export const TodayProgressCards: React.FC = () => {
       {statCards.map((props, idx) => (
         <AppStatCard key={idx} {...props} />
       ))}
-      {/* AI Quick Insight */}
-      {quickAnalysis && quickAnalysis.quick_takeaways?.length > 0 && (
-        <Card className="bg-gray-800/60 border-gray-700/80">
-          <CardContent className="p-4">
-            <div className="text-xs text-purple-300 font-semibold mb-1 flex items-center gap-2">
-              <FileChartLine className="w-4 h-4" /> Latest Insight
-              <Badge variant="secondary" className="ml-auto">AI</Badge>
-            </div>
-            <div className="text-gray-200 text-sm leading-snug">
-              <span>{quickAnalysis.quick_takeaways[0]}</span>
-              {quickAnalysis.quick_takeaways.length > 1 && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="ml-2 text-xs px-1 h-6"
-                  onClick={() => window.location.href = "/insights"} // Link to insights page
-                >
-                  See all
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      {/* Weekly Insight */}
-      {latestInsight && (
-        <Card className="bg-gradient-to-br from-purple-700/20 to-pink-700/20 border-purple-700/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs text-pink-300 font-semibold flex items-center gap-2">
-                <FileChartLine className="w-4 h-4" />
-                Weekly Insight
-              </div>
-              <Badge variant="outline" className="text-xs">This Week</Badge>
-            </div>
-            <div className="text-gray-200 text-xs mb-1">{latestInsight.emotional_summary}</div>
-            <div className="text-gray-400 text-xs flex flex-wrap gap-1">
-              {latestInsight.growth_observations?.slice(0, 2).map((growth, idx) => (
-                <Badge key={idx} className="text-emerald-200 bg-emerald-800/10 border-emerald-500/20 text-xs">{growth}</Badge>
-              ))}
-            </div>
-            <Button
-              variant="link"
-              size="sm"
-              className="mt-2 text-xs p-0 h-6"
-              onClick={() => window.location.href = "/insights"}
-            >
-              View Weekly Report
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {quickAnalysis && <AIInsightCard quickAnalysis={quickAnalysis} />}
+      {latestInsight && <WeeklyInsightCard latestInsight={latestInsight} />}
     </div>
   );
 };
