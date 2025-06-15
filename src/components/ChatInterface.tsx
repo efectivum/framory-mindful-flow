@@ -145,7 +145,7 @@ export const ChatInterface = () => {
 
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-screen w-full bg-[#171c26]">
       <ChatHeader />
       <MessageList
         messages={messages}
