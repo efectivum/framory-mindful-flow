@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface AppStatCardProps {
-  value: string | number;
+  value: string | number | React.ReactNode;
   label: string;
   icon?: React.ReactNode;
   color?: 'primary' | 'success' | 'warning' | 'error';
