@@ -8,11 +8,7 @@ interface StatCardRowProps {
 }
 
 export const StatCardRow: React.FC<StatCardRowProps> = ({ statCards, className }) => (
-  <div className={`
-    flex gap-3 overflow-x-auto pb-4
-    [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-    ${className || ""}
-  `}>
+  <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${className || ""}`}>
     {statCards.map((props, idx) => (
         <AppStatCard
             key={idx}
