@@ -63,7 +63,7 @@ const Index = () => {
 
   // DYNAMIC TODAY VIEW - replaces static content
   const todayView = (
-    <div>
+    <div className="w-full">
       {/* Progress Cards */}
       <TodayProgressCards />
 
