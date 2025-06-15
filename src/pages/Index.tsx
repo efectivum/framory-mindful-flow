@@ -12,6 +12,7 @@ import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useTodayContent } from "@/hooks/useTodayContent";
 import React from 'react';
+import { TodayProgressCards } from "@/components/TodayProgressCards";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -66,6 +67,9 @@ const Index = () => {
   // DYNAMIC TODAY VIEW - replaces static content
   const todayView = (
     <div>
+      {/* Progress Cards */}
+      <TodayProgressCards />
+
       {/* Greeting & prompt */}
       <div className="mb-6 text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{greeting}</h1>
