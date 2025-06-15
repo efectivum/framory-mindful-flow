@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AppStatCard } from "@/components/ui/AppStatCard";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
@@ -20,7 +19,9 @@ export const TodayProgressCards: React.FC = () => {
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
   const { getQuickAnalysis } = useQuickAnalysis();
-  const { data: quickAnalysis } = latestEntry ? getQuickAnalysis(latestEntry.id) : { data: undefined };
+
+  // Always call the hook, with suitable enabled flag
+  const { data: quickAnalysis } = getQuickAnalysis(latestEntry ? latestEntry.id : "");
 
   // Habit stats
   const activeHabits = habits.filter((h) => h.is_active);
