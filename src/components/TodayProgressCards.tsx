@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AppStatCard } from "@/components/ui/AppStatCard";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
@@ -20,6 +19,17 @@ export const TodayProgressCards: React.FC = () => {
 
   // Detect mobile layout
   const isMobile = useIsMobile();
+
+  // DEBUG: Log the detected mobile state and location for troubleshooting
+  React.useEffect(() => {
+    console.log('[TodayProgressCards] isMobile:', isMobile, 'window.innerWidth:', typeof window !== 'undefined' ? window.innerWidth : '');
+  }, [isMobile]);
+
+  // On initial render, isMobile will be undefined; we want to avoid rendering the wrong layout.
+  if (isMobile === undefined) {
+    // Optionally, you could return a loader/spinner here if you want
+    return null;
+  }
 
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
