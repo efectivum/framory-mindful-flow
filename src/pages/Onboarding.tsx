@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -74,7 +73,7 @@ const Onboarding = () => {
       <Card className="w-full max-w-lg bg-gray-800/60 border-gray-700/60 backdrop-blur-md shadow-xl">
         <CardContent className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-1">Welcome to Framory!</h1>
+            <h1 className="text-2xl font-bold text-white mb-1">Welcome to Lumatori!</h1>
             <p className="text-gray-400">Let's set up your personalized experience</p>
           </div>
           {step === 0 && (

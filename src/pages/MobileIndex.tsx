@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ const MobileIndex = () => {
         <div className="app-fade-in">
           <AppPageHeader
             icon={<Plus className="w-8 h-8 text-white" />}
-            title="Welcome to Framory"
+            title="Welcome to Lumatori"
             subtitle="Your personal growth companion for mindful living"
           />
           <AppCard variant="glass">

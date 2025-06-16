@@ -39,7 +39,7 @@ serve(async (req) => {
         {
           price_data: {
             currency: "usd",
-            product_data: { name: "Framory Premium - AI-Powered Insights" },
+            product_data: { name: "Lumatori Premium - AI-Powered Insights" },
             unit_amount: 999, // $9.99
             recurring: { interval: "month" },
           },

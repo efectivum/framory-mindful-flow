@@ -43,7 +43,7 @@ serve(async (req) => {
     
     if (isJournalEntry) {
       // Journal entry response - provide immediate contextual coaching
-      systemPrompt = `You are Framory Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.
+      systemPrompt = `You are Lumatori Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.
 
 USER CONTEXT:
 ${userContext.preferences ? `
@@ -85,7 +85,7 @@ RESPONSE STYLE:
 Respond naturally to their journal entry with personalized coaching insights.`;
     } else {
       // Conversational chat response
-      systemPrompt = `You are Framory Assistant, a personal growth companion. You provide helpful, conversational responses based on the user's context.
+      systemPrompt = `You are Lumatori Assistant, a personal growth companion. You provide helpful, conversational responses based on the user's context.
 
 USER CONTEXT:
 ${userContext.preferences ? `

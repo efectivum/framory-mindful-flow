@@ -11,7 +11,7 @@ function getTodayDateStr() {
   return d.toISOString().split("T")[0];
 }
 
-const INTENTION_KEY = "framory_daily_intention_";
+const INTENTION_KEY = "lumatori_daily_intention_";
 
 export function useTodayContent() {
   const { mode } = useTimeOfDay();
