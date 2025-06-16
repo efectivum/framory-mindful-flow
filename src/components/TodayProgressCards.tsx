@@ -4,16 +4,18 @@ import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useWeeklyInsights } from "@/hooks/useWeeklyInsights";
 import { useQuickAnalysis } from "@/hooks/useQuickAnalysis";
 import { useProgressStats } from "@/hooks/useProgressStats";
+import { useSubscription } from "@/hooks/useSubscription";
 import { StatCardRow } from "@/components/StatCardRow";
 import { AIInsightCard, WeeklyInsightCard } from "@/components/InsightCard";
+import { PremiumGate } from "@/components/PremiumGate";
 import { CircleCheck, FileChartLine, TrendingUp, TrendingDown, CircleArrowUp } from "lucide-react";
-import { AppStatCard } from "@/components/ui/AppStatCard";
 
 export const TodayProgressCards: React.FC = () => {
   const { stats, entries, activeHabits, completedHabitsToday, longestHabitStreak, moodTrend } =
     useProgressStats();
   const { mode } = useTimeOfDay();
   const { weeklyInsights, getLatestInsight } = useWeeklyInsights();
+  const { isPremium } = useSubscription();
 
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
@@ -68,12 +70,34 @@ export const TodayProgressCards: React.FC = () => {
 
   const latestInsight = getLatestInsight();
 
-  // Mobile-first: horizontal scroll by default, grid at desktop via CSS only
   return (
     <div className="w-full mb-4">
       <StatCardRow statCards={statCards} />
-      <AIInsightCard quickAnalysis={quickAnalysis} />
-      <WeeklyInsightCard latestInsight={latestInsight} />
+      
+      {isPremium ? (
+        <>
+          <AIInsightCard quickAnalysis={quickAnalysis} />
+          <WeeklyInsightCard latestInsight={latestInsight} />
+        </>
+      ) : (
+        <>
+          <PremiumGate
+            feature="AI Insights"
+            description="Get personalized insights and analysis of your journal entries powered by AI."
+            showPreview
+          >
+            <AIInsightCard quickAnalysis={quickAnalysis} />
+          </PremiumGate>
+          
+          <PremiumGate
+            feature="Weekly AI Reports"
+            description="Receive comprehensive weekly summaries and growth observations."
+            showPreview
+          >
+            <WeeklyInsightCard latestInsight={latestInsight} />
+          </PremiumGate>
+        </>
+      )}
     </div>
   );
 };

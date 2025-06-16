@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuickAnalysis } from '@/hooks/useQuickAnalysis';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumGate } from '@/components/PremiumGate';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,6 +18,17 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { getQuickAnalysis } = useQuickAnalysis();
   const { data: analysis, isLoading } = getQuickAnalysis(entry.id);
+  const { isPremium } = useSubscription();
+
+  if (!isPremium) {
+    return (
+      <PremiumGate
+        feature="AI Analysis"
+        description="Get instant AI-powered insights and takeaways from your journal entries."
+        className="mt-4"
+      />
+    );
+  }
 
   if (isLoading) {
     return (
