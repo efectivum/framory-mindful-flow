@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "../pages/Index";
@@ -14,6 +15,7 @@ import NotFound from "../pages/NotFound";
 import Chat from "../pages/Chat";
 import Onboarding from "../pages/Onboarding";
 import ConversationalOnboarding from "../pages/ConversationalOnboarding";
+import PremiumSuccess from "../pages/PremiumSuccess";
 
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuth } from '@/hooks/useAuth';
@@ -128,6 +130,14 @@ const AppRoutes = () => {
             <RequireOnboarding>
               <Chat />
             </RequireOnboarding>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/premium-success"
+        element={
+          <ProtectedRoute>
+            <PremiumSuccess />
           </ProtectedRoute>
         }
       />
