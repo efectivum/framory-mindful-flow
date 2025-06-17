@@ -1,5 +1,6 @@
+
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,8 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useQuickAnalysis } from '@/hooks/useQuickAnalysis';
 import { MoodDisplay } from '@/components/MoodDisplay';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { DeepReflectionModal } from '@/components/DeepReflectionModal';
+import { useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 
 const JournalEntry = () => {
@@ -14,6 +17,7 @@ const JournalEntry = () => {
   const navigate = useNavigate();
   const { entries } = useJournalEntries();
   const { getQuickAnalysis } = useQuickAnalysis();
+  const [showDeepReflection, setShowDeepReflection] = useState(false);
 
   const entry = entries.find(e => e.id === id);
   const { data: analysis } = getQuickAnalysis(id || '');
@@ -44,7 +48,7 @@ const JournalEntry = () => {
           Back to Journal
         </Button>
 
-        {/* AI Analysis Section */}
+        {/* Simplified AI Analysis Section */}
         {analysis && (
           <Card className="bg-gradient-to-br from-purple-500/10 to-blue-600/10 border-gray-700/50 backdrop-blur-sm">
             <CardHeader>
@@ -54,12 +58,12 @@ const JournalEntry = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Detected Emotions */}
+              {/* Main Emotions */}
               {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
                 <div>
-                  <h4 className="text-purple-300 font-medium mb-2">Detected Emotions</h4>
+                  <h4 className="text-purple-300 font-medium mb-2">Main Emotions</h4>
                   <div className="flex gap-2 flex-wrap">
-                    {entry.ai_detected_emotions.map((emotion, index) => (
+                    {entry.ai_detected_emotions.slice(0, 5).map((emotion, index) => (
                       <Badge key={index} variant="secondary" className="bg-purple-500/20 text-purple-300">
                         {emotion}
                       </Badge>
@@ -68,11 +72,11 @@ const JournalEntry = () => {
                 </div>
               )}
 
-              {/* Key Takeaways */}
+              {/* Short Summary */}
               {analysis.quick_takeaways && analysis.quick_takeaways.length > 0 && (
                 <div>
-                  <h4 className="text-blue-300 font-medium mb-2">Key Takeaways</h4>
-                  <div className="space-y-2">
+                  <h4 className="text-blue-300 font-medium mb-2">Summary</h4>
+                  <div className="space-y-1">
                     {analysis.quick_takeaways.map((takeaway, index) => (
                       <div key={index} className="flex items-start gap-2">
                         <span className="text-blue-400 text-sm mt-1">•</span>
@@ -83,35 +87,16 @@ const JournalEntry = () => {
                 </div>
               )}
 
-              {/* Emotional Insights */}
-              {analysis.emotional_insights && analysis.emotional_insights.length > 0 && (
-                <div>
-                  <h4 className="text-green-300 font-medium mb-2">Emotional Insights</h4>
-                  <div className="space-y-2">
-                    {analysis.emotional_insights.map((insight, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="text-green-400 text-sm mt-1">💙</span>
-                        <span className="text-gray-300 text-sm">{insight}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Suggestions */}
-              {analysis.action_suggestions && analysis.action_suggestions.length > 0 && (
-                <div className="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                  <h4 className="text-indigo-300 font-medium mb-2">Suggested Actions</h4>
-                  <div className="space-y-2">
-                    {analysis.action_suggestions.map((suggestion, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="text-indigo-400 text-sm mt-1">→</span>
-                        <span className="text-gray-300 text-sm">{suggestion}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Go Deeper Button */}
+              <div className="pt-3 border-t border-gray-600">
+                <Button
+                  onClick={() => setShowDeepReflection(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Go Deeper
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -162,6 +147,13 @@ const JournalEntry = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Deep Reflection Modal */}
+        <DeepReflectionModal
+          open={showDeepReflection}
+          onClose={() => setShowDeepReflection(false)}
+          entry={entry}
+        />
       </div>
     </ResponsiveLayout>
   );
