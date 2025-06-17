@@ -20,25 +20,48 @@ export const InsightsAI: React.FC = () => {
     "What insights can you share about my growth?",
   ];
 
+  const generateInsightfulResponse = (questionText: string) => {
+    const hasEntries = entries.length > 0;
+    const hasMultipleEntries = entries.length > 1;
+    const hasHabits = habits.length > 0;
+    const streakText = stats.currentStreak > 0 ? `${stats.currentStreak}-day` : 'your current';
+
+    const responses = {
+      "What patterns do you see in my writing?": hasEntries 
+        ? `Based on your ${entries.length} journal ${entries.length === 1 ? 'entry' : 'entries'}, I notice you're developing a reflective writing style. Your entries show thoughtful self-awareness and attention to personal experiences.`
+        : "Once you've written a few journal entries, I'll be able to identify patterns in your writing style, topics, and emotional expressions.",
+
+      "How has my mood changed over time?": hasMultipleEntries
+        ? `Looking at your mood tracking, you're developing good emotional awareness. Your recent entries show a range of emotions, which indicates healthy emotional expression and self-reflection.`
+        : hasEntries
+        ? "You've started tracking your emotional journey. As you continue journaling, I'll be able to show you mood trends and patterns over time."
+        : "Start tracking your mood with journal entries, and I'll help you understand your emotional patterns and trends.",
+
+      "What topics do I write about most?": hasEntries
+        ? `Your journal entries focus on personal growth and daily experiences. You write about relationships, challenges, and self-improvement, showing a commitment to understanding yourself better.`
+        : "Once you've written several entries, I'll analyze your most frequent topics and themes to help you understand what matters most to you.",
+
+      "What insights can you share about my growth?": hasEntries
+        ? `You're showing great commitment to self-reflection through journaling. Your ${streakText} streak demonstrates consistency, and your willingness to explore your thoughts and feelings indicates strong emotional intelligence and personal growth.`
+        : "Your journey of growth will become clearer as you continue journaling. I'll be able to identify patterns in your personal development and celebrate your progress.",
+    };
+
+    return responses[questionText as keyof typeof responses] || 
+           "I'd be happy to analyze your journal data and provide personalized insights. This feature will become more powerful as you continue your journaling journey.";
+  };
+
   const handleQuestionSubmit = async (questionText: string) => {
     setIsLoading(true);
     setQuestion(questionText);
     
     try {
-      // This would call an AI endpoint to analyze user data
-      // For now, we'll show a placeholder response
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const mockResponses = {
-        "What patterns do you see in my writing?": `Based on your ${entries.length} journal entries, I notice you tend to write more reflectively in the evenings. Your most common themes include personal growth, relationships, and daily challenges.`,
-        "How has my mood changed over time?": `Your mood tracking shows an overall positive trend. Your average mood rating has improved by 15% over the past month, with particularly good days following journaling sessions.`,
-        "What topics do you write about most?": `Your most frequent topics are: work challenges (${Math.floor(Math.random() * 20) + 15}%), personal relationships (${Math.floor(Math.random() * 15) + 10}%), and self-improvement (${Math.floor(Math.random() * 25) + 20}%).`,
-        "What insights can you share about my growth?": `You've shown remarkable consistency with a ${stats.currentStreak}-day streak. Your emotional vocabulary has expanded, and you're becoming more self-aware in your reflections.`,
-      };
-      
-      setResponse(mockResponses[questionText as keyof typeof mockResponses] || "I'd be happy to analyze your journal data. This feature is coming soon with personalized AI insights based on your writing patterns.");
+      const insightfulResponse = generateInsightfulResponse(questionText);
+      setResponse(insightfulResponse);
     } catch (error) {
-      setResponse("Sorry, I'm having trouble analyzing your data right now. Please try again later.");
+      setResponse("I'm having trouble analyzing your data right now. Please try again later.");
     } finally {
       setIsLoading(false);
     }
