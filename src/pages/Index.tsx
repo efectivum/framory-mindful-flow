@@ -2,35 +2,26 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { DashboardWidget } from '@/components/DashboardWidget';
-import { Target, BookOpen, TrendingUp, Plus, Calendar, Heart, Clock } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 import { useTimeOfDay } from "@/hooks/useTimeOfDay";
 import { useTodayContent } from "@/hooks/useTodayContent";
 import React from 'react';
-import { TodayProgressCards } from "@/components/TodayProgressCards";
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
+import { Card, CardContent } from '@/components/ui/card';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const { habits } = useHabits();
   const { entries, stats } = useJournalEntries();
-  const { summaryData } = useJournalAnalysis();
-
-  // Today View logic
   const { greeting } = useTimeOfDay();
   const todayContent = useTodayContent();
   const [intentionInput, setIntentionInput] = React.useState('');
 
   // Calculate habit stats
   const activeHabits = habits.filter(habit => habit.is_active);
-  const longestStreak = Math.max(...activeHabits.map(habit => habit.current_streak), 0);
-  const avgProgress = activeHabits.length > 0 
-    ? Math.round((activeHabits.reduce((sum, habit) => sum + (habit.current_streak / habit.target_days * 100), 0) / activeHabits.length))
-    : 0;
+  const todaysHabits = activeHabits.slice(0, 3); // Show first 3 habits
 
   if (loading) {
     return (
@@ -63,150 +54,130 @@ const Index = () => {
     );
   }
 
-  // DYNAMIC TODAY VIEW - replaces static content
-  const todayView = (
-    <div className="w-full">
-      {/* Progress Cards */}
-      <TodayProgressCards />
-
-      {/* Greeting & prompt */}
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{greeting}</h1>
-        <p className="text-md md:text-lg text-gray-300">{todayContent.prompt}</p>
-      </div>
-      {/* Intention input for morning mode */}
-      {todayContent.showIntentionBox && (
-        <div className="my-4 flex flex-col items-center max-w-md mx-auto">
-          {todayContent.intention ? (
-            <div className="bg-green-950/60 border border-green-700 text-green-200 px-4 py-3 rounded-xl w-full text-center mb-2">
-              <span>
-                <strong>Your intention:</strong> {todayContent.intention}
-              </span>
-              <Button
-                className="ml-2 text-xs px-2 h-7"
-                variant="ghost"
-                onClick={() => todayContent.setIntention("")}
-              >
-                Change
-              </Button>
-            </div>
-          ) : (
-            <form
-              className="w-full flex flex-col gap-2"
-              onSubmit={e => {
-                e.preventDefault();
-                if (intentionInput.trim()) {
-                  todayContent.setIntention(intentionInput.trim());
-                  setIntentionInput('');
-                }
-              }}
-            >
-              <input
-                type="text"
-                className="w-full bg-gray-900/60 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                placeholder="e.g. Be present in every moment"
-                value={intentionInput}
-                onChange={e => setIntentionInput(e.target.value)}
-                maxLength={64}
-                autoFocus
-              />
-              <Button
-                className="w-full md:w-auto bg-blue-700 text-white rounded-lg mt-1"
-                type="submit"
-                size="sm"
-              >
-                Set Intention
-              </Button>
-            </form>
-          )}
-        </div>
-      )}
-
-      {/* Suggestion sentence */}
-      {todayContent.suggestion && (
-        <div className="text-sm text-gray-400 my-2 text-center">{todayContent.suggestion}</div>
-      )}
-
-      {/* NEW DYNAMIC FEATURES */}
-      <DynamicHomepageFeatures />
-
-      {/* Reflection summary block for midday/evening */}
-      {todayContent.showReflectionSummary && (
-        <div className="my-8">
-          <h2 className="text-lg font-semibold text-white mb-1">Recent Reflections</h2>
-          <div className="space-y-2">
-            {entries.slice(0, 2).map((entry) => (
-              <div
-                className="p-3 bg-gray-800/60 rounded-lg border border-gray-700 text-gray-200"
-                key={entry.id}
-              >
-                <div className="font-medium mb-1 truncate">{entry.title || "Journal Entry"}</div>
-                <div className="text-xs text-gray-400 line-clamp-2">{entry.content.slice(0, 75)}...</div>
-                <div className="text-xs text-gray-500 mt-1">{new Date(entry.created_at).toLocaleDateString()}</div>
-              </div>
-            ))}
-            {entries.length === 0 && (
-              <div className="text-gray-500 text-center text-xs">No recent reflections. Write your first entry today!</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Quick mood check (midday/evening) */}
-      {todayContent.showMoodCheck && (
-        <div className="my-6">
-          <h3 className="text-white mb-1 font-semibold">How's your mood?</h3>
-          {/* Simple quick mood input: emoji dropdown, to be replaced with better picker/logic */}
-          <div className="flex items-center gap-3 justify-center">
-            <span className="text-2xl cursor-pointer">😊</span>
-            <span className="text-2xl cursor-pointer">😐</span>
-            <span className="text-2xl cursor-pointer">😢</span>
-            {/* (Add onClick logic to store mood in the future) */}
-          </div>
-        </div>
-      )}
-
-      {/* Habit completion (evening) */}
-      {todayContent.showHabits && (
-        <div className="my-6">
-          <h3 className="text-white font-semibold mb-2">Today's Habits</h3>
-          <div className="flex flex-wrap gap-2">
-            {habits.length > 0 ? (
-              habits.map(habit => (
-                <div
-                  key={habit.id}
-                  className={`px-3 py-2 rounded-lg border text-sm font-medium ${
-                    habit.is_active ? 'bg-gradient-to-r from-green-900 to-green-800 border-green-700 text-green-100' : 'bg-gray-800 border-gray-700 text-gray-400'
-                  }`}
-                >
-                  {habit.title}
-                  {habit.current_streak ? <span className="ml-2 text-xs">🔥{habit.current_streak}d</span> : ""}
-                </div>
-              ))
-            ) : (
-              <div className="text-gray-400">No tracked habits today</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Main actions, always */
-      }
-      <div className="mt-8 mb-10 space-y-4">
-        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" asChild>
-          <Link to="/journal">Start Journaling</Link>
-        </Button>
-        <Button className="w-full bg-gray-700 hover:bg-gray-800 text-white" asChild>
-          <Link to="/goals">Review Goals</Link>
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Use ResponsiveLayout everywhere (mobile first)
   return (
     <ResponsiveLayout>
-      {todayView}
+      <div className="space-y-8">
+        {/* Welcome Section */}
+        <div className="text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{greeting}</h1>
+          <p className="text-md md:text-lg text-gray-300">{todayContent.prompt}</p>
+        </div>
+
+        {/* Intention Setting */}
+        {todayContent.showIntentionBox && (
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm max-w-md mx-auto">
+            <CardContent className="p-4">
+              {todayContent.intention ? (
+                <div className="text-center">
+                  <p className="text-green-300 mb-2">
+                    <strong>Today's intention:</strong> {todayContent.intention}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => todayContent.setIntention("")}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    Change
+                  </Button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    if (intentionInput.trim()) {
+                      todayContent.setIntention(intentionInput.trim());
+                      setIntentionInput('');
+                    }
+                  }}
+                  className="space-y-3"
+                >
+                  <input
+                    type="text"
+                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="e.g. Be present in every moment"
+                    value={intentionInput}
+                    onChange={e => setIntentionInput(e.target.value)}
+                    maxLength={64}
+                    autoFocus
+                  />
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                    Set Intention
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-600/10 border-gray-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-white">{stats.currentStreak}</div>
+              <p className="text-gray-300 text-sm">Day Streak</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-green-500/10 to-emerald-600/10 border-gray-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-white">{entries.length}</div>
+              <p className="text-gray-300 text-sm">Total Entries</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-purple-500/10 to-violet-600/10 border-gray-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-white">{activeHabits.length}</div>
+              <p className="text-gray-300 text-sm">Active Habits</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Today's Habits */}
+        {todaysHabits.length > 0 && (
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <h3 className="text-white font-semibold mb-3">Today's Habits</h3>
+              <div className="space-y-2">
+                {todaysHabits.map(habit => (
+                  <div
+                    key={habit.id}
+                    className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg border border-gray-600"
+                  >
+                    <span className="text-gray-200">{habit.title}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-400">🔥 {habit.current_streak}d</span>
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        Complete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Main Actions */}
+        <div className="space-y-4">
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg" asChild>
+            <Link to="/journal">
+              <Plus className="w-5 h-5 mr-2" />
+              Start Journaling
+            </Link>
+          </Button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button className="bg-gray-700 hover:bg-gray-600 text-white h-10" asChild>
+              <Link to="/goals">Manage Habits</Link>
+            </Button>
+            <Button className="bg-gray-700 hover:bg-gray-600 text-white h-10" asChild>
+              <Link to="/insights">View Insights</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     </ResponsiveLayout>
   );
 };
