@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { HabitTrackingOverview } from '@/components/HabitTrackingOverview';
 import { MiniCalendar } from '@/components/MiniCalendar';
@@ -8,10 +9,14 @@ import { PersonalityInsight } from '@/components/PersonalityInsight';
 import { RecurringTopics } from '@/components/RecurringTopics';
 import { InsightsSuggestions } from '@/components/InsightsSuggestions';
 import { InsightsAI } from '@/components/InsightsAI';
+import { EmotionDetailModal } from '@/components/EmotionDetailModal';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 
 const Insights = () => {
+  const navigate = useNavigate();
   const { entries } = useJournalEntries();
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Process emotions from journal entries for bubble chart
   const emotionFrequency = React.useMemo(() => {
@@ -37,8 +42,22 @@ const Insights = () => {
   }, [entries]);
 
   const handleEmotionClick = (emotion: string) => {
-    // Future: show entries related to this emotion
-    console.log('Clicked emotion:', emotion);
+    setSelectedEmotion(emotion);
+    setIsModalOpen(true);
+  };
+
+  const handleViewEntries = () => {
+    if (selectedEmotion) {
+      navigate(`/journal-history?emotion=${encodeURIComponent(selectedEmotion)}`);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleAskQuestions = () => {
+    if (selectedEmotion) {
+      navigate(`/chat?emotion=${encodeURIComponent(selectedEmotion)}`);
+    }
+    setIsModalOpen(false);
   };
 
   return (
@@ -73,6 +92,16 @@ const Insights = () => {
         {/* Ask AI */}
         <InsightsAI />
       </div>
+
+      {/* Emotion Detail Modal */}
+      <EmotionDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        emotion={selectedEmotion || ''}
+        entries={entries}
+        onViewEntries={handleViewEntries}
+        onAskQuestions={handleAskQuestions}
+      />
     </ResponsiveLayout>
   );
 };

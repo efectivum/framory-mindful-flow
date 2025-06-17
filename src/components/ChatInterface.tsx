@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +10,9 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 
 export const ChatInterface = () => {
+  const [searchParams] = useSearchParams();
+  const emotionFromParams = searchParams.get('emotion');
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -29,6 +33,27 @@ export const ChatInterface = () => {
   
   const { createEntry } = useJournalEntries();
   const { detectIntent, generateResponse, isDetectingIntent, isGeneratingResponse } = useConversationalAI();
+
+  // Handle emotion-focused prompts from URL params
+  useEffect(() => {
+    if (emotionFromParams && messages.length === 1) {
+      const emotionPrompt = `I'd like to explore my ${emotionFromParams} entries. What patterns do you see with my ${emotionFromParams} experiences? Can you help me understand when and why I feel ${emotionFromParams}?`;
+      setInputText(emotionPrompt);
+      
+      // Update the initial bot message to be emotion-focused
+      setMessages([{
+        id: '1',
+        type: 'bot',
+        content: `I see you want to explore your ${emotionFromParams} experiences. I'm ready to help you analyze patterns and insights related to this emotion. What would you like to know?`,
+        timestamp: new Date(),
+      }]);
+      
+      // Focus the input
+      setTimeout(() => {
+        textAreaRef.current?.focus();
+      }, 100);
+    }
+  }, [emotionFromParams, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -142,7 +167,6 @@ export const ChatInterface = () => {
     setInputText(transcribedText);
     textAreaRef.current?.focus();
   };
-
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#171c26]">
