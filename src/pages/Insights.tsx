@@ -8,7 +8,6 @@ import { PersonalityInsight } from '@/components/PersonalityInsight';
 import { RecurringTopics } from '@/components/RecurringTopics';
 import { InsightsSuggestions } from '@/components/InsightsSuggestions';
 import { InsightsAI } from '@/components/InsightsAI';
-import { EmotionDetailModal } from '@/components/EmotionDetailModal';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 
 const Insights = () => {
