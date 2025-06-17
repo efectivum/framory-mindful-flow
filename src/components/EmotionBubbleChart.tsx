@@ -1,10 +1,15 @@
 
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Calendar, TrendingUp, Brain } from 'lucide-react';
 
 interface EmotionBubbleChartProps {
   emotions: Record<string, number>;
   onEmotionClick?: (emotion: string) => void;
+  onViewEntries?: (emotion: string) => void;
+  onAskQuestions?: (emotion: string) => void;
 }
 
 const emotionColors: Record<string, string> = {
@@ -30,10 +35,41 @@ const emotionColors: Record<string, string> = {
   pride: 'bg-purple-400',
 };
 
-export const EmotionBubbleChart = ({ emotions, onEmotionClick }: EmotionBubbleChartProps) => {
+const emotionInsights: Record<string, { description: string; patterns: string; growth: string }> = {
+  joy: {
+    description: "Joy represents moments of pure happiness and celebration in your life. It often emerges from achievements, connections with others, or experiencing something meaningful.",
+    patterns: "Joy typically appears during social interactions, accomplishments, or when engaging in activities you're passionate about. It tends to be more frequent on weekends and during positive life events.",
+    growth: "Cultivating joy involves recognizing and savoring positive moments, practicing gratitude, and engaging in activities that bring you genuine happiness."
+  },
+  happiness: {
+    description: "Happiness reflects your overall sense of well-being and contentment. It's a broader emotional state that encompasses satisfaction with life's various aspects.",
+    patterns: "Happiness often correlates with periods of stability, progress toward goals, and meaningful relationships. It tends to be sustained rather than momentary.",
+    growth: "Building happiness involves aligning your actions with your values, nurturing relationships, and finding purpose in your daily activities."
+  },
+  anxiety: {
+    description: "Anxiety indicates your mind's response to uncertainty or perceived threats. While challenging, it can also signal that you care deeply about outcomes.",
+    patterns: "Anxiety often emerges before important events, during transitions, or when facing unfamiliar situations. It may be more prominent during busy periods or when feeling overwhelmed.",
+    growth: "Managing anxiety involves developing coping strategies, practicing mindfulness, and gradually facing fears in manageable steps."
+  },
+  sadness: {
+    description: "Sadness is a natural response to loss, disappointment, or difficult circumstances. It allows for processing and healing from challenging experiences.",
+    patterns: "Sadness may appear during significant changes, losses, or when reflecting on past experiences. It often comes in waves and can be triggered by memories or anniversaries.",
+    growth: "Processing sadness healthily involves allowing yourself to feel it, seeking support when needed, and finding meaning in difficult experiences."
+  },
+  stress: {
+    description: "Stress reflects your response to pressure and demands. While some stress can be motivating, chronic stress signals the need for better balance and coping strategies.",
+    patterns: "Stress often peaks during deadlines, conflicts, or when juggling multiple responsibilities. It may be more intense during certain times of day or specific situations.",
+    growth: "Managing stress involves identifying triggers, developing healthy coping mechanisms, and creating boundaries to protect your well-being."
+  }
+};
+
+export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, onAskQuestions }: EmotionBubbleChartProps) => {
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'bubbles' | 'analysis'>('bubbles');
+
   const maxIntensity = Math.max(...Object.values(emotions));
-  const minSize = 40;
-  const maxSize = 120;
+  const minSize = 50;
+  const maxSize = 100;
 
   const getBubbleSize = (intensity: number) => {
     const normalizedIntensity = intensity / maxIntensity;
@@ -46,72 +82,191 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick }: EmotionBubbleCh
 
   const sortedEmotions = Object.entries(emotions)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 12); // Show top 12 emotions
+    .slice(0, 9); // Show top 9 emotions for better layout
+
+  const handleEmotionClick = (emotion: string) => {
+    setSelectedEmotion(emotion);
+    setViewMode('analysis');
+    onEmotionClick?.(emotion);
+  };
+
+  const handleBack = () => {
+    setViewMode('bubbles');
+    setSelectedEmotion(null);
+  };
+
+  const getEmotionAnalysis = (emotion: string) => {
+    const intensity = emotions[emotion];
+    const insight = emotionInsights[emotion.toLowerCase()] || {
+      description: `${emotion} is an important emotion that reflects your inner experiences and responses to life events.`,
+      patterns: `This emotion appears in your journal entries with varying frequency, often connected to specific situations or contexts.`,
+      growth: `Understanding and working with this emotion can contribute to your personal growth and emotional awareness.`
+    };
+
+    return {
+      frequency: intensity,
+      maxFrequency: maxIntensity,
+      percentage: Math.round((intensity / maxIntensity) * 100),
+      ...insight
+    };
+  };
 
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white">Emotional Landscape</CardTitle>
+        <CardTitle className="text-white flex items-center gap-2">
+          {viewMode === 'analysis' && selectedEmotion && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="text-gray-400 hover:text-white p-1 mr-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          )}
+          {viewMode === 'bubbles' ? 'Emotional Landscape' : `${selectedEmotion} Analysis`}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative min-h-[300px] flex flex-wrap items-center justify-center gap-4 p-4">
-          {sortedEmotions.map(([emotion, intensity], index) => {
-            const size = getBubbleSize(intensity);
-            return (
-              <motion.div
-                key={emotion}
-                className={`
-                  relative rounded-full cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg
-                  ${getEmotionColor(emotion)} opacity-80 hover:opacity-100
-                  flex items-center justify-center text-white font-medium text-sm
-                `}
-                style={{ 
-                  width: `${size}px`, 
-                  height: `${size}px`,
-                  fontSize: `${Math.max(10, size / 8)}px`
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.8 }}
-                transition={{ 
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 15
-                }}
-                whileHover={{ scale: 1.1, opacity: 1 }}
-                onClick={() => onEmotionClick?.(emotion)}
-                title={`${emotion}: ${intensity.toFixed(1)}/10`}
-              >
-                <div className="text-center">
-                  <div className="font-medium capitalize">{emotion}</div>
-                  <div className="text-xs opacity-90">{intensity.toFixed(1)}</div>
-                </div>
-                
-                {/* Floating animation for top emotions */}
-                {index < 3 && (
+      <CardContent className="min-h-[300px]">
+        <AnimatePresence mode="wait">
+          {viewMode === 'bubbles' ? (
+            <motion.div
+              key="bubbles"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-3 gap-6 p-4"
+            >
+              {sortedEmotions.map(([emotion, intensity], index) => {
+                const size = getBubbleSize(intensity);
+                return (
                   <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-white/30"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.3, 0.1, 0.3],
+                    key={emotion}
+                    className="flex justify-center"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ 
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 15
                     }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-        
-        <div className="mt-4 text-center">
-          <p className="text-gray-400 text-sm">
-            Click on emotions to explore related journal entries
-          </p>
-        </div>
+                  >
+                    <div
+                      className={`
+                        relative rounded-full cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg
+                        ${getEmotionColor(emotion)} opacity-80 hover:opacity-100
+                        flex items-center justify-center text-white font-medium
+                      `}
+                      style={{ 
+                        width: `${size}px`, 
+                        height: `${size}px`,
+                        fontSize: `${Math.max(10, size / 7)}px`
+                      }}
+                      onClick={() => handleEmotionClick(emotion)}
+                      title={`${emotion}: ${intensity.toFixed(1)}/10`}
+                    >
+                      <div className="text-center">
+                        <div className="font-medium capitalize">{emotion}</div>
+                        <div className="text-xs opacity-90">{intensity.toFixed(1)}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              <div className="col-span-3 text-center mt-4">
+                <p className="text-gray-400 text-sm">
+                  Click on emotions to explore detailed insights
+                </p>
+              </div>
+            </motion.div>
+          ) : selectedEmotion && (
+            <motion.div
+              key="analysis"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {(() => {
+                const analysis = getEmotionAnalysis(selectedEmotion);
+                return (
+                  <>
+                    {/* Header with emotion info */}
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className={`w-16 h-16 rounded-full ${getEmotionColor(selectedEmotion)} flex items-center justify-center`}
+                      >
+                        <span className="text-white font-bold text-lg capitalize">
+                          {selectedEmotion[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-white capitalize">{selectedEmotion}</h3>
+                        <p className="text-gray-400">
+                          {analysis.percentage}% intensity • Appears {analysis.frequency.toFixed(1)} times
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Analysis sections */}
+                    <div className="space-y-4">
+                      <div className="bg-gray-700/30 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="w-4 h-4 text-blue-400" />
+                          <h4 className="font-medium text-white">Understanding</h4>
+                        </div>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {analysis.description}
+                        </p>
+                      </div>
+
+                      <div className="bg-gray-700/30 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="w-4 h-4 text-green-400" />
+                          <h4 className="font-medium text-white">Patterns</h4>
+                        </div>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {analysis.patterns}
+                        </p>
+                      </div>
+
+                      <div className="bg-gray-700/30 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="w-4 h-4 text-purple-400" />
+                          <h4 className="font-medium text-white">Growth Opportunities</h4>
+                        </div>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {analysis.growth}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-4">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50"
+                        onClick={() => onViewEntries?.(selectedEmotion)}
+                      >
+                        Show relevant journal items
+                      </Button>
+                      <Button 
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                        onClick={() => onAskQuestions?.(selectedEmotion)}
+                      >
+                        Ask questions
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );

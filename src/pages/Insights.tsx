@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
@@ -15,8 +14,6 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 const Insights = () => {
   const navigate = useNavigate();
   const { entries } = useJournalEntries();
-  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Process emotions from journal entries for bubble chart
   const emotionFrequency = React.useMemo(() => {
@@ -41,23 +38,12 @@ const Insights = () => {
     return normalized;
   }, [entries]);
 
-  const handleEmotionClick = (emotion: string) => {
-    setSelectedEmotion(emotion);
-    setIsModalOpen(true);
+  const handleViewEntries = (emotion: string) => {
+    navigate(`/journal-history?emotion=${encodeURIComponent(emotion)}`);
   };
 
-  const handleViewEntries = () => {
-    if (selectedEmotion) {
-      navigate(`/journal-history?emotion=${encodeURIComponent(selectedEmotion)}`);
-    }
-    setIsModalOpen(false);
-  };
-
-  const handleAskQuestions = () => {
-    if (selectedEmotion) {
-      navigate(`/chat?emotion=${encodeURIComponent(selectedEmotion)}`);
-    }
-    setIsModalOpen(false);
+  const handleAskQuestions = (emotion: string) => {
+    navigate(`/chat?emotion=${encodeURIComponent(emotion)}`);
   };
 
   return (
@@ -76,7 +62,8 @@ const Insights = () => {
           {/* Emotional State Bubbles */}
           <EmotionBubbleChart 
             emotions={emotionFrequency}
-            onEmotionClick={handleEmotionClick}
+            onViewEntries={handleViewEntries}
+            onAskQuestions={handleAskQuestions}
           />
         </div>
 
@@ -92,16 +79,6 @@ const Insights = () => {
         {/* Ask AI */}
         <InsightsAI />
       </div>
-
-      {/* Emotion Detail Modal */}
-      <EmotionDetailModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        emotion={selectedEmotion || ''}
-        entries={entries}
-        onViewEntries={handleViewEntries}
-        onAskQuestions={handleAskQuestions}
-      />
     </ResponsiveLayout>
   );
 };
