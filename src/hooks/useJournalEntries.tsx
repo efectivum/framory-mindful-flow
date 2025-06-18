@@ -8,6 +8,7 @@ export type JournalEntry = {
   user_id: string;
   content: string;
   mood_after?: number;
+  mood_before?: number;
   title?: string;
   created_at: string;
   updated_at: string;
@@ -16,7 +17,8 @@ export type JournalEntry = {
   ai_sentiment_score?: number;
   ai_detected_emotions?: string[];
   ai_confidence_level?: number;
-  mood_before?: number;
+  mood_alignment_score?: number;
+  tags?: string[];
 };
 
 export const useJournalEntries = () => {
@@ -40,7 +42,7 @@ export const useJournalEntries = () => {
 
   // Create entry mutation
   const createEntryMutation = useMutation({
-    mutationFn: async (entry: { content: string; mood_after?: number; title?: string }) => {
+    mutationFn: async (entry: { content: string; mood_after?: number; mood_before?: number; title?: string; tags?: string[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -90,7 +92,7 @@ export const useJournalEntries = () => {
 
   // Update entry mutation
   const updateEntryMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; content?: string; title?: string; mood_after?: number }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; content?: string; title?: string; mood_after?: number; mood_before?: number; tags?: string[] }) => {
       const { data, error } = await supabase
         .from('journal_entries')
         .update(updates)
@@ -106,8 +108,23 @@ export const useJournalEntries = () => {
     },
   });
 
+  // Calculate basic stats from entries
+  const stats = {
+    totalEntries: entries?.length || 0,
+    thisWeekEntries: entries?.filter(entry => {
+      const entryDate = new Date(entry.created_at);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return entryDate > weekAgo;
+    }).length || 0,
+    averageMood: entries?.reduce((sum, entry) => {
+      if (entry.mood_after) return sum + entry.mood_after;
+      return sum;
+    }, 0) / (entries?.filter(entry => entry.mood_after).length || 1) || 0,
+  };
+
   // Wrapper functions for better API
-  const createEntry = (entry: { content: string; mood_after?: number; title?: string }, options?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+  const createEntry = (entry: { content: string; mood_after?: number; mood_before?: number; title?: string; tags?: string[] }, options?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
     createEntryMutation.mutate(entry, options);
   };
 
@@ -115,12 +132,13 @@ export const useJournalEntries = () => {
     deleteEntryMutation.mutate(entryId);
   };
 
-  const updateEntry = (update: { id: string; content?: string; title?: string; mood_after?: number }) => {
+  const updateEntry = (update: { id: string; content?: string; title?: string; mood_after?: number; mood_before?: number; tags?: string[] }) => {
     updateEntryMutation.mutate(update);
   };
 
   return {
-    entries,
+    entries: entries || [],
+    stats,
     isLoading,
     error,
     createEntry,
