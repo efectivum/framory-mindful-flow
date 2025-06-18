@@ -78,16 +78,20 @@ export const AsyncErrorHandler: React.FC<AsyncErrorHandlerProps> = ({
   );
 };
 
-// HOC for handling async component errors
+// Simplified HOC for handling async component errors without forwardRef
 export const withAsyncErrorHandling = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
   errorMessage?: string
 ) => {
-  return React.forwardRef<any, P>((props, ref) => {
+  const ComponentWithAsyncErrorHandling = (props: P) => {
     return (
       <AsyncErrorHandler errorMessage={errorMessage}>
-        <WrappedComponent {...props} ref={ref} />
+        <WrappedComponent {...props} />
       </AsyncErrorHandler>
     );
-  });
+  };
+
+  ComponentWithAsyncErrorHandling.displayName = `withAsyncErrorHandling(${WrappedComponent.displayName || WrappedComponent.name})`;
+
+  return ComponentWithAsyncErrorHandling;
 };
