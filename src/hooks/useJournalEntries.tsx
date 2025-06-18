@@ -1,7 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useJournalEntryAnalysis } from '@/hooks/useJournalEntryAnalysis';
 
 export type JournalEntry = {
   id: string;
@@ -24,6 +24,7 @@ export type JournalEntry = {
 export const useJournalEntries = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { analyzeEntry } = useJournalEntryAnalysis();
 
   // Get active (non-deleted) journal entries
   const { data: entries, isLoading, error } = useQuery({
@@ -40,7 +41,7 @@ export const useJournalEntries = () => {
     },
   });
 
-  // Create entry mutation
+  // Create entry mutation with AI analysis
   const createEntryMutation = useMutation({
     mutationFn: async (entry: { content: string; mood_after?: number; mood_before?: number; title?: string; tags?: string[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -56,6 +57,14 @@ export const useJournalEntries = () => {
         .single();
       
       if (error) throw error;
+      
+      // Trigger AI analysis in background after successful creation
+      if (data) {
+        setTimeout(() => {
+          analyzeEntry(data as JournalEntry);
+        }, 500);
+      }
+      
       return data;
     },
     onSuccess: () => {

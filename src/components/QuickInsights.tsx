@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Brain, MessageCircle, Sparkles } from 'lucide-react';
+import { Brain, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { InlineLoading } from '@/components/ui/inline-loading';
@@ -30,6 +30,9 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     );
   }
 
+  // Show mood analysis even without quick analysis
+  const hasAIData = entry.ai_detected_emotions || entry.ai_detected_mood || analysis;
+
   if (isLoading) {
     return (
       <InlineLoading 
@@ -39,23 +42,39 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     );
   }
 
-  if (!analysis) {
+  if (!hasAIData) {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
         <Brain className="w-4 h-4" />
-        <span>Analysis will appear automatically after saving</span>
+        <span>AI analysis will appear after processing</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
+      {/* Mood Analysis */}
+      {entry.ai_detected_mood && (
+        <div className="flex items-start gap-2">
+          <TrendingUp className="w-4 h-4 text-green-400 mt-0.5" />
+          <div className="flex-1">
+            <div className="text-green-300 text-sm font-medium mb-1">Detected Mood:</div>
+            <div className="text-gray-300 text-sm">
+              {entry.ai_detected_mood}/5 mood rating
+              {entry.ai_confidence_level && (
+                <span className="text-gray-400"> ({Math.round(entry.ai_confidence_level * 100)}% confidence)</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Emotions */}
       {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
         <div className="flex items-start gap-2">
           <Sparkles className="w-4 h-4 text-purple-400 mt-0.5" />
           <div className="flex-1">
-            <div className="text-purple-300 text-sm font-medium mb-2">Main Emotions:</div>
+            <div className="text-purple-300 text-sm font-medium mb-2">Detected Emotions:</div>
             <div className="flex gap-2 flex-wrap">
               {entry.ai_detected_emotions.slice(0, 5).map((emotion, index) => (
                 <Badge key={index} variant="secondary" className="bg-purple-500/20 text-purple-300 text-xs">
@@ -67,12 +86,12 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
         </div>
       )}
 
-      {/* Short Summary */}
-      {analysis.quick_takeaways && analysis.quick_takeaways.length > 0 && (
+      {/* Quick Analysis Takeaways */}
+      {analysis?.quick_takeaways && analysis.quick_takeaways.length > 0 && (
         <div className="flex items-start gap-2">
           <Brain className="w-4 h-4 text-blue-400 mt-0.5" />
           <div className="flex-1">
-            <div className="text-blue-300 text-sm font-medium mb-2">Summary:</div>
+            <div className="text-blue-300 text-sm font-medium mb-2">Key Insights:</div>
             <div className="space-y-1">
               {analysis.quick_takeaways.map((takeaway, index) => (
                 <div key={index} className="text-gray-300 text-sm flex items-start gap-2">

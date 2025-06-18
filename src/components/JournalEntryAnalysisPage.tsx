@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, BookOpen, Lightbulb, Target } from 'lucide-react';
+import { ArrowLeft, MessageSquare, BookOpen, Lightbulb, Target, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,24 +39,19 @@ export const JournalEntryAnalysisPage: React.FC<JournalEntryAnalysisPageProps> =
     );
   }
 
+  const hasAIAnalysis = entry.ai_detected_emotions || entry.ai_detected_mood || analysis;
+  
   const suggestedTopics = [
     "What patterns do you notice in your thoughts today?",
-    "How did your emotions shift throughout the day?",
+    "How did your emotions shift throughout the day?", 
     "What would you like to explore deeper?",
     "What challenged you most today?",
     "What are you grateful for right now?",
     "How can you build on today's insights?"
   ];
 
-  const shouldRecommendChat = analysis && (
-    (analysis.emotional_insights?.some(insight => 
-      insight.toLowerCase().includes('stress') || 
-      insight.toLowerCase().includes('anxiety') ||
-      insight.toLowerCase().includes('concern')
-    )) ||
-    (entry.ai_detected_emotions?.some(emotion => 
-      ['stress', 'anxiety', 'overwhelm', 'frustration'].includes(emotion.toLowerCase())
-    ))
+  const shouldRecommendChat = entry.ai_detected_emotions?.some(emotion => 
+    ['stress', 'anxiety', 'overwhelm', 'frustration', 'worry'].includes(emotion.toLowerCase())
   );
 
   return (
@@ -80,7 +74,9 @@ export const JournalEntryAnalysisPage: React.FC<JournalEntryAnalysisPageProps> =
           
           <div className="text-right">
             <h1 className="text-2xl font-bold text-white">Entry Saved!</h1>
-            <p className="text-gray-400">Here's what we discovered</p>
+            <p className="text-gray-400">
+              {hasAIAnalysis ? "Here's what we discovered" : "AI analysis in progress..."}
+            </p>
           </div>
         </motion.div>
 
@@ -124,49 +120,70 @@ export const JournalEntryAnalysisPage: React.FC<JournalEntryAnalysisPageProps> =
         </motion.div>
 
         {/* AI Analysis */}
-        {analysis && (
+        {hasAIAnalysis && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="space-y-4"
           >
-            {/* Key Insights */}
+            {/* Mood & Emotions */}
             <Card className="bg-gradient-to-br from-purple-500/10 to-blue-600/10 border-gray-700/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5" />
-                  Key Insights
+                  <Brain className="w-5 h-5" />
+                  AI Analysis
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {analysis.quick_takeaways && analysis.quick_takeaways.length > 0 && (
-                  <div className="space-y-2">
-                    {analysis.quick_takeaways.map((takeaway, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="text-purple-400 text-sm mt-1">✨</span>
-                        <span className="text-gray-300 text-sm">{takeaway}</span>
-                      </div>
-                    ))}
+                {/* Detected Mood */}
+                {entry.ai_detected_mood && (
+                  <div>
+                    <h4 className="text-blue-300 font-medium mb-2">Detected Mood</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-white">{entry.ai_detected_mood}/5</span>
+                      {entry.ai_confidence_level && (
+                        <span className="text-gray-400 text-sm">
+                          ({Math.round(entry.ai_confidence_level * 100)}% confidence)
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {analysis.emotional_insights && analysis.emotional_insights.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-blue-300 font-medium">Emotional Patterns</h4>
-                    {analysis.emotional_insights.map((insight, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="text-blue-400 text-sm mt-1">💙</span>
-                        <span className="text-gray-300 text-sm">{insight}</span>
-                      </div>
-                    ))}
+                {/* Detected Emotions */}
+                {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
+                  <div>
+                    <h4 className="text-purple-300 font-medium mb-2">Emotions Detected</h4>
+                    <div className="flex gap-2 flex-wrap">
+                      {entry.ai_detected_emotions.map((emotion, index) => (
+                        <Badge key={index} variant="secondary" className="bg-purple-500/20 text-purple-300">
+                          {emotion}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Insights */}
+                {analysis?.quick_takeaways && analysis.quick_takeaways.length > 0 && (
+                  <div>
+                    <h4 className="text-green-300 font-medium mb-2">Key Insights</h4>
+                    <div className="space-y-2">
+                      {analysis.quick_takeaways.map((takeaway, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <span className="text-green-400 text-sm mt-1">✨</span>
+                          <span className="text-gray-300 text-sm">{takeaway}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Growth Signals */}
-            {analysis.growth_indicators && analysis.growth_indicators.length > 0 && (
+            {/* Growth Indicators */}
+            {analysis?.growth_indicators && analysis.growth_indicators.length > 0 && (
               <Card className="bg-gradient-to-br from-green-500/10 to-teal-600/10 border-gray-700/50 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
@@ -189,7 +206,7 @@ export const JournalEntryAnalysisPage: React.FC<JournalEntryAnalysisPageProps> =
           </motion.div>
         )}
 
-        {/* Chat Recommendation (only if concerning patterns detected) */}
+        {/* Chat Recommendation */}
         {shouldRecommendChat && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

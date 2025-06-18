@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { MoodDisplay } from '@/components/MoodDisplay';
+import { JournalEntrySummary } from '@/components/JournalEntrySummary';
+import { Brain } from 'lucide-react';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -16,6 +18,8 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
   const handleClick = () => {
     navigate(`/journal/entry/${entry.id}`);
   };
+
+  const hasAIAnalysis = entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0;
 
   return (
     <Card 
@@ -30,9 +34,15 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
                 {entry.title}
               </h3>
             )}
-            <p className="text-sm text-gray-400">
-              {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span>{formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}</span>
+              {hasAIAnalysis && (
+                <div className="flex items-center gap-1">
+                  <Brain className="w-3 h-3 text-purple-400" />
+                  <span className="text-purple-400">AI Analyzed</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <MoodDisplay 
@@ -46,9 +56,26 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-gray-300 whitespace-pre-wrap line-clamp-3">{entry.content}</p>
+        <JournalEntrySummary entry={entry} />
         
-        {entry.tags && entry.tags.length > 0 && (
+        {/* Show AI detected emotions prominently */}
+        {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
+          <div className="flex gap-1 flex-wrap">
+            {entry.ai_detected_emotions.slice(0, 4).map((emotion, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/30"
+              >
+                {emotion}
+              </Badge>
+            ))}
+          </div>
+        )}
+        
+        {/* Show regular tags if no AI emotions */}
+        {(!entry.ai_detected_emotions || entry.ai_detected_emotions.length === 0) && 
+         entry.tags && entry.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">
             {entry.tags.map((tag, index) => (
               <Badge key={index} variant="secondary" className="text-xs">
