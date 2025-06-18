@@ -35,8 +35,16 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { content } = await req.json();
     
+    if (!content || typeof content !== 'string') {
+      throw new Error('Invalid content provided');
+    }
+
     const wordCount = content.trim().split(' ').length;
     
     // Skip analysis for very short content (minimum 50 words)
@@ -94,13 +102,39 @@ serve(async (req) => {
           { role: 'user', content: `Analyze this journal entry: "${content}"` }
         ],
         temperature: 0.2,
+        max_tokens: 300,
       }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
     const data = await response.json();
+    
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI API');
+    }
+
     console.log('Raw AI response:', data.choices[0].message.content);
     
     const analysis = cleanAndParseJSON(data.choices[0].message.content);
+
+    // Validate the response structure
+    if (typeof analysis.mood !== 'number' || analysis.mood < 1 || analysis.mood > 5) {
+      analysis.mood = 3; // Default to neutral
+    }
+    if (typeof analysis.sentiment !== 'number' || analysis.sentiment < -1 || analysis.sentiment > 1) {
+      analysis.sentiment = 0; // Default to neutral
+    }
+    if (!Array.isArray(analysis.emotions)) {
+      analysis.emotions = [];
+    }
+    if (typeof analysis.confidence !== 'number' || analysis.confidence < 0 || analysis.confidence > 1) {
+      analysis.confidence = 0.5; // Default confidence
+    }
 
     // Ensure emotions array doesn't exceed limit
     if (analysis.emotions && analysis.emotions.length > maxEmotions) {

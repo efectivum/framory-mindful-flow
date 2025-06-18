@@ -22,9 +22,25 @@ export const useJournalEntryAnalysis = () => {
 
         console.log(`Starting analysis for entry ${entry.id} (${wordCount} words)`);
         
-        // Analyze mood first
-        const moodAnalysis = await analyzeMood(entry.content);
+        // Step 1: Analyze mood with retry logic
+        let moodAnalysis = null;
+        let retryCount = 0;
+        const maxRetries = 3;
         
+        while (retryCount < maxRetries && !moodAnalysis) {
+          try {
+            moodAnalysis = await analyzeMood(entry.content);
+            if (moodAnalysis) break;
+          } catch (error) {
+            console.error(`Mood analysis attempt ${retryCount + 1} failed:`, error);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+            }
+          }
+        }
+
         if (moodAnalysis) {
           // Calculate mood alignment
           const alignmentScore = entry.mood_after 
@@ -50,14 +66,28 @@ export const useJournalEntryAnalysis = () => {
 
           console.log(`Mood analysis complete for entry ${entry.id}`);
 
-          // Generate quick analysis for insights (only for entries with 50+ words)
-          try {
-            await generateQuickAnalysis(entry);
-            console.log(`Quick analysis complete for entry ${entry.id}`);
-          } catch (quickAnalysisError) {
-            console.error('Quick analysis failed but mood analysis succeeded:', quickAnalysisError);
-            // Don't throw here - mood analysis succeeded
+          // Step 2: Generate quick analysis with retry logic
+          retryCount = 0;
+          while (retryCount < maxRetries) {
+            try {
+              await generateQuickAnalysis(entry);
+              console.log(`Quick analysis complete for entry ${entry.id}`);
+              break;
+            } catch (quickAnalysisError) {
+              console.error(`Quick analysis attempt ${retryCount + 1} failed:`, quickAnalysisError);
+              retryCount++;
+              if (retryCount < maxRetries) {
+                // Wait before retry
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+              } else {
+                console.error('Quick analysis failed after all retries, but mood analysis succeeded');
+                // Don't throw here - mood analysis succeeded
+              }
+            }
           }
+        } else {
+          console.error('Mood analysis failed after all retries');
+          throw new Error('Failed to analyze mood after multiple attempts');
         }
 
         return moodAnalysis;
@@ -66,10 +96,13 @@ export const useJournalEntryAnalysis = () => {
         throw error;
       }
     },
+    retry: 2, // Allow mutation-level retries
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   return {
     analyzeEntry: analyzeAndUpdateEntry.mutate,
     isAnalyzing: analyzeAndUpdateEntry.isPending,
+    analysisError: analyzeAndUpdateEntry.error,
   };
 };

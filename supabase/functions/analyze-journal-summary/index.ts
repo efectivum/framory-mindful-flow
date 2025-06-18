@@ -40,6 +40,10 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { entries, analysisType = 'quick', userPreferences, userPatterns } = await req.json();
     
     if (!entries || entries.length === 0) {
@@ -47,6 +51,11 @@ serve(async (req) => {
     }
 
     const entry = entries[0];
+    
+    if (!entry || !entry.content) {
+      throw new Error('Invalid entry data provided');
+    }
+
     const wordCount = entry.content.trim().split(' ').length;
     
     // Skip analysis for very short content (minimum 50 words)
@@ -60,18 +69,22 @@ serve(async (req) => {
         confidence_score: 0.1
       };
       
-      const { error: insertError } = await supabase
-        .from('entry_quick_analysis')
-        .upsert({
-          entry_id: entry.id,
-          user_id: entry.user_id,
-          ...defaultAnalysis
-        }, {
-          onConflict: 'entry_id'
-        });
+      try {
+        const { error: insertError } = await supabase
+          .from('entry_quick_analysis')
+          .upsert({
+            entry_id: entry.id,
+            user_id: entry.user_id,
+            ...defaultAnalysis
+          }, {
+            onConflict: 'entry_id'
+          });
 
-      if (insertError) {
-        console.error('Error storing analysis:', insertError);
+        if (insertError) {
+          console.error('Error storing default analysis:', insertError);
+        }
+      } catch (dbError) {
+        console.error('Database operation failed:', dbError);
       }
 
       return new Response(JSON.stringify(defaultAnalysis), {
@@ -136,41 +149,76 @@ Return only valid JSON with no markdown formatting.`;
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: analysisPrompt }],
           temperature: 0.2,
+          max_tokens: 500,
         }),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error:', response.status, errorText);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
       const aiResponse = await response.json();
+      
+      if (!aiResponse.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response from OpenAI API');
+      }
+
       console.log('Raw AI response:', aiResponse.choices[0].message.content);
       
       const analysis = cleanAndParseJSON(aiResponse.choices[0].message.content);
 
+      // Validate and ensure limits are respected
+      if (!Array.isArray(analysis.quick_takeaways)) {
+        analysis.quick_takeaways = [];
+      }
+      if (!Array.isArray(analysis.emotional_insights)) {
+        analysis.emotional_insights = [];
+      }
+      if (!Array.isArray(analysis.growth_indicators)) {
+        analysis.growth_indicators = [];
+      }
+      if (!Array.isArray(analysis.action_suggestions)) {
+        analysis.action_suggestions = [];
+      }
+      if (typeof analysis.confidence_score !== 'number') {
+        analysis.confidence_score = 0.5;
+      }
+
       // Ensure limits are respected
-      if (analysis.quick_takeaways && analysis.quick_takeaways.length > maxTakeaways) {
+      if (analysis.quick_takeaways.length > maxTakeaways) {
         analysis.quick_takeaways = analysis.quick_takeaways.slice(0, maxTakeaways);
       }
-      if (analysis.growth_indicators && analysis.growth_indicators.length > maxGrowthIndicators) {
+      if (analysis.growth_indicators.length > maxGrowthIndicators) {
         analysis.growth_indicators = analysis.growth_indicators.slice(0, maxGrowthIndicators);
       }
 
       console.log(`Quick analysis complete: ${analysis.quick_takeaways?.length || 0} takeaways, ${analysis.growth_indicators?.length || 0} growth indicators`);
 
-      // Store the analysis
-      const { error: insertError } = await supabase
-        .from('entry_quick_analysis')
-        .upsert({
-          entry_id: entry.id,
-          user_id: entry.user_id,
-          quick_takeaways: analysis.quick_takeaways || [],
-          emotional_insights: analysis.emotional_insights || [],
-          growth_indicators: analysis.growth_indicators || [],
-          action_suggestions: analysis.action_suggestions || [],
-          confidence_score: analysis.confidence_score || 0.5
-        }, {
-          onConflict: 'entry_id'
-        });
+      // Store the analysis with error handling
+      try {
+        const { error: insertError } = await supabase
+          .from('entry_quick_analysis')
+          .upsert({
+            entry_id: entry.id,
+            user_id: entry.user_id,
+            quick_takeaways: analysis.quick_takeaways || [],
+            emotional_insights: analysis.emotional_insights || [],
+            growth_indicators: analysis.growth_indicators || [],
+            action_suggestions: analysis.action_suggestions || [],
+            confidence_score: analysis.confidence_score || 0.5
+          }, {
+            onConflict: 'entry_id'
+          });
 
-      if (insertError) {
-        console.error('Error storing analysis:', insertError);
+        if (insertError) {
+          console.error('Error storing analysis:', insertError);
+          // Don't throw here, return the analysis anyway
+        }
+      } catch (dbError) {
+        console.error('Database operation failed:', dbError);
+        // Don't throw here, return the analysis anyway
       }
 
       return new Response(JSON.stringify(analysis), {
@@ -209,10 +257,22 @@ Return only valid JSON with no markdown formatting.`;
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: analysisPrompt }],
           temperature: 0.3,
+          max_tokens: 800,
         }),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error:', response.status, errorText);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
       const aiResponse = await response.json();
+      
+      if (!aiResponse.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response from OpenAI API');
+      }
+
       const analysis = cleanAndParseJSON(aiResponse.choices[0].message.content);
 
       return new Response(JSON.stringify(analysis), {

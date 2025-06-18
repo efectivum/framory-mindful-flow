@@ -58,25 +58,44 @@ export const useJournalEntries = () => {
       
       if (error) throw error;
       
-      // Trigger AI analysis with proper error handling and retry logic
+      // Trigger AI analysis with improved error handling
       if (data) {
         const wordCount = data.content.trim().split(' ').length;
         
         if (wordCount >= 50) {
-          // Use a longer delay to ensure the entry is properly saved
-          setTimeout(() => {
-            console.log(`Triggering analysis for new entry ${data.id} (${wordCount} words)`);
-            analyzeEntry(data as JournalEntry);
-          }, 1000);
+          console.log(`Scheduling analysis for new entry ${data.id} (${wordCount} words)`);
+          
+          // Use a more reliable delay and error handling
+          setTimeout(async () => {
+            try {
+              console.log(`Triggering analysis for entry ${data.id}`);
+              analyzeEntry(data as JournalEntry);
+            } catch (error) {
+              console.error(`Failed to trigger analysis for entry ${data.id}:`, error);
+              // Don't show user error for background analysis failure
+            }
+          }, 2000); // Increased delay to ensure database consistency
         } else {
-          console.log(`Skipping analysis for short entry (${wordCount} words)`);
+          console.log(`Entry ${data.id} too short for analysis (${wordCount} words)`);
         }
       }
       
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      toast({
+        title: "Entry Created",
+        description: "Your journal entry has been saved successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Create entry error:', error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your entry. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -118,12 +137,53 @@ export const useJournalEntries = () => {
         .single();
       
       if (error) throw error;
+
+      // Re-trigger analysis if content was updated and is substantial
+      if (updates.content && data) {
+        const wordCount = updates.content.trim().split(' ').length;
+        if (wordCount >= 50) {
+          console.log(`Re-analyzing updated entry ${id} (${wordCount} words)`);
+          setTimeout(() => {
+            try {
+              analyzeEntry(data as JournalEntry);
+            } catch (error) {
+              console.error(`Failed to re-analyze updated entry ${id}:`, error);
+            }
+          }, 1000);
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      toast({
+        title: "Entry Updated",
+        description: "Your journal entry has been updated successfully.",
+      });
     },
   });
+
+  // Function to manually trigger analysis for entries missing it
+  const triggerMissingAnalysis = async () => {
+    if (!entries) return;
+    
+    const entriesNeedingAnalysis = entries.filter(entry => {
+      const wordCount = entry.content.trim().split(' ').length;
+      return wordCount >= 50 && !entry.ai_detected_emotions && !entry.ai_detected_mood;
+    });
+
+    console.log(`Found ${entriesNeedingAnalysis.length} entries needing analysis`);
+    
+    // Process a few at a time to avoid overwhelming the system
+    for (let i = 0; i < Math.min(5, entriesNeedingAnalysis.length); i++) {
+      const entry = entriesNeedingAnalysis[i];
+      setTimeout(() => {
+        console.log(`Triggering missing analysis for entry ${entry.id}`);
+        analyzeEntry(entry);
+      }, i * 3000); // Stagger the requests
+    }
+  };
 
   // Calculate current streak
   const calculateCurrentStreak = () => {
@@ -197,6 +257,7 @@ export const useJournalEntries = () => {
     createEntry,
     deleteEntry,
     updateEntry,
+    triggerMissingAnalysis, // New function to manually trigger analysis
     isCreating: createEntryMutation.isPending,
     isDeleting: deleteEntryMutation.isPending,
     isUpdating: updateEntryMutation.isPending,
