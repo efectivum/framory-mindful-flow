@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { Message } from '@/types/chat';
@@ -9,17 +9,17 @@ interface ConversationState {
   content: string;
 }
 
-interface ConversationManagerProps {
+interface UseConversationManagerProps {
   isCoachingMode: boolean;
   onMessageAdd: (message: Message) => void;
   onInputFocus: () => void;
 }
 
-export const ConversationManager: React.FC<ConversationManagerProps> = ({
+export const useConversationManager = ({
   isCoachingMode,
   onMessageAdd,
   onInputFocus
-}) => {
+}: UseConversationManagerProps) => {
   const [conversationHistory, setConversationHistory] = useState<ConversationState[]>([]);
   const { generateResponse, isGeneratingResponse } = useConversationalAI();
   const journalSuggestion = useJournalSuggestion();
@@ -114,21 +114,4 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
     isGeneratingResponse,
     conversationHistory
   };
-};
-
-export const useConversationManager = (
-  isCoachingMode: boolean,
-  onMessageAdd: (message: Message) => void,
-  onInputFocus: () => void
-) => {
-  const managerRef = useRef<any>(null);
-  
-  return (
-    <ConversationManager
-      ref={managerRef}
-      isCoachingMode={isCoachingMode}
-      onMessageAdd={onMessageAdd}
-      onInputFocus={onInputFocus}
-    />
-  );
 };

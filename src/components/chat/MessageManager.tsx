@@ -1,21 +1,21 @@
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/chat';
 
-interface MessageManagerProps {
+interface UseMessageManagerProps {
   isCoachingMode: boolean;
   onConversation: (inputText: string) => Promise<void>;
   textAreaRef: React.RefObject<HTMLTextAreaElement>;
 }
 
-export const MessageManager: React.FC<MessageManagerProps> = ({
+export const useMessageManager = ({
   isCoachingMode,
   onConversation,
   textAreaRef
-}) => {
+}: UseMessageManagerProps) => {
   const [inputText, setInputText] = useState('');
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [fileAttachment, setFileAttachment] = useState<File | null>(null);
@@ -114,21 +114,4 @@ export const MessageManager: React.FC<MessageManagerProps> = ({
     handleVoiceTranscription,
     isDetectingIntent
   };
-};
-
-export const useMessageManager = (
-  isCoachingMode: boolean,
-  onConversation: (inputText: string) => Promise<void>,
-  textAreaRef: React.RefObject<HTMLTextAreaElement>
-) => {
-  const managerRef = useRef<any>(null);
-  
-  return (
-    <MessageManager
-      ref={managerRef}
-      isCoachingMode={isCoachingMode}
-      onConversation={onConversation}
-      textAreaRef={textAreaRef}
-    />
-  );
 };

@@ -1,28 +1,25 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
-import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatContextManager } from './chat/ChatContextManager';
+import { useConversationManager } from './chat/ConversationManager';
+import { useMessageManager } from './chat/MessageManager';
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
   const [showActivitySelector, setShowActivitySelector] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-  const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
-  const [fileAttachment, setFileAttachment] = useState<File | null>(null);
   const [chatContext, setChatContext] = useState<any>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   
   const { createEntry } = useJournalEntries();
-  const { detectIntent, generateResponse, isDetectingIntent, isGeneratingResponse } = useConversationalAI();
   const journalSuggestion = useJournalSuggestion();
 
   const scrollToBottom = () => {
@@ -43,7 +40,7 @@ export const ChatInterface = () => {
     // Set up input text for emotion context
     if (chatContext?.emotionFromParams) {
       const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
-      setInputText(emotionPrompt);
+      messageManager.setInputText(emotionPrompt);
       
       setTimeout(() => {
         textAreaRef.current?.focus();
@@ -51,150 +48,36 @@ export const ChatInterface = () => {
     }
   };
 
-  const isJournalConfirmation = (message: string): boolean => {
-    const confirmationPatterns = [
-      /^yes,?\s*(save|journal)/i,
-      /^save\s*(it|this|that)/i,
-      /^(yes|yeah|yep)\s*$/i,
-      /^please\s*save/i,
-      /^i\s*would\s*like\s*to\s*save/i,
-    ];
-    
-    return confirmationPatterns.some(pattern => pattern.test(message.trim()));
+  const addMessage = (message: Message) => {
+    setMessages(prev => [...prev, message]);
   };
 
-  const handleSend = async () => {
-    if (!inputText.trim() && !fileAttachment) return;
-    
-    let attachmentUrl: string | undefined = undefined;
-    let attachmentType: string | undefined = undefined;
-    if (fileAttachment) {
-      attachmentUrl = URL.createObjectURL(fileAttachment);
-      attachmentType = fileAttachment.type;
-    }
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputText,
-      activityType: selectedActivity || undefined,
-      timestamp: new Date(),
-      ...(attachmentUrl ? { attachmentUrl, attachmentType } : {}),
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setInputText('');
-    setFileAttachment(null);
+  const handleInputFocus = () => {
     textAreaRef.current?.focus();
+  };
 
-    if (attachmentUrl && !inputText.trim()) return;
+  // Initialize conversation manager
+  const conversationManager = useConversationManager({
+    isCoachingMode: chatContext?.isCoachingMode || false,
+    onMessageAdd: addMessage,
+    onInputFocus: handleInputFocus
+  });
 
-    // Check if this is a journal confirmation from a coaching conversation
-    if (journalSuggestion.isWaitingForConfirmation && isJournalConfirmation(inputText)) {
-      journalSuggestion.confirmSuggestion();
-      
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: "Perfect! I've prepared your journal entry based on our conversation. You can edit it before saving if needed.",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, botResponse]);
-      return;
-    }
+  // Initialize message manager
+  const messageManager = useMessageManager({
+    isCoachingMode: chatContext?.isCoachingMode || false,
+    onConversation: conversationManager.handleConversation,
+    textAreaRef
+  });
 
-    // For coaching mode, use different detection logic
-    if (chatContext?.isCoachingMode) {
-      // In coaching mode, focus on conversation rather than immediate journaling
-      const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
-      const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
-      
-      if (aiResponse) {
-        const botResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'bot',
-          content: aiResponse,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botResponse]);
-        setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
-
-        // Only suggest journaling if the coach naturally offers it in the response
-        if (aiResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
-            aiResponse.toLowerCase().includes('capture these insights in your journal')) {
-          const conversationSummary = conversationHistory.map(msg => 
-            `${msg.role === 'user' ? 'You' : 'Coach'}: ${msg.content}`
-          ).join('\n\n');
-          journalSuggestion.setSuggestion(conversationSummary);
-        }
-      }
-    } else {
-      // Regular chat mode with intent detection
-      const intentResult = await detectIntent(inputText, selectedActivity, conversationHistory);
-      console.log('Intent detection result:', intentResult);
-
-      if (intentResult?.intent === 'journal' && intentResult.confidence > 0.7) {
-        newMessage.isJournalEntry = true;
-        setMessages(prev => prev.map(msg => msg.id === newMessage.id ? newMessage : msg));
-
-        createEntry({
-          content: inputText,
-          title: selectedActivity ? `${selectedActivity} entry` : undefined,
-        });
-
-        const aiResponse = await generateResponse(inputText, conversationHistory, true);
-        
-        if (aiResponse) {
-          const botResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'bot',
-            content: aiResponse,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, botResponse]);
-          setConversationHistory(prev => [...prev, 
-            { role: 'user', content: inputText },
-            { role: 'assistant', content: aiResponse }
-          ]);
-        }
-      } else {
-        const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
-        const aiResponse = await generateResponse(inputText, updatedHistory, false);
-        
-        if (aiResponse) {
-          const botResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'bot',
-            content: aiResponse,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, botResponse]);
-          setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
-
-          // Check if AI suggested journaling (but not in coaching mode)
-          if (aiResponse.toLowerCase().includes('would you like to save') && 
-              aiResponse.toLowerCase().includes('journal')) {
-            journalSuggestion.setSuggestion(inputText);
-          }
-        } else {
-          const botResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'bot',
-            content: "I'm sorry, I'm having trouble responding right now. Please try again.",
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, botResponse]);
-        }
-      }
-    }
-
-    setSelectedActivity(null);
+  const handleSend = async () => {
+    await messageManager.handleSend(addMessage);
   };
 
   const handleJournalSave = (content: string) => {
     createEntry({
       content: content,
-      title: selectedActivity ? `${selectedActivity} entry` : undefined,
+      title: messageManager.selectedActivity ? `${messageManager.selectedActivity} entry` : undefined,
     });
 
     const botResponse: Message = {
@@ -219,23 +102,8 @@ export const ChatInterface = () => {
   };
 
   const handleActivitySelect = (activity: string) => {
-    setSelectedActivity(activity);
+    messageManager.setSelectedActivity(activity);
     setShowActivitySelector(false);
-    textAreaRef.current?.focus();
-  };
-
-  const handleVoiceTranscription = (transcribedText: string) => {
-    setInputText(transcribedText);
-    textAreaRef.current?.focus();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      return;
-    }
-    setFileAttachment(file);
     textAreaRef.current?.focus();
   };
 
@@ -249,25 +117,25 @@ export const ChatInterface = () => {
       <ChatHeader />
       <MessageList
         messages={messages}
-        isDetectingIntent={isDetectingIntent}
-        isGeneratingResponse={isGeneratingResponse}
+        isDetectingIntent={messageManager.isDetectingIntent}
+        isGeneratingResponse={conversationManager.isGeneratingResponse}
         messagesEndRef={messagesEndRef}
       />
       <ChatInput
-        inputText={inputText}
-        setInputText={setInputText}
+        inputText={messageManager.inputText}
+        setInputText={messageManager.setInputText}
         handleSend={handleSend}
-        handleFileChange={handleFileChange}
-        handleVoiceTranscription={handleVoiceTranscription}
+        handleFileChange={messageManager.handleFileChange}
+        handleVoiceTranscription={messageManager.handleVoiceTranscription}
         handleActivitySelect={handleActivitySelect}
-        fileAttachment={fileAttachment}
-        setFileAttachment={setFileAttachment}
-        selectedActivity={selectedActivity}
-        setSelectedActivity={setSelectedActivity}
+        fileAttachment={messageManager.fileAttachment}
+        setFileAttachment={messageManager.setFileAttachment}
+        selectedActivity={messageManager.selectedActivity}
+        setSelectedActivity={messageManager.setSelectedActivity}
         showActivitySelector={showActivitySelector}
         setShowActivitySelector={setShowActivitySelector}
-        isDetectingIntent={isDetectingIntent}
-        isGeneratingResponse={isGeneratingResponse}
+        isDetectingIntent={messageManager.isDetectingIntent}
+        isGeneratingResponse={conversationManager.isGeneratingResponse}
         textAreaRef={textAreaRef}
       />
       
