@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Send } from 'lucide-react';
+import { InlineLoading } from '@/components/ui/inline-loading';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 
@@ -123,10 +123,7 @@ export const InsightsAI: React.FC = () => {
           <Card className="bg-gray-700/30 border-gray-600">
             <CardContent className="p-4">
               {isLoading ? (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <div className="animate-spin w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full"></div>
-                  Analyzing your journal data...
-                </div>
+                <InlineLoading message="Analyzing your journal data..." />
               ) : (
                 <p className="text-gray-200">{response}</p>
               )}

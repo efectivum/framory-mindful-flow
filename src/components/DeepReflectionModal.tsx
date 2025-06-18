@@ -1,9 +1,10 @@
 
 import { useState } from 'react';
-import { MessageCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { MessageCircle, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { InlineLoading } from '@/components/ui/inline-loading';
 import { useToast } from '@/hooks/use-toast';
 import { useDeepReflection } from '@/hooks/useDeepReflection';
 import { JournalEntry } from '@/hooks/useJournalEntries';
@@ -74,8 +75,11 @@ export const DeepReflectionModal = ({ open, onClose, entry }: DeepReflectionModa
 
           {isGenerating && (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-400 mb-4" />
-              <p className="text-gray-300">Creating your reflection...</p>
+              <InlineLoading 
+                message="Creating your reflection..." 
+                size="lg"
+                className="text-gray-300 justify-center"
+              />
             </div>
           )}
 

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Brain, MessageCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { InlineLoading } from '@/components/ui/inline-loading';
 import { useQuickAnalysis } from '@/hooks/useQuickAnalysis';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumGate } from '@/components/PremiumGate';
@@ -31,10 +32,10 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-gray-400 text-sm">
-        <Brain className="w-4 h-4 animate-pulse" />
-        <span>Loading insights...</span>
-      </div>
+      <InlineLoading 
+        message="Loading insights..." 
+        className="text-gray-400 text-sm"
+      />
     );
   }
 

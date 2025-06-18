@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingCard } from '@/components/ui/loading-card';
 import { useJournalAnalysis } from '@/hooks/useJournalAnalysis';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { Heart } from 'lucide-react';
@@ -26,7 +27,14 @@ export const EmotionTrends: React.FC = () => {
   const emotions = summaryData?.emotionBreakdown;
 
   if (isSummaryLoading && !emotions) {
-      return null;
+    return (
+      <LoadingCard 
+        title="Loading emotion trends..."
+        variant="skeleton"
+        lines={4}
+        showHeader={false}
+      />
+    );
   }
   
   if (!emotions || Object.keys(emotions).length === 0) {

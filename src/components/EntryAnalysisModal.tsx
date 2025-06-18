@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { LoadingCard } from '@/components/ui/loading-card';
 import { Brain, TrendingUp, AlertTriangle, Star } from 'lucide-react';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 import { useJournalAnalysis, JournalEntryAnalysis } from '@/hooks/useJournalAnalysis';
@@ -79,12 +79,11 @@ export const EntryAnalysisModal = ({ entry, open, onClose }: EntryAnalysisModalP
 
           {/* Analysis Results */}
           {isEntryLoading ? (
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-8 text-center">
-                <Brain className="w-8 h-8 text-blue-400 mx-auto mb-4 animate-pulse" />
-                <p className="text-gray-400">Analyzing your entry...</p>
-              </CardContent>
-            </Card>
+            <LoadingCard 
+              title="Analyzing your entry..."
+              variant="spinner"
+              className="bg-gray-800/50 border-gray-700"
+            />
           ) : analysis ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Insights */}

@@ -15,7 +15,7 @@ export const NetworkStatusIndicator: React.FC = () => {
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4">
       <Alert 
         variant={isOnline ? "default" : "destructive"}
-        className="bg-gray-800/90 border-gray-600 backdrop-blur-sm"
+        className="bg-gray-800/90 border-gray-600 backdrop-blur-sm animate-fade-in"
       >
         {isOnline ? (
           <Wifi className="h-4 w-4 text-orange-400" />
