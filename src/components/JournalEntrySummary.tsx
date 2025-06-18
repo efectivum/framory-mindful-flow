@@ -7,79 +7,58 @@ interface JournalEntrySummaryProps {
   maxLength?: number;
 }
 
-export const JournalEntrySummary = ({ entry, maxLength = 120 }: JournalEntrySummaryProps) => {
+export const JournalEntrySummary = ({ entry, maxLength = 140 }: JournalEntrySummaryProps) => {
   const summary = useMemo(() => {
-    const content = entry.content;
+    const content = entry.content.trim();
     
     // If content is short enough, return as is
     if (content.length <= maxLength) {
       return content;
     }
 
-    // Try to create an intelligent summary
+    // Split into sentences and try to get the most meaningful one
     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
     if (sentences.length === 0) {
       return content.substring(0, maxLength) + '...';
     }
 
-    // For single sentence, truncate intelligently
+    // For single sentence, truncate elegantly
     if (sentences.length === 1) {
-      const words = content.split(' ');
-      if (words.length <= 15) {
+      if (content.length <= maxLength + 20) {
         return content;
       }
-      return words.slice(0, 15).join(' ') + '...';
+      return content.substring(0, maxLength - 3) + '...';
     }
 
-    // For multiple sentences, try to get key insights
-    let summary = '';
-    
-    // Prioritize sentences with emotional keywords
+    // Try to find the most emotionally rich sentence
     const emotionalKeywords = [
-      'feel', 'felt', 'feeling', 'grateful', 'happy', 'sad', 'angry', 
-      'excited', 'nervous', 'proud', 'worried', 'relieved', 'frustrated',
-      'accomplished', 'overwhelmed', 'peaceful', 'anxious', 'content'
+      'feel', 'felt', 'feeling', 'grateful', 'happy', 'sad', 'excited', 
+      'nervous', 'proud', 'worried', 'relieved', 'accomplished', 'peaceful'
     ];
     
-    const emotionalSentences = sentences.filter(sentence => 
+    const emotionalSentence = sentences.find(sentence => 
       emotionalKeywords.some(keyword => 
         sentence.toLowerCase().includes(keyword)
-      )
+      ) && sentence.trim().length <= maxLength
     );
 
-    if (emotionalSentences.length > 0) {
-      summary = emotionalSentences[0].trim();
-      if (summary.length <= maxLength) {
-        return summary + '.';
-      }
+    if (emotionalSentence) {
+      return emotionalSentence.trim() + '.';
     }
 
-    // Fallback to first sentence
-    summary = sentences[0].trim();
-    if (summary.length <= maxLength) {
-      return summary + '.';
+    // Fallback to first sentence if it fits
+    const firstSentence = sentences[0].trim();
+    if (firstSentence.length <= maxLength) {
+      return firstSentence + '.';
     }
 
-    // Final fallback - intelligent word truncation
-    const words = summary.split(' ');
-    const truncatedWords = [];
-    let currentLength = 0;
-    
-    for (const word of words) {
-      if (currentLength + word.length + 1 <= maxLength - 3) {
-        truncatedWords.push(word);
-        currentLength += word.length + 1;
-      } else {
-        break;
-      }
-    }
-    
-    return truncatedWords.join(' ') + '...';
+    // Final fallback - intelligent truncation
+    return content.substring(0, maxLength - 3) + '...';
   }, [entry.content, maxLength]);
 
   return (
-    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+    <p className="text-gray-300 leading-relaxed text-sm line-clamp-3">
       {summary}
     </p>
   );
