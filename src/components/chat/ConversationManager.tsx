@@ -39,6 +39,8 @@ export const useConversationManager = ({
   };
 
   const handleConversation = async (inputText: string) => {
+    console.log('ConversationManager: Handling conversation', { inputText, isCoachingMode });
+    
     // Check if this is a journal confirmation from a coaching conversation
     if (journalSuggestion.isWaitingForConfirmation && isJournalConfirmation(inputText)) {
       journalSuggestion.confirmSuggestion();
@@ -53,8 +55,9 @@ export const useConversationManager = ({
       return;
     }
 
-    // For coaching mode, use different logic
+    // For coaching mode, use enhanced logic
     if (isCoachingMode) {
+      console.log('ConversationManager: Using coaching mode');
       const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
       const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
       
@@ -82,7 +85,8 @@ export const useConversationManager = ({
         }
       }
     } else {
-      // Regular chat mode
+      // Regular mode
+      console.log('ConversationManager: Using regular mode');
       const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
       const aiResponse = await generateResponse(inputText, updatedHistory, false);
       

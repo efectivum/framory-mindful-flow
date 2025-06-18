@@ -1,3 +1,4 @@
+
 import {
   Calendar,
   Target,
@@ -6,6 +7,7 @@ import {
   Library,
   User,
   Home,
+  MessageSquare,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -37,6 +39,11 @@ const menuItems = [
     title: 'Journaling',
     url: '/journal',
     icon: BookOpen,
+  },
+  {
+    title: 'Coach',
+    url: '/coach',
+    icon: MessageSquare,
   },
   {
     title: 'Insights',

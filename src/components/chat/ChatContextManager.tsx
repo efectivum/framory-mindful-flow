@@ -29,7 +29,9 @@ export const ChatContextManager: React.FC<ChatContextManagerProps> = ({
     const emotionFromParams = searchParams.get('emotion');
     const journalContext = location.state?.journalContext;
     const contextType = location.state?.contextType;
-    const isCoachingMode = contextType === 'journal-entry';
+    
+    // Enable coaching mode if on /coach route or if context type is journal-entry
+    const isCoachingMode = location.pathname === '/coach' || contextType === 'journal-entry';
 
     const context: ChatContext = {
       emotionFromParams,
@@ -59,6 +61,13 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
         content: `I see you want to explore your ${emotionFromParams} experiences. I'm ready to help you analyze patterns and insights related to this emotion. What would you like to know?`,
         timestamp: new Date(),
       };
+    } else if (isCoachingMode) {
+      initialMessage = {
+        id: '1',
+        type: 'bot',
+        content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+        timestamp: new Date(),
+      };
     } else {
       initialMessage = {
         id: '1',
@@ -70,7 +79,7 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
 
     onInitialMessage(initialMessage);
     setIsInitialized(true);
-  }, [searchParams, location.state, onContextReady, onInitialMessage, isInitialized]);
+  }, [searchParams, location.state, location.pathname, onContextReady, onInitialMessage, isInitialized]);
 
   return null; // This is a logic-only component
 };

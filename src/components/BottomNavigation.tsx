@@ -8,7 +8,7 @@ const navItems = [
   { id: 'dashboard', label: 'Home', icon: Home, path: '/' },
   { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
   { id: 'journal', label: 'Journal', icon: BookOpen, path: '/journal' },
-  { id: 'chat', label: 'Chat', icon: MessageSquare, path: '/chat' },
+  { id: 'coach', label: 'Coach', icon: MessageSquare, path: '/coach' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
 
