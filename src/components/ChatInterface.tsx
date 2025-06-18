@@ -1,13 +1,14 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
+import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
+import { JournalPreviewModal } from './JournalPreviewModal';
 
 export const ChatInterface = () => {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,7 @@ export const ChatInterface = () => {
   
   const { createEntry } = useJournalEntries();
   const { detectIntent, generateResponse, isDetectingIntent, isGeneratingResponse } = useConversationalAI();
+  const journalSuggestion = useJournalSuggestion();
 
   // Handle emotion-focused prompts from URL params
   useEffect(() => {
@@ -78,8 +80,21 @@ export const ChatInterface = () => {
     textAreaRef.current?.focus();
   };
 
+  const isJournalConfirmation = (message: string): boolean => {
+    const confirmationPatterns = [
+      /^yes,?\s*(save|journal)/i,
+      /^save\s*(it|this|that)/i,
+      /^(yes|yeah|yep)\s*$/i,
+      /^please\s*save/i,
+      /^i\s*would\s*like\s*to\s*save/i,
+    ];
+    
+    return confirmationPatterns.some(pattern => pattern.test(message.trim()));
+  };
+
   const handleSend = async () => {
     if (!inputText.trim() && !fileAttachment) return;
+    
     let attachmentUrl: string | undefined = undefined;
     let attachmentType: string | undefined = undefined;
     if (fileAttachment) {
@@ -103,6 +118,21 @@ export const ChatInterface = () => {
 
     if (attachmentUrl && !inputText.trim()) return;
 
+    // Check if this is a journal confirmation
+    if (journalSuggestion.isWaitingForConfirmation && isJournalConfirmation(inputText)) {
+      journalSuggestion.confirmSuggestion();
+      
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "Perfect! I've prepared your journal entry for review. You can edit it before saving if needed.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, botResponse]);
+      return;
+    }
+
+    // Regular conversation flow
     const intentResult = await detectIntent(inputText, selectedActivity, conversationHistory);
     console.log('Intent detection result:', intentResult);
 
@@ -143,6 +173,12 @@ export const ChatInterface = () => {
         };
         setMessages(prev => [...prev, botResponse]);
         setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
+
+        // Check if AI suggested journaling
+        if (aiResponse.toLowerCase().includes('would you like to save') && 
+            aiResponse.toLowerCase().includes('journal')) {
+          journalSuggestion.setSuggestion(inputText);
+        }
       } else {
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
@@ -155,6 +191,33 @@ export const ChatInterface = () => {
     }
 
     setSelectedActivity(null);
+  };
+
+  const handleJournalSave = (content: string) => {
+    createEntry({
+      content: content,
+      title: selectedActivity ? `${selectedActivity} entry` : undefined,
+    });
+
+    const botResponse: Message = {
+      id: Date.now().toString(),
+      type: 'bot',
+      content: "Great! Your journal entry has been saved successfully. How are you feeling about what you've shared?",
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, botResponse]);
+    journalSuggestion.clearSuggestion();
+  };
+
+  const handleJournalCancel = () => {
+    const botResponse: Message = {
+      id: Date.now().toString(),
+      type: 'bot',
+      content: "No worries! Your thoughts weren't saved. Feel free to continue our conversation or let me know if you'd like to journal about something else.",
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, botResponse]);
+    journalSuggestion.clearSuggestion();
   };
 
   const handleActivitySelect = (activity: string) => {
@@ -193,6 +256,14 @@ export const ChatInterface = () => {
         isDetectingIntent={isDetectingIntent}
         isGeneratingResponse={isGeneratingResponse}
         textAreaRef={textAreaRef}
+      />
+      
+      <JournalPreviewModal
+        isOpen={journalSuggestion.showPreview}
+        onClose={journalSuggestion.clearSuggestion}
+        suggestedContent={journalSuggestion.suggestedContent}
+        onSave={handleJournalSave}
+        onCancel={handleJournalCancel}
       />
     </div>
   );
