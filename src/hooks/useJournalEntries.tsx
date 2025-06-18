@@ -3,6 +3,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export type JournalEntry = {
+  id: string;
+  user_id: string;
+  content: string;
+  mood_after?: number;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  ai_detected_mood?: number;
+  ai_sentiment_score?: number;
+  ai_detected_emotions?: string[];
+  ai_confidence_level?: number;
+  mood_before?: number;
+};
+
 export const useJournalEntries = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -18,16 +34,22 @@ export const useJournalEntries = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as JournalEntry[];
     },
   });
 
   // Create entry mutation
   const createEntryMutation = useMutation({
     mutationFn: async (entry: { content: string; mood_after?: number; title?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('journal_entries')
-        .insert(entry)
+        .insert({
+          ...entry,
+          user_id: user.id
+        })
         .select()
         .single();
       
