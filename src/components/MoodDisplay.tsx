@@ -45,7 +45,7 @@ export const MoodDisplay = ({
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       {/* User Mood */}
       {userMood && (
         <div className="text-center">
@@ -71,7 +71,7 @@ export const MoodDisplay = ({
                   <p>Confidence: {Math.round(aiConfidence * 100)}%</p>
                 )}
                 {aiEmotions && aiEmotions.length > 0 && (
-                  <p>Emotions: {aiEmotions.join(', ')}</p>
+                  <p>Emotions: {aiEmotions.slice(0, 3).join(', ')}{aiEmotions.length > 3 ? '...' : ''}</p>
                 )}
               </div>
             </TooltipContent>
@@ -96,17 +96,6 @@ export const MoodDisplay = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )}
-
-      {/* AI Emotions */}
-      {aiEmotions && aiEmotions.length > 0 && (
-        <div className="flex gap-1 flex-wrap">
-          {aiEmotions.slice(0, 2).map((emotion, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {emotion}
-            </Badge>
-          ))}
-        </div>
       )}
     </div>
   );

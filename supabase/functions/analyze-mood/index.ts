@@ -16,6 +16,18 @@ serve(async (req) => {
 
   try {
     const { content } = await req.json();
+    
+    // Skip analysis for very short content
+    if (content.trim().split(' ').length < 10) {
+      return new Response(JSON.stringify({
+        mood: 3,
+        sentiment: 0,
+        emotions: [],
+        confidence: 0.1
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -31,8 +43,11 @@ serve(async (req) => {
             content: `You are an expert emotional intelligence analyst. Analyze the emotional content of journal entries and return a JSON response with:
             - mood: integer 1-5 (1=very negative, 2=negative, 3=neutral, 4=positive, 5=very positive)
             - sentiment: decimal -1.0 to 1.0 (-1=very negative, 0=neutral, 1=very positive)
-            - emotions: array of detected emotions (max 3, like ["grateful", "anxious", "excited"])
+            - emotions: array of ALL meaningful emotions detected (not limited to 3-5, extract as many as are genuinely present)
             - confidence: decimal 0.0 to 1.0 representing confidence in analysis
+            
+            Focus on quality over quantity - only include emotions that are clearly present and meaningful. 
+            For rich, complex entries, you may detect 6-10 emotions. For simple entries, 2-4 emotions.
             
             Only return valid JSON, no other text.`
           },

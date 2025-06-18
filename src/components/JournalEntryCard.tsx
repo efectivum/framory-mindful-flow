@@ -20,6 +20,7 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
   };
 
   const hasAIAnalysis = entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0;
+  const wordCount = entry.content.trim().split(' ').length;
 
   return (
     <Card 
@@ -36,7 +37,7 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
             )}
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <span>{formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}</span>
-              {hasAIAnalysis && (
+              {hasAIAnalysis && wordCount >= 10 && (
                 <div className="flex items-center gap-1">
                   <Brain className="w-3 h-3 text-purple-400" />
                   <span className="text-purple-400">AI Analyzed</span>
@@ -58,22 +59,25 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
       <CardContent className="space-y-4">
         <JournalEntrySummary entry={entry} />
         
-        {/* Show AI detected emotions prominently */}
+        {/* Clean Emotion Display - Show all meaningful emotions */}
         {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            {entry.ai_detected_emotions.slice(0, 4).map((emotion, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/30"
-              >
-                {emotion}
-              </Badge>
-            ))}
+          <div className="space-y-2">
+            <div className="text-xs text-purple-300 font-medium">Emotions</div>
+            <div className="flex gap-1 flex-wrap">
+              {entry.ai_detected_emotions.map((emotion, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full"
+                >
+                  {emotion}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
         
-        {/* Show regular tags if no AI emotions */}
+        {/* Show regular tags only if no AI emotions */}
         {(!entry.ai_detected_emotions || entry.ai_detected_emotions.length === 0) && 
          entry.tags && entry.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">
