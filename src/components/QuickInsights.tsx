@@ -43,9 +43,6 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     );
   }
 
-  // Show mood analysis even without quick analysis
-  const hasAIData = entry.ai_detected_emotions || entry.ai_detected_mood || analysis;
-
   if (isLoading) {
     return (
       <InlineLoading 
@@ -55,18 +52,21 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     );
   }
 
+  // Show mood analysis even without quick analysis
+  const hasAIData = entry.ai_detected_emotions || entry.ai_detected_mood || analysis;
+
   if (!hasAIData) {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
         <Brain className="w-4 h-4" />
-        <span>AI analysis will appear after processing</span>
+        <span>AI analysis in progress...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Clean Emotion Display - Mindsera Style */}
+      {/* Clean Emotion Display - All meaningful emotions */}
       {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
         <div className="space-y-2">
           <div className="text-purple-300 text-sm font-medium">Emotions Detected</div>
