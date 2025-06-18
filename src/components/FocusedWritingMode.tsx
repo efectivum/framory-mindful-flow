@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Mic, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,13 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
   const [mood, setMood] = useState<number | undefined>();
   const [wordCount, setWordCount] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Update content when initialContent changes
+  useEffect(() => {
+    if (isOpen) {
+      setContent(initialContent);
+    }
+  }, [isOpen, initialContent]);
 
   useEffect(() => {
     if (content) {

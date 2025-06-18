@@ -251,13 +251,14 @@ export const JournalEntryAnalysisPage: React.FC<JournalEntryAnalysisPageProps> =
                 <Button 
                   onClick={() => navigate('/journal')}
                   variant="outline"
-                  className="flex-1"
+                  className="w-full"
                 >
                   Write Another Entry
                 </Button>
                 <Button 
                   onClick={() => navigate('/journal/history')}
                   variant="outline"
+                  className="w-full"
                 >
                   View All Entries
                 </Button>

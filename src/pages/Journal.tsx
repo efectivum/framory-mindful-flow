@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BookOpen, Mic, History, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ const Journal = () => {
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
+  const [initialContent, setInitialContent] = useState('');
 
   const handleSaveEntry = async (content: string, mood?: number) => {
     try {
@@ -42,6 +44,7 @@ const Journal = () => {
   const handleVoiceTranscription = (text: string) => {
     console.log('Voice transcription received:', text);
     setIsVoiceMode(false);
+    setInitialContent(text);
     openModal();
   };
 
@@ -55,6 +58,12 @@ const Journal = () => {
   ];
 
   const handlePromptClick = (prompt: string) => {
+    setInitialContent(prompt + '\n\n');
+    openModal();
+  };
+
+  const handleStartWriting = () => {
+    setInitialContent('');
     openModal();
   };
 
@@ -93,7 +102,7 @@ const Journal = () => {
             <CardContent className="p-6 md:p-8">
               <div 
                 className="min-h-32 w-full p-4 bg-transparent border-2 border-dashed border-gray-600 rounded-lg cursor-text hover:border-gray-500 transition-colors flex items-center justify-center touch-manipulation"
-                onClick={openModal}
+                onClick={handleStartWriting}
               >
                 <div className="text-center">
                   <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-3" />
@@ -104,7 +113,7 @@ const Journal = () => {
               
               <div className="flex flex-col sm:flex-row items-center justify-center mt-6 gap-3 sm:gap-4 mobile-touch-spacing">
                 <Button
-                  onClick={openModal}
+                  onClick={handleStartWriting}
                   className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 md:px-10 py-3 min-h-[44px] text-base mobile-button haptic-light"
                   disabled={isCreating}
                 >
@@ -176,6 +185,7 @@ const Journal = () => {
         isOpen={isModalOpen}
         onClose={closeModal}
         onSave={handleSaveEntry}
+        initialContent={initialContent}
       />
 
       {/* Voice Recording Modal */}
