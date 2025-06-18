@@ -1,6 +1,8 @@
 
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
+import { QueryErrorBoundary } from "@/components/QueryErrorBoundary";
 import Index from "../pages/Index";
 import Auth from "../pages/Auth";
 import CompleteSignup from "../pages/CompleteSignup";
@@ -47,110 +49,166 @@ const RequireOnboarding = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Wrapper component for route-level error boundaries and query error handling
+const RouteWrapper = ({ children }: { children: React.ReactNode }) => (
+  <RouteErrorBoundary>
+    <QueryErrorBoundary>
+      {children}
+    </QueryErrorBoundary>
+  </RouteErrorBoundary>
+);
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Index />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Index />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/complete-signup" element={<CompleteSignup />} />
+      <Route 
+        path="/auth" 
+        element={
+          <RouteWrapper>
+            <Auth />
+          </RouteWrapper>
+        } 
+      />
+      <Route 
+        path="/complete-signup" 
+        element={
+          <RouteWrapper>
+            <CompleteSignup />
+          </RouteWrapper>
+        } 
+      />
       <Route
         path="/goals"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Goals />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Goals />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/journal"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Journal />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Journal />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/journal/history"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <JournalHistory />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <JournalHistory />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/journal/entry/:id"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <JournalEntry />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <JournalEntry />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/insights"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Insights />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Insights />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
-      <Route path="/resources" element={<Resources />} />
+      <Route 
+        path="/resources" 
+        element={
+          <RouteWrapper>
+            <Resources />
+          </RouteWrapper>
+        } 
+      />
       <Route
         path="/profile"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Profile />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Profile />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/chat"
         element={
-          <ProtectedRoute>
-            <RequireOnboarding>
-              <Chat />
-            </RequireOnboarding>
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <RequireOnboarding>
+                <Chat />
+              </RequireOnboarding>
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
       <Route
         path="/premium-success"
         element={
-          <ProtectedRoute>
-            <PremiumSuccess />
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <PremiumSuccess />
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
-      {/* Use conversational onboarding for onboarding route */}
       <Route
         path="/onboarding"
         element={
-          <ProtectedRoute>
-            <ConversationalOnboarding />
-          </ProtectedRoute>
+          <RouteWrapper>
+            <ProtectedRoute>
+              <ConversationalOnboarding />
+            </ProtectedRoute>
+          </RouteWrapper>
         }
       />
-      <Route path="*" element={<NotFound />} />
+      <Route 
+        path="*" 
+        element={
+          <RouteWrapper>
+            <NotFound />
+          </RouteWrapper>
+        } 
+      />
     </Routes>
   );
 };
