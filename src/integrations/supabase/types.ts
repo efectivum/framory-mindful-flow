@@ -125,6 +125,36 @@ export type Database = {
         }
         Relationships: []
       }
+      data_exports: {
+        Row: {
+          created_at: string
+          expires_at: string
+          export_type: string
+          file_url: string | null
+          format: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          export_type: string
+          file_url?: string | null
+          format: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          export_type?: string
+          file_url?: string | null
+          format?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deep_reflections: {
         Row: {
           created_at: string
@@ -292,6 +322,7 @@ export type Database = {
           ai_sentiment_score: number | null
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
           mood_after: number | null
           mood_alignment_score: number | null
@@ -308,6 +339,7 @@ export type Database = {
           ai_sentiment_score?: number | null
           content: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           mood_after?: number | null
           mood_alignment_score?: number | null
@@ -324,6 +356,7 @@ export type Database = {
           ai_sentiment_score?: number | null
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           mood_after?: number | null
           mood_alignment_score?: number | null
@@ -676,6 +709,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_exports: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_expired_signups: {
         Args: Record<PropertyKey, never>
         Returns: undefined

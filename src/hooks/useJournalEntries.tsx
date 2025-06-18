@@ -1,264 +1,111 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useMoodAnalysis } from '@/hooks/useMoodAnalysis';
-import { useCoachingLogic } from '@/hooks/useCoachingLogic';
-
-export interface JournalEntry {
-  id: string;
-  user_id: string;
-  title?: string;
-  content: string;
-  mood_before?: number;
-  mood_after?: number;
-  ai_detected_mood?: number;
-  ai_sentiment_score?: number;
-  ai_detected_emotions?: string[];
-  ai_confidence_level?: number;
-  mood_alignment_score?: number;
-  tags?: string[];
-  created_at: string;
-  updated_at: string;
-}
 
 export const useJournalEntries = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { analyzeMood, calculateMoodAlignment } = useMoodAnalysis();
-  const { determineResponseLevel, generateCoachingResponse, createInteraction } = useCoachingLogic();
+  const { toast } = useToast();
 
-  const { data: entries = [], isLoading } = useQuery({
-    queryKey: ['journal-entries', user?.id],
+  // Get active (non-deleted) journal entries
+  const { data: entries, isLoading, error } = useQuery({
+    queryKey: ['journal-entries'],
     queryFn: async () => {
-      if (!user) return [];
-      
       const { data, error } = await supabase
         .from('journal_entries')
         .select('*')
-        .eq('user_id', user.id)
+        .is('deleted_at', null) // Only get non-deleted entries
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as JournalEntry[];
-    },
-    enabled: !!user,
-  });
-
-  const createEntryMutation = useMutation({
-    mutationFn: async (newEntry: {
-      title?: string;
-      content: string;
-      mood_before?: number;
-      mood_after?: number;
-      tags?: string[];
-    }) => {
-      if (!user) throw new Error('User not authenticated');
-
-      // Analyze mood with AI
-      const aiAnalysis = await analyzeMood(newEntry.content);
       
-      let aiData = {};
-      if (aiAnalysis) {
-        const alignment = calculateMoodAlignment(newEntry.mood_after, aiAnalysis.mood);
-        aiData = {
-          ai_detected_mood: aiAnalysis.mood,
-          ai_sentiment_score: aiAnalysis.sentiment,
-          ai_detected_emotions: aiAnalysis.emotions,
-          ai_confidence_level: aiAnalysis.confidence,
-          mood_alignment_score: alignment,
-        };
-      }
+      if (error) throw error;
+      return data;
+    },
+  });
 
+  // Create entry mutation
+  const createEntryMutation = useMutation({
+    mutationFn: async (entry: { content: string; mood_after?: number; title?: string }) => {
       const { data, error } = await supabase
         .from('journal_entries')
-        .insert([{ ...newEntry, ...aiData, user_id: user.id }])
+        .insert(entry)
         .select()
         .single();
-
+      
       if (error) throw error;
-
-      // Auto-trigger enhanced quick analysis with user context
-      try {
-        // Get user preferences and patterns for personalized analysis
-        const [preferencesResult, patternsResult] = await Promise.all([
-          supabase.from('user_preferences').select('*').eq('user_id', user.id).single(),
-          supabase.from('user_patterns').select('*').eq('user_id', user.id).order('confidence_level', { ascending: false }).limit(5)
-        ]);
-
-        const analysisResponse = await supabase.functions.invoke('analyze-journal-summary', {
-          body: { 
-            entries: [data], 
-            analysisType: 'quick',
-            userPreferences: preferencesResult.data
-          }
-        });
-
-        if (analysisResponse.data && !analysisResponse.error) {
-          // Store quick analysis in database
-          await supabase
-            .from('entry_quick_analysis')
-            .insert([{
-              entry_id: data.id,
-              user_id: user.id,
-              quick_takeaways: analysisResponse.data.quick_takeaways || [],
-              emotional_insights: analysisResponse.data.emotional_insights || [],
-              growth_indicators: analysisResponse.data.growth_indicators || [],
-              action_suggestions: analysisResponse.data.action_suggestions || [],
-              confidence_score: analysisResponse.data.confidence_score || 0,
-            }]);
-        }
-      } catch (analysisError) {
-        console.log('Quick analysis failed, but entry was saved:', analysisError);
-      }
-
-      // Generate coaching response
-      try {
-        const allEntries = await supabase
-          .from('journal_entries')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (allEntries.data) {
-          const responseLevel = determineResponseLevel(data, allEntries.data);
-          const coachingResponse = generateCoachingResponse(responseLevel, data, allEntries.data);
-
-          // Store coaching interaction
-          await createInteraction({
-            entry_id: data.id,
-            response_level: responseLevel,
-            response_type: coachingResponse.type,
-            response_content: coachingResponse.content,
-            pattern_detected: coachingResponse.pattern_detected,
-            confidence_score: responseLevel === 2 ? 0.8 : responseLevel === 3 ? 0.9 : 0.5,
-            user_engaged: false,
-          });
-        }
-      } catch (coachingError) {
-        console.log('Coaching response failed, but entry was saved:', coachingError);
-      }
-
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['quick-analysis'] });
-      queryClient.invalidateQueries({ queryKey: ['coaching-interactions'] });
+    },
+  });
+
+  // Soft delete entry mutation
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (entryId: string) => {
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', entryId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       toast({
-        title: "Success!",
-        description: "Journal entry saved with personalized AI analysis!",
+        title: "Entry Deleted",
+        description: "Your journal entry has been moved to recently deleted. You can restore it within 30 days.",
       });
     },
     onError: (error) => {
+      console.error('Delete error:', error);
       toast({
-        title: "Error",
-        description: `Failed to save entry: ${error.message}`,
+        title: "Delete Failed",
+        description: "There was an error deleting your entry. Please try again.",
         variant: "destructive",
       });
     },
   });
 
+  // Update entry mutation
   const updateEntryMutation = useMutation({
-    mutationFn: async ({ id, updates }: {
-      id: string;
-      updates: Partial<Omit<JournalEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
-    }) => {
-      if (!user) throw new Error('User not authenticated');
-
+    mutationFn: async ({ id, ...updates }: { id: string; content?: string; title?: string; mood_after?: number }) => {
       const { data, error } = await supabase
         .from('journal_entries')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(updates)
         .eq('id', id)
-        .eq('user_id', user.id)
         .select()
         .single();
-
+      
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-      toast({
-        title: "Success!",
-        description: "Journal entry updated successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update entry: ${error.message}`,
-        variant: "destructive",
-      });
     },
   });
 
-  const getJournalStats = () => {
-    const thisWeek = entries.filter(entry => {
-      const entryDate = new Date(entry.created_at);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return entryDate > weekAgo;
-    });
-
-    const avgMood = entries
-      .filter(entry => entry.mood_after)
-      .reduce((sum, entry) => sum + (entry.mood_after || 0), 0) / 
-      entries.filter(entry => entry.mood_after).length || 0;
-
-    const avgAiMood = entries
-      .filter(entry => entry.ai_detected_mood)
-      .reduce((sum, entry) => sum + (entry.ai_detected_mood || 0), 0) / 
-      entries.filter(entry => entry.ai_detected_mood).length || 0;
-
-    const avgAlignment = entries
-      .filter(entry => entry.mood_alignment_score)
-      .reduce((sum, entry) => sum + (entry.mood_alignment_score || 0), 0) / 
-      entries.filter(entry => entry.mood_alignment_score).length || 0;
-
-    return {
-      thisWeekCount: thisWeek.length,
-      totalCount: entries.length,
-      averageMood: avgMood,
-      averageAiMood: avgAiMood,
-      averageAlignment: avgAlignment,
-      currentStreak: calculateJournalStreak(entries),
-    };
+  // Wrapper functions for better API
+  const createEntry = (entry: { content: string; mood_after?: number; title?: string }, options?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+    createEntryMutation.mutate(entry, options);
   };
 
-  const calculateJournalStreak = (entries: JournalEntry[]) => {
-    if (entries.length === 0) return 0;
-    
-    let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-    
-    for (let i = 0; i < 30; i++) {
-      const dayEntries = entries.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        entryDate.setHours(0, 0, 0, 0);
-        return entryDate.getTime() === currentDate.getTime();
-      });
-      
-      if (dayEntries.length > 0) {
-        streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-    
-    return streak;
+  const deleteEntry = (entryId: string) => {
+    deleteEntryMutation.mutate(entryId);
+  };
+
+  const updateEntry = (update: { id: string; content?: string; title?: string; mood_after?: number }) => {
+    updateEntryMutation.mutate(update);
   };
 
   return {
     entries,
     isLoading,
-    createEntry: createEntryMutation.mutate,
-    updateEntry: updateEntryMutation.mutate,
+    error,
+    createEntry,
+    deleteEntry,
+    updateEntry,
     isCreating: createEntryMutation.isPending,
+    isDeleting: deleteEntryMutation.isPending,
     isUpdating: updateEntryMutation.isPending,
-    stats: getJournalStats(),
   };
 };
