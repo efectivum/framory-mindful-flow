@@ -22,7 +22,7 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
 
   // Content length check for smart analysis
   const wordCount = entry.content.trim().split(' ').length;
-  const shouldShowAnalysis = wordCount >= 10; // Minimum threshold
+  const shouldShowAnalysis = wordCount >= 50; // Minimum threshold for meaningful analysis
 
   if (!isPremium) {
     return (
@@ -38,7 +38,7 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
         <Brain className="w-4 h-4" />
-        <span>Entry too short for meaningful analysis</span>
+        <span>Entry too short for analysis (minimum 50 words)</span>
       </div>
     );
   }
@@ -59,19 +59,19 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm">
         <Brain className="w-4 h-4" />
-        <span>AI analysis in progress...</span>
+        <span>Analysis in progress...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Clean Emotion Display - All meaningful emotions */}
+      {/* Clean Emotion Display - Only show top 5 emotions */}
       {entry.ai_detected_emotions && entry.ai_detected_emotions.length > 0 && (
         <div className="space-y-2">
           <div className="text-purple-300 text-sm font-medium">Emotions Detected</div>
           <div className="flex gap-2 flex-wrap">
-            {entry.ai_detected_emotions.map((emotion, index) => (
+            {entry.ai_detected_emotions.slice(0, 5).map((emotion, index) => (
               <Badge 
                 key={index} 
                 variant="secondary" 
@@ -102,14 +102,14 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
         </div>
       )}
 
-      {/* Dynamic Key Insights - Content Driven */}
+      {/* Concise Key Insights - Max 3 for clean display */}
       {analysis?.quick_takeaways && analysis.quick_takeaways.length > 0 && (
         <div className="flex items-start gap-2">
           <Brain className="w-4 h-4 text-blue-400 mt-0.5" />
           <div className="flex-1">
             <div className="text-blue-300 text-sm font-medium mb-2">Key Insights</div>
             <div className="space-y-2">
-              {analysis.quick_takeaways.map((takeaway, index) => (
+              {analysis.quick_takeaways.slice(0, 3).map((takeaway, index) => (
                 <div key={index} className="text-gray-300 text-sm flex items-start gap-2">
                   <span className="text-blue-400 text-xs mt-1">•</span>
                   <span className="leading-relaxed">{takeaway}</span>
@@ -120,14 +120,14 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
         </div>
       )}
 
-      {/* Growth Indicators */}
+      {/* Growth Indicators - Max 2 for clean display */}
       {analysis?.growth_indicators && analysis.growth_indicators.length > 0 && (
         <div className="flex items-start gap-2">
           <Sparkles className="w-4 h-4 text-green-400 mt-0.5" />
           <div className="flex-1">
             <div className="text-green-300 text-sm font-medium mb-2">Growth Signals</div>
             <div className="space-y-1">
-              {analysis.growth_indicators.map((indicator, index) => (
+              {analysis.growth_indicators.slice(0, 2).map((indicator, index) => (
                 <div key={index} className="text-gray-300 text-sm flex items-start gap-2">
                   <span className="text-green-400 text-xs mt-1">✨</span>
                   <span>{indicator}</span>
@@ -138,8 +138,8 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
         </div>
       )}
 
-      {/* Go Deeper Button - Only for rich content */}
-      {wordCount >= 50 && (
+      {/* Go Deeper Button - Only for substantial content */}
+      {wordCount >= 100 && (
         <div className="pt-2 border-t border-gray-600">
           <Button
             onClick={() => setShowDeepReflection(true)}

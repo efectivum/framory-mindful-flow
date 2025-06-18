@@ -12,7 +12,17 @@ export const useJournalEntryAnalysis = () => {
   const analyzeAndUpdateEntry = useMutation({
     mutationFn: async (entry: JournalEntry) => {
       try {
-        // Analyze mood
+        const wordCount = entry.content.trim().split(' ').length;
+        
+        // Skip analysis for very short content (under 50 words)
+        if (wordCount < 50) {
+          console.log(`Skipping analysis for short entry (${wordCount} words)`);
+          return null;
+        }
+
+        console.log(`Starting analysis for entry ${entry.id} (${wordCount} words)`);
+        
+        // Analyze mood first
         const moodAnalysis = await analyzeMood(entry.content);
         
         if (moodAnalysis) {
@@ -33,10 +43,21 @@ export const useJournalEntryAnalysis = () => {
             })
             .eq('id', entry.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Failed to update entry with mood analysis:', updateError);
+            throw updateError;
+          }
 
-          // Generate quick analysis for insights
-          await generateQuickAnalysis(entry);
+          console.log(`Mood analysis complete for entry ${entry.id}`);
+
+          // Generate quick analysis for insights (only for entries with 50+ words)
+          try {
+            await generateQuickAnalysis(entry);
+            console.log(`Quick analysis complete for entry ${entry.id}`);
+          } catch (quickAnalysisError) {
+            console.error('Quick analysis failed but mood analysis succeeded:', quickAnalysisError);
+            // Don't throw here - mood analysis succeeded
+          }
         }
 
         return moodAnalysis;

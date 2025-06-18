@@ -49,10 +49,11 @@ serve(async (req) => {
     const entry = entries[0];
     const wordCount = entry.content.trim().split(' ').length;
     
-    // Skip analysis for very short content
-    if (wordCount < 10) {
+    // Skip analysis for very short content (minimum 50 words)
+    if (wordCount < 50) {
+      console.log(`Skipping quick analysis for short content (${wordCount} words)`);
       const defaultAnalysis = {
-        quick_takeaways: ['Entry too short for meaningful analysis'],
+        quick_takeaways: [],
         emotional_insights: [],
         growth_indicators: [],
         action_suggestions: [],
@@ -78,45 +79,50 @@ serve(async (req) => {
       });
     }
     
-    // Content-driven analysis logic - dynamic insight generation
-    let maxTakeaways, analysisDepth;
-    if (wordCount < 50) {
-      maxTakeaways = 2;
-      analysisDepth = "brief";
-    } else if (wordCount < 150) {
-      maxTakeaways = 4;
+    // Smart content-driven analysis logic - Mindsera style
+    let maxTakeaways, maxGrowthIndicators, analysisDepth;
+    if (wordCount < 100) {
+      maxTakeaways = 1;
+      maxGrowthIndicators = 1;
       analysisDepth = "concise";
-    } else if (wordCount < 300) {
-      maxTakeaways = 6;
-      analysisDepth = "moderate";
+    } else if (wordCount < 200) {
+      maxTakeaways = 2;
+      maxGrowthIndicators = 1;
+      analysisDepth = "focused";
+    } else if (wordCount < 400) {
+      maxTakeaways = 3;
+      maxGrowthIndicators = 2;
+      analysisDepth = "balanced";
     } else {
-      maxTakeaways = 8;
+      maxTakeaways = 4;
+      maxGrowthIndicators = 2;
       analysisDepth = "comprehensive";
     }
 
     if (analysisType === 'quick') {
-      console.log(`Generating ${analysisDepth} analysis for ${entries.length} entries (${wordCount} words)`);
+      console.log(`Generating ${analysisDepth} analysis for entry ${entry.id} (${wordCount} words)`);
       
-      const analysisPrompt = `You are an expert journal analyst specializing in extracting meaningful insights from personal writing.
+      const analysisPrompt = `You are an expert journal analyst specializing in extracting concise, meaningful insights from personal writing.
 
 Entry content: "${entry.content}"
 Word count: ${wordCount}
 Analysis approach: ${analysisDepth}
 
 Provide a JSON response with these fields:
-- quick_takeaways: Array of meaningful insights (extract as many genuine insights as the content warrants, up to ${maxTakeaways} for this entry length)
-- emotional_insights: Array of emotional observations (only if emotionally rich content)
-- growth_indicators: Array of growth signals (only if clearly present)
+- quick_takeaways: Array of ${maxTakeaways} concise insights (one clear sentence each)
+- emotional_insights: Array of emotional observations (only if emotionally significant)
+- growth_indicators: Array of ${maxGrowthIndicators} growth signals (only if clearly present)
 - action_suggestions: Array of actionable suggestions (only if appropriate)
 - confidence_score: 0.0-1.0 confidence level
 
-Quality guidelines:
-- Each insight must add genuine value and be specific to this content
-- For short entries (${wordCount} words): Focus on 1-2 core themes only
-- For longer entries: Extract multiple meaningful insights without repetition
-- Don't force insights if content is simple or unclear
-- Avoid generic advice - make insights specific to what was written
-- Each takeaway should be a complete, valuable observation
+Mindsera-style guidelines:
+- Each takeaway must be ONE sentence, clear and specific
+- Focus on the most important insight(s) only
+- For shorter entries: Extract 1-2 core themes, avoid over-analysis
+- For longer entries: Identify key patterns but stay concise
+- Don't force insights if content is simple
+- Make each insight genuinely valuable and specific to this content
+- Avoid generic advice - personalize to what was actually written
 
 Return only valid JSON with no markdown formatting.`;
 
@@ -129,7 +135,7 @@ Return only valid JSON with no markdown formatting.`;
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: analysisPrompt }],
-          temperature: 0.3,
+          temperature: 0.2,
         }),
       });
 
@@ -137,6 +143,16 @@ Return only valid JSON with no markdown formatting.`;
       console.log('Raw AI response:', aiResponse.choices[0].message.content);
       
       const analysis = cleanAndParseJSON(aiResponse.choices[0].message.content);
+
+      // Ensure limits are respected
+      if (analysis.quick_takeaways && analysis.quick_takeaways.length > maxTakeaways) {
+        analysis.quick_takeaways = analysis.quick_takeaways.slice(0, maxTakeaways);
+      }
+      if (analysis.growth_indicators && analysis.growth_indicators.length > maxGrowthIndicators) {
+        analysis.growth_indicators = analysis.growth_indicators.slice(0, maxGrowthIndicators);
+      }
+
+      console.log(`Quick analysis complete: ${analysis.quick_takeaways?.length || 0} takeaways, ${analysis.growth_indicators?.length || 0} growth indicators`);
 
       // Store the analysis
       const { error: insertError } = await supabase
@@ -179,7 +195,7 @@ Provide comprehensive analysis with:
 - growthIndicators: Array of positive signals
 - concerns: Array of areas needing attention
 
-Extract as many meaningful insights as the content warrants. Rich, complex entries should yield more insights.
+Extract meaningful insights based on content richness. Quality over quantity.
 
 Return only valid JSON with no markdown formatting.`;
 
@@ -192,7 +208,7 @@ Return only valid JSON with no markdown formatting.`;
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: analysisPrompt }],
-          temperature: 0.4,
+          temperature: 0.3,
         }),
       });
 
@@ -210,7 +226,7 @@ Return only valid JSON with no markdown formatting.`;
     console.error('Error in analyze-journal-summary function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      quick_takeaways: ['Analysis temporarily unavailable'],
+      quick_takeaways: [],
       emotional_insights: [],
       growth_indicators: [],
       action_suggestions: [],

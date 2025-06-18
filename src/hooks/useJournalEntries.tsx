@@ -41,7 +41,7 @@ export const useJournalEntries = () => {
     },
   });
 
-  // Create entry mutation with AI analysis
+  // Create entry mutation with improved AI analysis
   const createEntryMutation = useMutation({
     mutationFn: async (entry: { content: string; mood_after?: number; mood_before?: number; title?: string; tags?: string[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -58,11 +58,19 @@ export const useJournalEntries = () => {
       
       if (error) throw error;
       
-      // Trigger AI analysis in background after successful creation
+      // Trigger AI analysis with proper error handling and retry logic
       if (data) {
-        setTimeout(() => {
-          analyzeEntry(data as JournalEntry);
-        }, 500);
+        const wordCount = data.content.trim().split(' ').length;
+        
+        if (wordCount >= 50) {
+          // Use a longer delay to ensure the entry is properly saved
+          setTimeout(() => {
+            console.log(`Triggering analysis for new entry ${data.id} (${wordCount} words)`);
+            analyzeEntry(data as JournalEntry);
+          }, 1000);
+        } else {
+          console.log(`Skipping analysis for short entry (${wordCount} words)`);
+        }
       }
       
       return data;

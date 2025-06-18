@@ -37,8 +37,11 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
     
-    // Skip analysis for very short content
-    if (content.trim().split(' ').length < 10) {
+    const wordCount = content.trim().split(' ').length;
+    
+    // Skip analysis for very short content (minimum 50 words)
+    if (wordCount < 50) {
+      console.log(`Skipping mood analysis for short content (${wordCount} words)`);
       return new Response(JSON.stringify({
         mood: 3,
         sentiment: 0,
@@ -49,8 +52,20 @@ serve(async (req) => {
       });
     }
 
-    const wordCount = content.trim().split(' ').length;
+    console.log(`Analyzing mood for ${wordCount} words`);
     
+    // Content-driven emotion limit
+    let maxEmotions;
+    if (wordCount < 100) {
+      maxEmotions = 2;
+    } else if (wordCount < 200) {
+      maxEmotions = 3;
+    } else if (wordCount < 400) {
+      maxEmotions = 4;
+    } else {
+      maxEmotions = 5;
+    }
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -65,21 +80,20 @@ serve(async (req) => {
             content: `You are an expert emotional intelligence analyst. Analyze the emotional content of journal entries and return a JSON response with:
             - mood: integer 1-5 (1=very negative, 2=negative, 3=neutral, 4=positive, 5=very positive)
             - sentiment: decimal -1.0 to 1.0 (-1=very negative, 0=neutral, 1=very positive)
-            - emotions: array of ALL meaningful emotions detected (extract as many as are genuinely present - quality over arbitrary limits)
+            - emotions: array of the ${maxEmotions} most prominent emotions (only clear, genuine emotions)
             - confidence: decimal 0.0 to 1.0 representing confidence in analysis
             
             For content with ${wordCount} words:
-            - Extract emotions that are clearly present and meaningful
-            - Don't force emotions if content is simple
-            - Rich, complex entries may have 6-12 emotions
-            - Simple entries may have 2-4 emotions
-            - Focus on accuracy and relevance
+            - Extract only ${maxEmotions} main emotions that are clearly present
+            - Focus on accuracy over quantity
+            - Use specific emotion words, not generic ones
+            - Ensure emotions are genuinely reflected in the content
             
             Return only valid JSON with no markdown formatting.`
           },
           { role: 'user', content: `Analyze this journal entry: "${content}"` }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
       }),
     });
 
@@ -87,6 +101,13 @@ serve(async (req) => {
     console.log('Raw AI response:', data.choices[0].message.content);
     
     const analysis = cleanAndParseJSON(data.choices[0].message.content);
+
+    // Ensure emotions array doesn't exceed limit
+    if (analysis.emotions && analysis.emotions.length > maxEmotions) {
+      analysis.emotions = analysis.emotions.slice(0, maxEmotions);
+    }
+
+    console.log(`Mood analysis complete: mood=${analysis.mood}, emotions=[${analysis.emotions.join(', ')}]`);
 
     return new Response(JSON.stringify(analysis), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
