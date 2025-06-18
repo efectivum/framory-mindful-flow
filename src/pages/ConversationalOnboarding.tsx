@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -25,7 +24,7 @@ const userAvatar = (
 const prefQuestions: { key: PrefKey; question: string }[] = [
   {
     key: "growth_focus",
-    question: "Welcome to Framory! What's your main personal growth focus right now? (e.g. Habits, Mindfulness, Goals, Journaling)",
+    question: "Welcome to Lumatori! What's your main personal growth focus right now? (e.g. Habits, Mindfulness, Goals, Journaling)",
   },
   {
     key: "tone_of_voice",
@@ -248,7 +247,7 @@ export default function ConversationalOnboarding() {
       <Card className="w-full max-w-lg bg-gray-800/60 border-gray-700/60 backdrop-blur-md shadow-xl">
         <CardContent className="p-8 flex flex-col">
           <div className="mb-4">
-            <h1 className="text-2xl font-bold text-white mb-1 text-center">Welcome to Framory!</h1>
+            <h1 className="text-2xl font-bold text-white mb-1 text-center">Welcome to Lumatori!</h1>
             <p className="text-gray-400 text-center mb-4">Let's chat and personalize your experience 🧠💬</p>
           </div>
           <div className="flex-1 overflow-y-auto max-h-[340px] space-y-4">

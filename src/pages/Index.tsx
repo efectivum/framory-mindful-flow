@@ -39,7 +39,7 @@ const Index = () => {
             <Calendar className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-            Welcome to Framory
+            Welcome to Lumatori
           </h1>
           <p className="text-lg md:text-xl text-gray-400 mb-8">
             Your personal growth companion for mindful living

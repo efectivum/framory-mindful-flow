@@ -17,7 +17,7 @@ export const PrivacySettings = () => {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-white font-medium">Data Analytics</div>
-            <div className="text-gray-400 text-sm">Help improve Framory with usage data</div>
+            <div className="text-gray-400 text-sm">Help improve Lumatori with usage data</div>
           </div>
           <Switch defaultChecked />
         </div>
