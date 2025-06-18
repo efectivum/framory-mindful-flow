@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,12 +40,12 @@ export const useConversationalAI = () => {
     }
   };
 
-  // Add optional "mode" param for onboarding & normal chat
+  // Updated to support coaching mode
   const generateResponse = async (
     message: string,
     conversationHistory: ConversationMessage[] = [],
     isJournalEntry: boolean = false,
-    mode: "onboarding" | "chat" = "chat"
+    mode: "onboarding" | "chat" | "coaching" = "chat"
   ) => {
     if (!user) return null;
 
@@ -57,6 +58,7 @@ export const useConversationalAI = () => {
           userId: user.id,
           isJournalEntry,
           onboarding: mode === "onboarding",
+          coachingMode: mode === "coaching",
         }
       });
 

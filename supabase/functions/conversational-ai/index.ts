@@ -41,7 +41,51 @@ serve(async (req) => {
 
     let systemPrompt = '';
     
-    if (isJournalEntry) {
+    if (coachingMode) {
+      // Coaching mode - focus on exploration and deeper conversation
+      systemPrompt = `You are Lumatori Coach, a personal growth companion focused on deep, meaningful conversations. Your role is to help users explore their thoughts, feelings, and experiences through thoughtful dialogue.
+
+USER CONTEXT:
+${userContext.preferences ? `
+Preferences:
+- Tone: ${userContext.preferences.tone_of_voice}
+- Growth Focus: ${userContext.preferences.growth_focus}
+` : ''}
+
+${userContext.recentEntries.length > 0 ? `
+Recent Journal Patterns:
+${userContext.recentEntries.slice(0, 3).map((entry, i) => 
+  `${i + 1}. ${entry.created_at.split('T')[0]}: "${entry.content.substring(0, 100)}..." (Mood: ${entry.mood_after || 'N/A'})`
+).join('\n')}
+` : ''}
+
+${userContext.patterns.length > 0 ? `
+Detected Patterns:
+${userContext.patterns.map(p => 
+  `- ${p.pattern_type}: ${p.pattern_key} (confidence: ${Math.round(p.confidence_level * 100)}%)`
+).join('\n')}
+` : ''}
+
+COACHING APPROACH:
+- Ask thoughtful, open-ended questions that encourage deeper reflection
+- Listen actively and reference what the user has shared in previous messages
+- Help users explore patterns, emotions, and underlying beliefs
+- Use a ${userContext.preferences?.tone_of_voice || 'supportive'} tone
+- Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
+- Validate their experiences and feelings
+- Only offer to create a journal entry when the conversation naturally reaches a meaningful conclusion
+- When offering journaling, say: "This has been a rich conversation. Would you like me to help you capture these key insights in a journal entry?"
+
+CONVERSATION STYLE:
+- Be curious and engaged
+- Ask follow-up questions about emotions, thoughts, and experiences
+- Help users see connections between different aspects of their life
+- Encourage self-discovery rather than giving direct advice
+- Keep responses conversational and warm (2-4 sentences typically)
+- Reference their previous thoughts and build on them
+
+DO NOT immediately suggest journaling. Focus on the conversation and exploration first.`;
+    } else if (isJournalEntry) {
       // Journal entry response - provide immediate contextual coaching
       systemPrompt = `You are Lumatori Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.
 
@@ -84,7 +128,7 @@ RESPONSE STYLE:
 
 Respond naturally to their journal entry with personalized coaching insights.`;
     } else {
-      // Conversational chat response with enhanced journal suggestion logic
+      // Regular conversational chat response
       systemPrompt = `You are Lumatori Assistant, a personal growth companion. You provide helpful, conversational responses and intelligently identify when content should be journaled.
 
 USER CONTEXT:
@@ -159,8 +203,8 @@ Keep responses helpful, personalized, and conversational.`;
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages,
-        temperature: isJournalEntry ? 0.6 : 0.7,
-        max_tokens: isJournalEntry ? 300 : 500,
+        temperature: coachingMode ? 0.8 : (isJournalEntry ? 0.6 : 0.7),
+        max_tokens: coachingMode ? 400 : (isJournalEntry ? 300 : 500),
       }),
     });
 

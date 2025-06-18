@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
@@ -14,7 +13,7 @@ import Insights from "../pages/Insights";
 import Resources from "../pages/Resources";
 import Profile from "../pages/Profile";
 import NotFound from "../pages/NotFound";
-import Chat from "../pages/Chat";
+import Coach from "../pages/Coach";
 import Onboarding from "../pages/Onboarding";
 import ConversationalOnboarding from "../pages/ConversationalOnboarding";
 import PremiumSuccess from "../pages/PremiumSuccess";
@@ -170,12 +169,12 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/chat"
+        path="/coach"
         element={
           <RouteWrapper>
             <ProtectedRoute>
               <RequireOnboarding>
-                <Chat />
+                <Coach />
               </RequireOnboarding>
             </ProtectedRoute>
           </RouteWrapper>
