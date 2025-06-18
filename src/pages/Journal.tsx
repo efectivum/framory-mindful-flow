@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BookOpen, Mic, History, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,15 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useMobileModal } from '@/hooks/useMobileModal';
 import { FocusedWritingMode } from '@/components/FocusedWritingMode';
 import { MoodCaptureStep } from '@/components/MoodCaptureStep';
+import { CoachingChoiceStep } from '@/components/CoachingChoiceStep';
 import { JournalEntryAnalysisPage } from '@/components/JournalEntryAnalysisPage';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
-type FlowState = 'writing' | 'mood-capture' | 'analysis' | 'closed';
-type ActionType = 'finish' | 'go-deeper';
+type FlowState = 'writing' | 'coaching-choice' | 'mood-capture' | 'analysis' | 'closed';
+type ActionType = 'finish' | 'go-deeper' | 'finalize-after-choice';
 
 const Journal = () => {
   const navigate = useNavigate();
@@ -90,6 +90,21 @@ const Journal = () => {
   const handleGoDeeper = (content: string) => {
     setEntryContent(content);
     setActionType('go-deeper');
+    setFlowState('coaching-choice');
+  };
+
+  const handleChatWithCoach = () => {
+    // Navigate to coach with journal content as context
+    navigate('/coach', { 
+      state: { 
+        journalContext: entryContent,
+        contextType: 'journal-entry' 
+      } 
+    });
+  };
+
+  const handleFinalizeEntry = () => {
+    setActionType('finalize-after-choice');
     setFlowState('mood-capture');
   };
 
@@ -228,6 +243,13 @@ const Journal = () => {
         onFinish={handleFinish}
         onGoDeeper={handleGoDeeper}
         initialContent={initialContent}
+      />
+
+      {/* Coaching Choice Step */}
+      <CoachingChoiceStep
+        isVisible={flowState === 'coaching-choice'}
+        onChatWithCoach={handleChatWithCoach}
+        onFinalizeEntry={handleFinalizeEntry}
       />
 
       {/* Mood Capture Step */}

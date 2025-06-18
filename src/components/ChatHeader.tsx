@@ -28,7 +28,7 @@ export const ChatHeader = () => {
         </AvatarFallback>
       </Avatar>
       <div>
-        <h1 className="text-gray-100 font-semibold text-base">Lumatori Assistant</h1>
+        <h1 className="text-gray-100 font-semibold text-base">Lumatori Coach</h1>
         <p className="text-green-400 text-xs font-medium">Online</p>
       </div>
     </div>
