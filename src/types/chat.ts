@@ -1,4 +1,6 @@
 
+import { HabitSuggestion } from '@/hooks/useCoachHabitSuggestion';
+
 export interface Message {
   id: string;
   type: 'user' | 'bot';
@@ -8,4 +10,5 @@ export interface Message {
   isJournalEntry?: boolean;
   attachmentUrl?: string;
   attachmentType?: string;
+  habitSuggestion?: HabitSuggestion;
 }

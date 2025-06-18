@@ -40,7 +40,7 @@ export const useConversationalAI = () => {
     }
   };
 
-  // Updated to support coaching mode
+  // Updated to support coaching mode with enhanced capabilities
   const generateResponse = async (
     message: string,
     conversationHistory: ConversationMessage[] = [],
@@ -63,7 +63,15 @@ export const useConversationalAI = () => {
       });
 
       if (error) throw error;
-      return data.response;
+      
+      // Handle both old and new response formats
+      if (typeof data.response === 'string') {
+        return data.response;
+      } else if (data.response && data.response.response) {
+        return data.response.response;
+      } else {
+        return data.response;
+      }
     } catch (error) {
       console.error('Failed to generate AI response:', error);
       return null;

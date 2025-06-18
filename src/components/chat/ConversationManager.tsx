@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
+import { useCoachHabitSuggestion } from '@/hooks/useCoachHabitSuggestion';
 import { Message } from '@/types/chat';
 
 interface ConversationState {
@@ -23,6 +24,7 @@ export const useConversationManager = ({
   const [conversationHistory, setConversationHistory] = useState<ConversationState[]>([]);
   const { generateResponse, isGeneratingResponse } = useConversationalAI();
   const journalSuggestion = useJournalSuggestion();
+  const { parseHabitFromCoachResponse } = useCoachHabitSuggestion();
 
   const isJournalConfirmation = (message: string): boolean => {
     const confirmationPatterns = [
@@ -57,11 +59,15 @@ export const useConversationManager = ({
       const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
       
       if (aiResponse) {
+        // Check if the response contains a habit suggestion
+        const habitSuggestion = parseHabitFromCoachResponse(aiResponse);
+        
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
           content: aiResponse,
           timestamp: new Date(),
+          habitSuggestion: habitSuggestion || undefined,
         };
         onMessageAdd(botResponse);
         setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
