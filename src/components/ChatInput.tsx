@@ -50,7 +50,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="bg-[#161c26] border-t border-gray-800 p-3 md:p-4 pb-6">
+    <div className="bg-[#161c26] border-t border-gray-800 p-3 md:p-4 pb-6 safe-area-pb">
       {selectedActivity && (
         <div className="mb-2 flex items-center justify-between">
           <span className="inline-block px-3 py-1 bg-blue-900 text-blue-300 text-xs rounded-full border border-blue-700">
@@ -60,7 +60,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setSelectedActivity(null)}
-            className="text-gray-400 hover:text-gray-200 text-xs h-auto py-0.5 px-1.5"
+            className="text-gray-400 hover:text-gray-200 text-xs h-auto py-0.5 px-1.5 min-h-[32px]"
           >
             Cancel
           </Button>
@@ -79,7 +79,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-10 w-10 rounded-full shrink-0"
+            className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-10 w-10 md:h-10 md:w-10 rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
             type="button"
             tabIndex={-1}
           >
@@ -104,7 +104,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setFileAttachment(null)}
-              className="text-gray-400 hover:text-red-400"
+              className="text-gray-400 hover:text-red-400 min-h-[32px]"
               tabIndex={-1}
               type="button"
             >
@@ -119,7 +119,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             size="icon"
             onClick={() => setShowActivitySelector(!showActivitySelector)}
             className={cn(
-              "text-gray-400 hover:text-blue-300 hover:bg-blue-900 h-10 w-10 shrink-0 rounded-full",
+              "text-gray-400 hover:text-blue-300 hover:bg-blue-900 h-10 w-10 shrink-0 rounded-full min-h-[44px] min-w-[44px] touch-manipulation",
               showActivitySelector && "text-blue-400 bg-blue-950"
             )}
           >
@@ -146,18 +146,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-xl border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-blue-500 py-2.5 px-3.5 text-sm text-gray-100 placeholder:text-gray-400"
           rows={1}
           disabled={isDetectingIntent || isGeneratingResponse}
+          style={{ fontSize: '16px' }}
         />
         <VoiceButton
           onTranscription={handleVoiceTranscription}
           disabled={isDetectingIntent || isGeneratingResponse}
-          className="ml-1"
+          className="ml-1 min-h-[44px] min-w-[44px] rounded-full touch-manipulation"
         />
 
         <Button
           onClick={handleSend}
           disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !fileAttachment)}
           size="icon"
-          className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60"
+          className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full shrink-0 shadow-sm disabled:opacity-60 min-h-[44px] min-w-[44px] touch-manipulation haptic-light"
         >
           <Send className="w-5 h-5" />
         </Button>
