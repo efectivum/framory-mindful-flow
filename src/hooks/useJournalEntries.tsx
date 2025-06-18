@@ -108,19 +108,55 @@ export const useJournalEntries = () => {
     },
   });
 
-  // Calculate basic stats from entries
+  // Calculate current streak
+  const calculateCurrentStreak = () => {
+    if (!entries || entries.length === 0) return 0;
+    
+    let streak = 0;
+    const today = new Date();
+    const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    for (let i = 0; i <= 365; i++) { // Check up to a year back
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(checkDate.getDate() - i);
+      
+      const hasEntryOnDate = entries.some(entry => {
+        const entryDate = new Date(entry.created_at);
+        const entryDateOnly = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+        return entryDateOnly.getTime() === checkDate.getTime();
+      });
+      
+      if (hasEntryOnDate) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
+
+  // Calculate stats from entries
   const stats = {
     totalEntries: entries?.length || 0,
+    totalCount: entries?.length || 0, // Alias for compatibility
     thisWeekEntries: entries?.filter(entry => {
       const entryDate = new Date(entry.created_at);
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       return entryDate > weekAgo;
     }).length || 0,
+    thisWeekCount: entries?.filter(entry => {
+      const entryDate = new Date(entry.created_at);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return entryDate > weekAgo;
+    }).length || 0, // Alias for compatibility
     averageMood: entries?.reduce((sum, entry) => {
       if (entry.mood_after) return sum + entry.mood_after;
       return sum;
     }, 0) / (entries?.filter(entry => entry.mood_after).length || 1) || 0,
+    currentStreak: calculateCurrentStreak(),
   };
 
   // Wrapper functions for better API
