@@ -6,20 +6,26 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useMobileModal } from '@/hooks/useMobileModal';
 import { FocusedWritingMode } from '@/components/FocusedWritingMode';
+import { MoodCaptureStep } from '@/components/MoodCaptureStep';
 import { JournalEntryAnalysisPage } from '@/components/JournalEntryAnalysisPage';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
+type FlowState = 'writing' | 'mood-capture' | 'analysis' | 'closed';
+type ActionType = 'finish' | 'go-deeper';
+
 const Journal = () => {
   const navigate = useNavigate();
   const { createEntry, isCreating } = useJournalEntries();
   const { isModalOpen, openModal, closeModal } = useMobileModal();
   const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [flowState, setFlowState] = useState<FlowState>('closed');
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [initialContent, setInitialContent] = useState('');
+  const [entryContent, setEntryContent] = useState('');
+  const [actionType, setActionType] = useState<ActionType>('finish');
 
   const handleSaveEntry = async (content: string, mood?: number) => {
     try {
@@ -34,8 +40,13 @@ const Journal = () => {
       });
       
       setCurrentEntryId(result.id);
-      closeModal();
-      setShowAnalysis(true);
+      
+      if (actionType === 'go-deeper') {
+        setFlowState('analysis');
+      } else {
+        setFlowState('closed');
+        closeModal();
+      }
     } catch (error) {
       console.error('Failed to save entry:', error);
     }
@@ -45,6 +56,7 @@ const Journal = () => {
     console.log('Voice transcription received:', text);
     setIsVoiceMode(false);
     setInitialContent(text);
+    setFlowState('writing');
     openModal();
   };
 
@@ -59,15 +71,44 @@ const Journal = () => {
 
   const handlePromptClick = (prompt: string) => {
     setInitialContent(prompt + '\n\n');
+    setFlowState('writing');
     openModal();
   };
 
   const handleStartWriting = () => {
     setInitialContent('');
+    setFlowState('writing');
     openModal();
   };
 
-  if (showAnalysis && currentEntryId) {
+  const handleFinish = (content: string) => {
+    setEntryContent(content);
+    setActionType('finish');
+    setFlowState('mood-capture');
+  };
+
+  const handleGoDeeper = (content: string) => {
+    setEntryContent(content);
+    setActionType('go-deeper');
+    setFlowState('mood-capture');
+  };
+
+  const handleMoodSelect = (mood?: number) => {
+    handleSaveEntry(entryContent, mood);
+  };
+
+  const handleMoodSkip = () => {
+    handleSaveEntry(entryContent);
+  };
+
+  const handleCloseAll = () => {
+    setFlowState('closed');
+    closeModal();
+    setInitialContent('');
+    setEntryContent('');
+  };
+
+  if (flowState === 'analysis' && currentEntryId) {
     return (
       <JournalEntryAnalysisPage 
         entryId={currentEntryId} 
@@ -182,10 +223,18 @@ const Journal = () => {
 
       {/* Focused Writing Mode */}
       <FocusedWritingMode
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSave={handleSaveEntry}
+        isOpen={flowState === 'writing'}
+        onClose={handleCloseAll}
+        onFinish={handleFinish}
+        onGoDeeper={handleGoDeeper}
         initialContent={initialContent}
+      />
+
+      {/* Mood Capture Step */}
+      <MoodCaptureStep
+        isVisible={flowState === 'mood-capture'}
+        onMoodSelect={handleMoodSelect}
+        onSkip={handleMoodSkip}
       />
 
       {/* Voice Recording Modal */}
