@@ -1,32 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
-import { useToast } from '@/hooks/use-toast';
+import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
+import { ChatContextManager } from './chat/ChatContextManager';
 
 export const ChatInterface = () => {
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const emotionFromParams = searchParams.get('emotion');
-  
-  // Check for journal context from navigation state
-  const journalContext = location.state?.journalContext;
-  const contextType = location.state?.contextType;
-  const isCoachingMode = contextType === 'journal-entry';
-  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [fileAttachment, setFileAttachment] = useState<File | null>(null);
-  const { toast } = useToast();
+  const [chatContext, setChatContext] = useState<any>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -34,44 +24,6 @@ export const ChatInterface = () => {
   const { createEntry } = useJournalEntries();
   const { detectIntent, generateResponse, isDetectingIntent, isGeneratingResponse } = useConversationalAI();
   const journalSuggestion = useJournalSuggestion();
-
-  // Initialize conversation based on context
-  useEffect(() => {
-    if (isCoachingMode && journalContext && messages.length === 0) {
-      const coachingWelcome: Message = {
-        id: '1',
-        type: 'bot',
-        content: `I can see you'd like to explore your journal entry further. Let's dive deeper into what you've shared: "${journalContext.substring(0, 150)}${journalContext.length > 150 ? '...' : ''}"
-
-What aspect of this would you like to explore more? What feelings or thoughts came up for you while writing this?`,
-        timestamp: new Date(),
-      };
-      setMessages([coachingWelcome]);
-    } else if (emotionFromParams && messages.length === 0) {
-      const emotionPrompt = `I'd like to explore my ${emotionFromParams} entries. What patterns do you see with my ${emotionFromParams} experiences? Can you help me understand when and why I feel ${emotionFromParams}?`;
-      setInputText(emotionPrompt);
-      
-      const emotionWelcome: Message = {
-        id: '1',
-        type: 'bot',
-        content: `I see you want to explore your ${emotionFromParams} experiences. I'm ready to help you analyze patterns and insights related to this emotion. What would you like to know?`,
-        timestamp: new Date(),
-      };
-      setMessages([emotionWelcome]);
-      
-      setTimeout(() => {
-        textAreaRef.current?.focus();
-      }, 100);
-    } else if (messages.length === 0) {
-      const defaultWelcome: Message = {
-        id: '1',
-        type: 'bot',
-        content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
-        timestamp: new Date(),
-      };
-      setMessages([defaultWelcome]);
-    }
-  }, [isCoachingMode, journalContext, emotionFromParams, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,19 +33,22 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
     scrollToBottom();
   }, [messages]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      toast({
-        title: "Unsupported file",
-        description: "Only images and PDFs are supported in this preview.",
-        variant: "destructive"
-      });
-      return;
+  const handleContextReady = (context: any) => {
+    setChatContext(context);
+  };
+
+  const handleInitialMessage = (message: Message) => {
+    setMessages([message]);
+    
+    // Set up input text for emotion context
+    if (chatContext?.emotionFromParams) {
+      const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
+      setInputText(emotionPrompt);
+      
+      setTimeout(() => {
+        textAreaRef.current?.focus();
+      }, 100);
     }
-    setFileAttachment(file);
-    textAreaRef.current?.focus();
   };
 
   const isJournalConfirmation = (message: string): boolean => {
@@ -149,7 +104,7 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
     }
 
     // For coaching mode, use different detection logic
-    if (isCoachingMode) {
+    if (chatContext?.isCoachingMode) {
       // In coaching mode, focus on conversation rather than immediate journaling
       const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
       const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
@@ -274,8 +229,23 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
     textAreaRef.current?.focus();
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      return;
+    }
+    setFileAttachment(file);
+    textAreaRef.current?.focus();
+  };
+
   return (
     <div className="flex flex-col h-screen w-full bg-[#171c26]">
+      <ChatContextManager 
+        onContextReady={handleContextReady}
+        onInitialMessage={handleInitialMessage}
+      />
+      
       <ChatHeader />
       <MessageList
         messages={messages}
