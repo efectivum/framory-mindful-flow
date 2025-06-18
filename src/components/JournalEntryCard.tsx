@@ -42,7 +42,7 @@ export const JournalEntryCard = ({ entry }: JournalEntryCardProps) => {
       </CardHeader>
       
       <CardContent className="space-y-3">
-        {/* Content summary */}
+        {/* Key Points Summary - Now properly extracts key insights */}
         <JournalEntrySummary entry={entry} maxLength={140} />
         
         {/* Clean emotion display - max 3 emotions */}
