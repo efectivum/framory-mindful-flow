@@ -68,8 +68,8 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
   const [viewMode, setViewMode] = useState<'bubbles' | 'analysis'>('bubbles');
 
   const maxIntensity = Math.max(...Object.values(emotions));
-  const minSize = 50;
-  const maxSize = 100;
+  const minSize = 60; // Increased for better mobile touch
+  const maxSize = 120; // Increased for mobile
 
   const getBubbleSize = (intensity: number) => {
     const normalizedIntensity = intensity / maxIntensity;
@@ -82,7 +82,7 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
 
   const sortedEmotions = Object.entries(emotions)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 9); // Show top 9 emotions for better layout
+    .slice(0, 6); // Reduced to 6 for better mobile layout
 
   const handleEmotionClick = (emotion: string) => {
     setSelectedEmotion(emotion);
@@ -113,14 +113,14 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
 
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white flex items-center gap-2 text-lg sm:text-xl">
           {viewMode === 'analysis' && selectedEmotion && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleBack}
-              className="text-gray-400 hover:text-white p-1 mr-2"
+              className="text-gray-400 hover:text-white p-2 mr-2 touch-manipulation"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -128,7 +128,7 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
           {viewMode === 'bubbles' ? 'Emotional Landscape' : `${selectedEmotion} Analysis`}
         </CardTitle>
       </CardHeader>
-      <CardContent className="min-h-[300px]">
+      <CardContent className="min-h-[300px] p-4 sm:p-6">
         <AnimatePresence mode="wait">
           {viewMode === 'bubbles' ? (
             <motion.div
@@ -137,7 +137,7 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="grid grid-cols-3 gap-6 p-4"
+              className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 p-2 sm:p-4"
             >
               {sortedEmotions.map(([emotion, intensity], index) => {
                 const size = getBubbleSize(intensity);
@@ -156,29 +156,31 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
                   >
                     <div
                       className={`
-                        relative rounded-full cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg
-                        ${getEmotionColor(emotion)} opacity-80 hover:opacity-100
+                        relative rounded-full cursor-pointer transition-all duration-300 
+                        touch-manipulation active:scale-95 
+                        ${getEmotionColor(emotion)} opacity-80 active:opacity-100
                         flex items-center justify-center text-white font-medium
+                        min-h-[44px] min-w-[44px]
                       `}
                       style={{ 
-                        width: `${size}px`, 
-                        height: `${size}px`,
-                        fontSize: `${Math.max(10, size / 7)}px`
+                        width: `${Math.max(size, 44)}px`, 
+                        height: `${Math.max(size, 44)}px`,
+                        fontSize: `${Math.max(11, size / 7)}px`
                       }}
                       onClick={() => handleEmotionClick(emotion)}
                       title={`${emotion}: ${intensity.toFixed(1)}/10`}
                     >
-                      <div className="text-center">
-                        <div className="font-medium capitalize">{emotion}</div>
-                        <div className="text-xs opacity-90">{intensity.toFixed(1)}</div>
+                      <div className="text-center px-1">
+                        <div className="font-medium capitalize leading-tight">{emotion}</div>
+                        <div className="text-xs opacity-90 mt-0.5">{intensity.toFixed(1)}</div>
                       </div>
                     </div>
                   </motion.div>
                 );
               })}
-              <div className="col-span-3 text-center mt-4">
+              <div className="col-span-2 sm:col-span-3 text-center mt-4">
                 <p className="text-gray-400 text-sm">
-                  Click on emotions to explore detailed insights
+                  Tap on emotions to explore detailed insights
                 </p>
               </div>
             </motion.div>
@@ -189,55 +191,55 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="space-y-6"
+              className="space-y-4 sm:space-y-6"
             >
               {(() => {
                 const analysis = getEmotionAnalysis(selectedEmotion);
                 return (
                   <>
                     {/* Header with emotion info */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div 
-                        className={`w-16 h-16 rounded-full ${getEmotionColor(selectedEmotion)} flex items-center justify-center`}
+                        className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full ${getEmotionColor(selectedEmotion)} flex items-center justify-center`}
                       >
-                        <span className="text-white font-bold text-lg capitalize">
+                        <span className="text-white font-bold text-base sm:text-lg capitalize">
                           {selectedEmotion[0]}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-white capitalize">{selectedEmotion}</h3>
-                        <p className="text-gray-400">
+                        <h3 className="text-lg sm:text-xl font-semibold text-white capitalize">{selectedEmotion}</h3>
+                        <p className="text-gray-400 text-sm sm:text-base">
                           {analysis.percentage}% intensity • Appears {analysis.frequency.toFixed(1)} times
                         </p>
                       </div>
                     </div>
 
                     {/* Analysis sections */}
-                    <div className="space-y-4">
-                      <div className="bg-gray-700/30 rounded-lg p-4">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="bg-gray-700/30 rounded-lg p-3 sm:p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Brain className="w-4 h-4 text-blue-400" />
-                          <h4 className="font-medium text-white">Understanding</h4>
+                          <h4 className="font-medium text-white text-sm sm:text-base">Understanding</h4>
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed">
                           {analysis.description}
                         </p>
                       </div>
 
-                      <div className="bg-gray-700/30 rounded-lg p-4">
+                      <div className="bg-gray-700/30 rounded-lg p-3 sm:p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <TrendingUp className="w-4 h-4 text-green-400" />
-                          <h4 className="font-medium text-white">Patterns</h4>
+                          <h4 className="font-medium text-white text-sm sm:text-base">Patterns</h4>
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed">
                           {analysis.patterns}
                         </p>
                       </div>
 
-                      <div className="bg-gray-700/30 rounded-lg p-4">
+                      <div className="bg-gray-700/30 rounded-lg p-3 sm:p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Calendar className="w-4 h-4 text-purple-400" />
-                          <h4 className="font-medium text-white">Growth Opportunities</h4>
+                          <h4 className="font-medium text-white text-sm sm:text-base">Growth Opportunities</h4>
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed">
                           {analysis.growth}
@@ -245,17 +247,17 @@ export const EmotionBubbleChart = ({ emotions, onEmotionClick, onViewEntries, on
                       </div>
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="flex gap-3 pt-4">
+                    {/* Action buttons - Mobile-first vertical stacking */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
                       <Button 
                         variant="outline" 
-                        className="flex-1 bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50"
+                        className="min-h-[44px] bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 touch-manipulation text-sm"
                         onClick={() => onViewEntries?.(selectedEmotion)}
                       >
                         Show relevant journal items
                       </Button>
                       <Button 
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                        className="min-h-[44px] bg-indigo-600 hover:bg-indigo-700 touch-manipulation text-sm"
                         onClick={() => onAskQuestions?.(selectedEmotion)}
                       >
                         Ask questions
