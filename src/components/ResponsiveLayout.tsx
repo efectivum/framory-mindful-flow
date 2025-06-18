@@ -9,12 +9,13 @@ interface ResponsiveLayoutProps {
   title?: string;
   subtitle?: string;
   showHeader?: boolean;
+  hideBottomNav?: boolean;
 }
 
 /**
  * Mobile-first layout:
  * - Sidebar hidden by default, visible via CSS only on md+.
- * - BottomNavigation visible by default, hidden on md+.
+ * - BottomNavigation visible by default, hidden on md+ or when hideBottomNav is true.
  * - Page header shown if provided.
  */
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
@@ -22,6 +23,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   title,
   subtitle,
   showHeader = true,
+  hideBottomNav = false,
 }) => {
   return (
     <SidebarProvider>
@@ -44,8 +46,8 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
           )}
           <div className="flex-1 p-4 lg:p-6 pb-20 md:pb-6">{children}</div>
         </main>
-        {/* Bottom navigation (mobile by default) */}
-        <BottomNavigation />
+        {/* Bottom navigation (mobile by default, conditionally hidden) */}
+        {!hideBottomNav && <BottomNavigation />}
       </div>
     </SidebarProvider>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Mic, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,7 +62,8 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
   const handleSave = () => {
     if (content.trim()) {
       onSave(content.trim(), mood);
-      onClose();
+      setContent('');
+      setMood(undefined);
     }
   };
 
@@ -84,7 +84,7 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gray-900 overflow-hidden touch-manipulation"
+        className="fixed inset-0 z-[60] bg-gray-900 overflow-hidden touch-manipulation"
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
@@ -107,8 +107,8 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
           </div>
         </div>
 
-        {/* Main Writing Area with keyboard-aware spacing */}
-        <div className={`h-full flex flex-col p-4 md:p-8 pt-16 md:pt-20 ${keyboardVisible ? 'pb-4' : 'pb-32 md:pb-8'}`}>
+        {/* Main Writing Area with proper mobile spacing */}
+        <div className="h-full flex flex-col p-4 md:p-8 pt-16 md:pt-20 pb-32 md:pb-8">
           <div className="flex-1 w-full max-w-4xl mx-auto space-y-4 md:space-y-6">
             <div className="relative flex-1">
               <Textarea
@@ -131,10 +131,10 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
           </div>
         </div>
 
-        {/* Mobile-optimized Bottom Actions */}
-        <div className={`fixed bottom-0 left-0 right-0 z-20 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-4 safe-area-pb ${keyboardVisible ? 'hidden' : 'block'}`}>
+        {/* Fixed Bottom Actions - properly positioned above mobile navigation area */}
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-4 mb-0 safe-area-pb">
           <div className="flex flex-col gap-3 max-w-4xl mx-auto">
-            {/* Mood selector - full width on mobile */}
+            {/* Mood selector */}
             <select 
               className="w-full md:w-auto bg-gray-800/50 border border-gray-700 text-white rounded-lg px-3 py-3 md:py-2 text-sm min-h-[44px]"
               value={mood || ''}
@@ -148,7 +148,7 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
               <option value="1">😞 Very Low</option>
             </select>
 
-            {/* Save button - full width on mobile */}
+            {/* Save button */}
             <Button 
               onClick={handleSave}
               disabled={!content.trim()}
@@ -160,38 +160,8 @@ export const FocusedWritingMode: React.FC<FocusedWritingModeProps> = ({
           </div>
         </div>
 
-        {/* Keyboard-visible bottom actions */}
-        {keyboardVisible && (
-          <div className="fixed bottom-0 left-0 right-0 z-20 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 p-2">
-            <div className="flex items-center justify-between max-w-4xl mx-auto">
-              <select 
-                className="flex-1 mr-3 bg-gray-800/50 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
-                value={mood || ''}
-                onChange={(e) => setMood(e.target.value ? parseInt(e.target.value) : undefined)}
-              >
-                <option value="">Mood?</option>
-                <option value="5">😄</option>
-                <option value="4">😊</option>
-                <option value="3">😐</option>
-                <option value="2">😕</option>
-                <option value="1">😞</option>
-              </select>
-              <Button 
-                onClick={handleSave}
-                disabled={!content.trim()}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
-              >
-                <Save className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Subtle Background Pattern */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none">
-          <div className="h-full w-full bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
-        </div>
+        {/* Backdrop overlay to prevent interaction with background */}
+        <div className="absolute inset-0 bg-black/50 -z-10" />
       </motion.div>
     </AnimatePresence>
   );
