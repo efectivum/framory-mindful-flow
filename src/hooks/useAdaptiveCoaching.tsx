@@ -28,6 +28,25 @@ interface AdaptiveCoachingData {
   adaptiveInsights: string[];
 }
 
+// Type guard functions for safe JSON parsing
+const ensureStringArray = (value: any): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter(item => typeof item === 'string');
+  }
+  return [];
+};
+
+const ensureString = (value: any): string => {
+  return typeof value === 'string' ? value : '';
+};
+
+const parsePreferredStyles = (styles: any): string[] => {
+  if (styles && typeof styles === 'object' && 'styles' in styles && Array.isArray(styles.styles)) {
+    return styles.styles.filter((style: any) => typeof style === 'string');
+  }
+  return [];
+};
+
 export const useAdaptiveCoaching = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -68,8 +87,8 @@ export const useAdaptiveCoaching = () => {
       const adaptiveData: AdaptiveCoachingData = {
         userContext: {
           currentChallenges: extractChallenges(conversationContext),
-          previousSuccesses: learningProfile?.effective_intervention_types || [],
-          preferredApproaches: learningProfile?.preferred_communication_styles?.styles || [],
+          previousSuccesses: ensureStringArray(learningProfile?.effective_intervention_types),
+          preferredApproaches: parsePreferredStyles(learningProfile?.preferred_communication_styles),
           timeConstraints: 'moderate'
         },
         protocolSuggestions: protocols?.map(protocol => ({
@@ -78,9 +97,9 @@ export const useAdaptiveCoaching = () => {
           category: protocol.category,
           source: protocol.source,
           description: protocol.description,
-          implementation_steps: protocol.implementation_steps || [],
-          expected_timeline: protocol.expected_timeline || 'Variable',
-          success_metrics: protocol.success_metrics || [],
+          implementation_steps: ensureStringArray(protocol.implementation_steps),
+          expected_timeline: ensureString(protocol.expected_timeline) || 'Variable',
+          success_metrics: ensureStringArray(protocol.success_metrics),
           confidence: calculateProtocolConfidence(protocol, learningProfile),
           reason: generateRecommendationReason(protocol, learningProfile)
         })) || [],
@@ -144,7 +163,8 @@ export const useAdaptiveCoaching = () => {
 
       if (existingProfile) {
         // Update existing profile
-        const updatedInterventionTypes = [...(existingProfile.effective_intervention_types || [])];
+        const existingTypes = ensureStringArray(existingProfile.effective_intervention_types);
+        const updatedInterventionTypes = [...existingTypes];
         if (feedbackData.satisfaction >= 4 && !updatedInterventionTypes.includes(feedbackData.interventionType)) {
           updatedInterventionTypes.push(feedbackData.interventionType);
         }
@@ -191,7 +211,8 @@ export const useAdaptiveCoaching = () => {
     if (!profile) return 0.5;
     
     const baseConfidence = 0.5;
-    const categoryMatch = profile.effective_intervention_types?.includes(protocol.category) ? 0.3 : 0;
+    const effectiveTypes = ensureStringArray(profile.effective_intervention_types);
+    const categoryMatch = effectiveTypes.includes(protocol.category) ? 0.3 : 0;
     const successRate = (profile.successful_interventions || 0) / Math.max(1, profile.total_interactions || 1) * 0.2;
     
     return Math.min(1.0, baseConfidence + categoryMatch + successRate);
@@ -202,7 +223,8 @@ export const useAdaptiveCoaching = () => {
       return `This ${protocol.category} protocol aligns with your current conversation context.`;
     }
 
-    const hasSuccess = profile.effective_intervention_types?.includes(protocol.category);
+    const effectiveTypes = ensureStringArray(profile.effective_intervention_types);
+    const hasSuccess = effectiveTypes.includes(protocol.category);
     if (hasSuccess) {
       return `Based on your previous success with ${protocol.category} approaches, this protocol is highly recommended.`;
     }
@@ -217,7 +239,8 @@ export const useAdaptiveCoaching = () => {
       insights.push("Your coaching profile shows strong engagement with evidence-based approaches.");
     }
     
-    if (profile?.effective_intervention_types?.length > 2) {
+    const effectiveTypes = ensureStringArray(profile?.effective_intervention_types);
+    if (effectiveTypes.length > 2) {
       insights.push("You respond well to diverse intervention types, suggesting an adaptable mindset.");
     }
     
