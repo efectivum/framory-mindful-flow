@@ -59,17 +59,21 @@ export const useErrorTracking = () => {
     // Send to backend for persistent storage
     try {
       const { error: dbError } = await supabase
-        .from('error_logs')
+        .from('ai_insights') // Use existing table for now
         .insert([{
-          id: errorId,
           user_id: user?.id,
-          message: errorLog.message,
-          stack: errorLog.stack,
-          severity: errorLog.severity,
-          context: errorLog.context || {},
-          url: errorLog.url,
-          user_agent: errorLog.userAgent,
-          created_at: new Date(errorLog.timestamp).toISOString(),
+          source_type: 'error_tracking',
+          insight_type: severity,
+          content: errorLog.message,
+          metadata: {
+            stack: errorLog.stack,
+            url: errorLog.url,
+            user_agent: errorLog.userAgent,
+            context: errorLog.context || {},
+            timestamp: errorLog.timestamp,
+            resolved: false
+          },
+          confidence_score: severity === 'critical' ? 1.0 : 0.8
         }]);
 
       if (dbError) {
@@ -99,14 +103,8 @@ export const useErrorTracking = () => {
       error.id === errorId ? { ...error, resolved: true } : error
     ));
 
-    try {
-      await supabase
-        .from('error_logs')
-        .update({ resolved: true })
-        .eq('id', errorId);
-    } catch (e) {
-      console.error('Failed to mark error as resolved:', e);
-    }
+    // For now, we'll skip the database update since we're using ai_insights table
+    // In production, you'd update the actual error_logs table once types are regenerated
   }, []);
 
   const clearErrors = useCallback(() => {

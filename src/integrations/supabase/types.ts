@@ -348,6 +348,48 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean | null
+          severity: string
+          stack: string | null
+          updated_at: string
+          url: string
+          user_agent: string
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved?: boolean | null
+          severity: string
+          stack?: string | null
+          updated_at?: string
+          url: string
+          user_agent: string
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved?: boolean | null
+          severity?: string
+          stack?: string | null
+          updated_at?: string
+          url?: string
+          user_agent?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_at: string

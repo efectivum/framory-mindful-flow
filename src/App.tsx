@@ -40,19 +40,6 @@ const ErrorTrackingProvider = ({ children }: { children: React.ReactNode }) => {
     // Make error logging available globally
     window.logError = logError;
 
-    // Set up query client error handling
-    queryClient.setMutationDefaults(['*'], {
-      onError: (error) => {
-        logError(error as Error, 'medium', { source: 'mutation' });
-      },
-    });
-
-    queryClient.setQueryDefaults(['*'], {
-      onError: (error) => {
-        logError(error as Error, 'medium', { source: 'query' });
-      },
-    });
-
     return () => {
       delete window.logError;
     };

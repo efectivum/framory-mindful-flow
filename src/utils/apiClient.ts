@@ -63,19 +63,23 @@ class APIClient {
     );
   }
 
-  async query(
-    table: string,
+  async query<T = any>(
+    tableName: string,
     operation: (query: any) => any,
     config: RequestConfig = {}
-  ) {
-    const rateLimitKey = config.rateLimitKey || `query_${table}`;
+  ): Promise<T> {
+    const rateLimitKey = config.rateLimitKey || `query_${tableName}`;
     
     if (!this.checkRateLimit(rateLimitKey)) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
     return this.withRetry(
-      () => operation(supabase.from(table)),
+      () => {
+        // Create the query dynamically
+        const query = supabase.from(tableName as any);
+        return operation(query);
+      },
       config.retryCount || 3
     );
   }
