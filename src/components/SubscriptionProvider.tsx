@@ -6,7 +6,7 @@ import { useSubscriptionActions } from '@/hooks/subscription/useSubscriptionActi
 import { SubscriptionContext } from '@/contexts/SubscriptionContext';
 
 export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const {
     isLoading,
     isPremium,
@@ -24,15 +24,22 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   }, [checkSubscriptionFromDatabase]);
 
   useEffect(() => {
-    if (user) {
+    // Only check subscription when auth is ready and user exists
+    if (!authLoading && user) {
+      console.log('SubscriptionProvider: Checking subscription for user', user.email);
       checkSubscriptionFromDatabase();
+    } else if (!authLoading && !user) {
+      console.log('SubscriptionProvider: No user found, skipping subscription check');
     }
-  }, [user?.id, checkSubscriptionFromDatabase]);
+  }, [user?.id, authLoading, checkSubscriptionFromDatabase]);
+
+  // Show loading while authentication is loading
+  const contextIsLoading = authLoading || (user && isLoading);
 
   return (
     <SubscriptionContext.Provider
       value={{
-        isLoading,
+        isLoading: contextIsLoading,
         isPremium,
         isBeta,
         subscriptionTier,

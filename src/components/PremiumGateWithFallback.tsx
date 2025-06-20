@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Crown, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Crown, Sparkles, AlertCircle, RefreshCw, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PremiumGateWithFallbackProps {
   feature: string;
@@ -21,7 +23,9 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
   showPreview = false,
   className = ""
 }) => {
+  const { user } = useAuth();
   const { isPremium, isBeta, createCheckout, isLoading, refreshSubscription } = useSubscription();
+  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const handleRefresh = async () => {
@@ -33,12 +37,39 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
     }
   };
 
+  // If user is not authenticated, show login prompt
+  if (!user) {
+    return (
+      <Card className={`bg-gradient-to-br from-blue-500/10 to-purple-600/10 border-blue-500/30 ${className}`}>
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <LogIn className="w-5 h-5 text-blue-400" />
+            {feature}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center space-y-3">
+            <p className="text-gray-300 text-sm">Please sign in to access {feature.toLowerCase()}.</p>
+            
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Allow access for both premium and beta users
   if (isPremium || isBeta) {
     return <>{children}</>;
   }
 
-  // Show loading for a reasonable time
+  // Show loading for a reasonable time while checking subscription
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -47,6 +78,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
     );
   }
 
+  // Default to premium gate for free users
   return (
     <Card className={`bg-gradient-to-br from-purple-500/10 to-blue-600/10 border-purple-500/30 ${className}`}>
       <CardHeader>

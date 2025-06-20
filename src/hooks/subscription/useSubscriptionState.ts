@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { SubscriptionTier } from '@/types/subscription';
 
 export const useSubscriptionState = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [isBeta, setIsBeta] = useState(false);
@@ -13,17 +13,25 @@ export const useSubscriptionState = () => {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const checkSubscriptionFromDatabase = useCallback(async () => {
-    if (!user) {
+    // Don't check subscription if auth is still loading or user is null
+    if (authLoading || !user?.email) {
       setIsLoading(false);
+      setSubscriptionTier('free');
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionEnd(null);
       return;
     }
 
     try {
       setIsLoading(true);
       
-      // Get subscription data from local database with timeout
+      // Add a small delay to ensure auth context is fully established
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get subscription data from local database with timeout and better error handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout
 
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
@@ -36,7 +44,10 @@ export const useSubscriptionState = () => {
 
       if (error) {
         console.error('Error fetching subscription data:', error);
-        // Don't throw error, just default to free
+        // On RLS or permission errors, default to free but don't block the UI
+        if (error.code === 'PGRST116' || error.message.includes('RLS')) {
+          console.warn('RLS policy blocked subscription check, defaulting to free tier');
+        }
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -45,7 +56,7 @@ export const useSubscriptionState = () => {
       }
 
       if (!subscriberData) {
-        // No subscription record found
+        // No subscription record found - user is free tier
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -79,7 +90,7 @@ export const useSubscriptionState = () => {
       
     } catch (error) {
       console.error('Error checking subscription:', error);
-      // Default to free on error - don't block the UI
+      // Default to free on any error - don't block the UI
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
@@ -87,7 +98,7 @@ export const useSubscriptionState = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   return {
     isLoading,
