@@ -35,7 +35,7 @@ const Insights = () => {
   // Create mood data for the mood card
   const moodData = moodTrends.map(trend => ({
     date: new Date(trend.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    mood: trend.average_mood || 0
+    mood: trend.mood || 0
   }));
 
   const averageMood = moodData.reduce((sum, data) => sum + data.mood, 0) / moodData.length || 0;

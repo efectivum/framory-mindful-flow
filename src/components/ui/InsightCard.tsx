@@ -3,7 +3,7 @@ import React from 'react';
 import { FlippableCard } from './FlippableCard';
 import { Card } from './card';
 import { cn } from '@/lib/utils';
-import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { RotateCcw } from 'lucide-react';
 
 interface InsightCardProps {
   title: string;
@@ -53,7 +53,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
       
       {/* Flip Indicator */}
       <div className="absolute bottom-4 right-4">
-        <ArrowUturnLeftIcon className="w-5 h-5 text-gray-500 rotate-180" />
+        <RotateCcw className="w-5 h-5 text-gray-500" />
       </div>
     </Card>
   );
