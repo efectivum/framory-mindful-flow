@@ -37,6 +37,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback })
     setShowFeedbackDialog(false);
   };
 
+  const handleHabitCreated = () => {
+    console.log('Habit created successfully');
+  };
+
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
       <div
@@ -51,7 +55,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback })
         {/* Habit Suggestion */}
         {message.habitSuggestion && (
           <div className="mt-3">
-            <CoachHabitSuggestion suggestion={message.habitSuggestion} />
+            <CoachHabitSuggestion 
+              suggestion={message.habitSuggestion} 
+              onHabitCreated={handleHabitCreated}
+            />
           </div>
         )}
 

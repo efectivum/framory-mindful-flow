@@ -5,6 +5,10 @@ export interface Message {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
+  activityType?: string;
+  isJournalEntry?: boolean;
+  attachmentUrl?: string;
+  attachmentType?: string;
   habitSuggestion?: {
     title: string;
     description: string;

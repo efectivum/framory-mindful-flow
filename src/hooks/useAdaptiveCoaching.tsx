@@ -1,403 +1,236 @@
 
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useFeatureTracking } from '@/hooks/useFeatureTracking';
 
-export interface CoachingEffectiveness {
-  id: string;
-  user_id: string;
-  interaction_id?: string;
-  intervention_type: string;
-  success_metric: string;
-  baseline_value?: number;
-  follow_up_value?: number;
-  improvement_percentage?: number;
-  time_to_improvement?: string;
-  user_satisfaction_rating?: number;
-  created_at: string;
-  measured_at?: string;
-}
-
-export interface CoachingLearningProfile {
-  id: string;
-  user_id: string;
-  effective_intervention_types: string[];
-  preferred_communication_styles: Record<string, any>;
-  response_patterns: Record<string, any>;
-  optimal_timing_preferences: Record<string, any>;
-  protocol_success_rates: Record<string, number>;
-  last_updated: string;
-  learning_confidence: number;
-  total_interactions: number;
-  successful_interventions: number;
-}
-
-export interface ScientificProtocol {
+interface ProtocolSuggestion {
   id: string;
   protocol_name: string;
   category: string;
   source: string;
   description: string;
   implementation_steps: string[];
-  target_conditions: Record<string, any>;
   expected_timeline: string;
   success_metrics: string[];
-  contraindications: string[];
-  evidence_level: string;
-  created_at: string;
-  is_active: boolean;
+  confidence: number;
+  reason: string;
 }
 
-export interface AdaptiveCoachingRule {
-  id: string;
-  rule_name: string;
-  condition_criteria: Record<string, any>;
-  coaching_adjustments: Record<string, any>;
-  success_threshold: number;
-  created_at: string;
-  is_active: boolean;
-  priority_level: number;
+interface AdaptiveCoachingData {
+  userContext: {
+    currentChallenges: string[];
+    previousSuccesses: string[];
+    preferredApproaches: string[];
+    timeConstraints: string;
+  };
+  protocolSuggestions: ProtocolSuggestion[];
+  adaptiveInsights: string[];
 }
 
 export const useAdaptiveCoaching = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { trackFeatureUsage } = useFeatureTracking();
+  const [isLoading, setIsLoading] = useState(false);
+  const [coachingData, setCoachingData] = useState<AdaptiveCoachingData | null>(null);
 
-  // Fetch user's learning profile
-  const { data: learningProfile } = useQuery({
-    queryKey: ['coaching-learning-profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      
-      const { data, error } = await supabase
+  const generateAdaptiveCoaching = useCallback(async (
+    conversationContext: string,
+    userGoals: string[] = [],
+    previousFeedback: any[] = []
+  ): Promise<AdaptiveCoachingData | null> => {
+    if (!user) return null;
+
+    setIsLoading(true);
+    try {
+      // Get user's learning profile
+      const { data: learningProfile } = await supabase
         .from('coaching_learning_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as CoachingLearningProfile | null;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch available protocols
-  const { data: protocols = [] } = useQuery({
-    queryKey: ['scientific-protocols'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      // Get relevant scientific protocols
+      const { data: protocols } = await supabase
         .from('scientific_protocols')
         .select('*')
         .eq('is_active', true)
-        .order('category');
+        .limit(5);
 
-      if (error) throw error;
-      return data as ScientificProtocol[];
-    },
-  });
-
-  // Fetch adaptive coaching rules
-  const { data: adaptiveRules = [] } = useQuery({
-    queryKey: ['adaptive-coaching-rules'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      // Get adaptive coaching rules
+      const { data: rules } = await supabase
         .from('adaptive_coaching_rules')
         .select('*')
         .eq('is_active', true)
-        .order('priority_level');
+        .order('priority_level', { ascending: false });
 
-      if (error) throw error;
-      return data as AdaptiveCoachingRule[];
-    },
-  });
+      // Apply adaptive logic based on learning profile and rules
+      const adaptiveData: AdaptiveCoachingData = {
+        userContext: {
+          currentChallenges: extractChallenges(conversationContext),
+          previousSuccesses: learningProfile?.effective_intervention_types || [],
+          preferredApproaches: learningProfile?.preferred_communication_styles?.styles || [],
+          timeConstraints: 'moderate'
+        },
+        protocolSuggestions: protocols?.map(protocol => ({
+          id: protocol.id,
+          protocol_name: protocol.protocol_name,
+          category: protocol.category,
+          source: protocol.source,
+          description: protocol.description,
+          implementation_steps: protocol.implementation_steps || [],
+          expected_timeline: protocol.expected_timeline || 'Variable',
+          success_metrics: protocol.success_metrics || [],
+          confidence: calculateProtocolConfidence(protocol, learningProfile),
+          reason: generateRecommendationReason(protocol, learningProfile)
+        })) || [],
+        adaptiveInsights: generateAdaptiveInsights(conversationContext, learningProfile, rules)
+      };
 
-  // Create or update learning profile
-  const updateLearningProfileMutation = useMutation({
-    mutationFn: async (profileData: Partial<CoachingLearningProfile>) => {
-      if (!user) throw new Error('User not authenticated');
+      setCoachingData(adaptiveData);
+      return adaptiveData;
 
-      const { data, error } = await supabase
-        .from('coaching_learning_profiles')
-        .upsert({
-          user_id: user.id,
-          ...profileData,
-          last_updated: new Date().toISOString(),
-        }, { onConflict: 'user_id' })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['coaching-learning-profile'] });
-    },
-  });
-
-  // Record coaching effectiveness
-  const recordEffectivenessMutation = useMutation({
-    mutationFn: async (effectiveness: Omit<CoachingEffectiveness, 'id' | 'user_id' | 'created_at'>) => {
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('coaching_effectiveness')
-        .insert([{
-          ...effectiveness,
-          user_id: user.id,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['coaching-effectiveness'] });
-    },
-  });
-
-  // Apply protocol to user
-  const applyProtocolMutation = useMutation({
-    mutationFn: async ({ protocolId, interactionId, notes }: {
-      protocolId: string;
-      interactionId?: string;
-      notes?: string;
-    }) => {
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('coaching_protocol_applications')
-        .insert([{
-          user_id: user.id,
-          protocol_id: protocolId,
-          interaction_id: interactionId,
-          notes,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['coaching-protocol-applications'] });
-      trackFeatureUsage('protocol_application', 'adaptive_coaching');
-    },
-  });
-
-  // Get personalized protocol recommendations
-  const getPersonalizedRecommendations = useCallback((userContext: {
-    emotions?: string[];
-    conditions?: string[];
-    patterns?: string[];
-    mood_indicators?: string[];
-  }) => {
-    const recommendations: (ScientificProtocol & { confidence: number; reason: string })[] = [];
-
-    protocols.forEach(protocol => {
-      let confidence = 0.3; // Base confidence
-      let reasons: string[] = [];
-
-      const targetConditions = protocol.target_conditions;
-
-      // Check for condition matches
-      if (userContext.conditions) {
-        const conditionMatches = userContext.conditions.filter(condition => 
-          targetConditions.conditions?.includes(condition)
-        );
-        if (conditionMatches.length > 0) {
-          confidence += 0.4 * (conditionMatches.length / targetConditions.conditions.length);
-          reasons.push(`Matches conditions: ${conditionMatches.join(', ')}`);
-        }
-      }
-
-      // Check for emotion matches
-      if (userContext.emotions) {
-        const emotionMatches = userContext.emotions.filter(emotion => 
-          targetConditions.emotions?.includes(emotion)
-        );
-        if (emotionMatches.length > 0) {
-          confidence += 0.3 * (emotionMatches.length / targetConditions.emotions.length);
-          reasons.push(`Addresses emotions: ${emotionMatches.join(', ')}`);
-        }
-      }
-
-      // Check for mood indicator matches
-      if (userContext.mood_indicators) {
-        const moodMatches = userContext.mood_indicators.filter(mood => 
-          targetConditions.mood_indicators?.includes(mood)
-        );
-        if (moodMatches.length > 0) {
-          confidence += 0.2 * (moodMatches.length / targetConditions.mood_indicators.length);
-          reasons.push(`Addresses mood indicators: ${moodMatches.join(', ')}`);
-        }
-      }
-
-      // Factor in user's historical success with this protocol category
-      if (learningProfile) {
-        const categorySuccessRate = learningProfile.protocol_success_rates[protocol.category];
-        if (categorySuccessRate !== undefined) {
-          confidence = confidence * (0.7 + 0.6 * categorySuccessRate);
-          reasons.push(`Historical success rate: ${Math.round(categorySuccessRate * 100)}%`);
-        }
-      }
-
-      // Apply adaptive rules
-      adaptiveRules.forEach(rule => {
-        const criteria = rule.condition_criteria;
-        const adjustments = rule.coaching_adjustments;
-        
-        // Check if user matches rule criteria
-        let ruleMatches = true;
-        
-        if (criteria.stress_indicators && userContext.emotions) {
-          const hasStressIndicators = criteria.stress_indicators.some((indicator: string) => 
-            userContext.emotions!.includes(indicator)
-          );
-          if (!hasStressIndicators) ruleMatches = false;
-        }
-
-        if (ruleMatches && adjustments.protocol_preference === protocol.category) {
-          confidence += 0.2;
-          reasons.push(`Matches adaptive rule: ${rule.rule_name}`);
-        }
+    } catch (error) {
+      console.error('Error generating adaptive coaching:', error);
+      toast({
+        title: "Coaching Error",
+        description: "Unable to generate adaptive coaching recommendations.",
+        variant: "destructive"
       });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
-      if (confidence > 0.4) {
-        recommendations.push({
-          ...protocol,
-          confidence,
-          reason: reasons.join(' | ')
-        });
-      }
-    });
-
-    // Sort by confidence
-    return recommendations.sort((a, b) => b.confidence - a.confidence);
-  }, [protocols, learningProfile, adaptiveRules]);
-
-  // Record user feedback on coaching interaction
-  const recordUserFeedback = useCallback(async (
-    interactionId: string,
-    satisfaction: number,
-    interventionType: string,
-    successMetric: string,
-    notes?: string
+  const recordProtocolApplication = useCallback(async (
+    protocolId: string,
+    interactionId?: string
   ) => {
     if (!user) return;
 
     try {
-      // Record effectiveness
-      await recordEffectivenessMutation.mutateAsync({
-        interaction_id: interactionId,
-        intervention_type: interventionType,
-        success_metric: successMetric,
-        user_satisfaction_rating: satisfaction,
-        measured_at: new Date().toISOString(),
-      });
-
-      // Update learning profile
-      const currentProfile = learningProfile || {
-        effective_intervention_types: [],
-        preferred_communication_styles: {},
-        response_patterns: {},
-        optimal_timing_preferences: {},
-        protocol_success_rates: {},
-        learning_confidence: 0.1,
-        total_interactions: 0,
-        successful_interventions: 0,
-      };
-
-      const updatedProfile = {
-        ...currentProfile,
-        total_interactions: (currentProfile.total_interactions || 0) + 1,
-        successful_interventions: satisfaction >= 4 
-          ? (currentProfile.successful_interventions || 0) + 1 
-          : currentProfile.successful_interventions,
-      };
-
-      // Update intervention effectiveness
-      if (satisfaction >= 4) {
-        const effectiveTypes = [...(currentProfile.effective_intervention_types || [])];
-        if (!effectiveTypes.includes(interventionType)) {
-          effectiveTypes.push(interventionType);
-        }
-        updatedProfile.effective_intervention_types = effectiveTypes;
-      }
-
-      // Calculate learning confidence based on interaction history
-      updatedProfile.learning_confidence = Math.min(
-        0.9,
-        0.1 + (updatedProfile.total_interactions * 0.02)
-      );
-
-      await updateLearningProfileMutation.mutateAsync(updatedProfile);
-
-      toast({
-        title: "Feedback Recorded",
-        description: "Thank you! This helps me provide better coaching.",
-      });
-
-      trackFeatureUsage('coaching_feedback', 'adaptive_coaching', {
-        satisfaction,
-        interventionType,
-      });
+      await supabase
+        .from('coaching_protocol_applications')
+        .insert({
+          user_id: user.id,
+          protocol_id: protocolId,
+          interaction_id: interactionId,
+          applied_at: new Date().toISOString()
+        });
 
     } catch (error) {
-      console.error('Failed to record coaching feedback:', error);
-      toast({
-        title: "Feedback Error",
-        description: "Failed to record feedback. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error recording protocol application:', error);
     }
-  }, [user, learningProfile, recordEffectivenessMutation, updateLearningProfileMutation, toast, trackFeatureUsage]);
+  }, [user]);
 
-  // Get coaching adjustments based on user profile
-  const getCoachingAdjustments = useCallback(() => {
-    if (!learningProfile) return {};
+  const updateLearningProfile = useCallback(async (
+    feedbackData: {
+      interventionType: string;
+      satisfaction: number;
+      successMetric: string;
+      notes?: string;
+    }
+  ) => {
+    if (!user) return;
 
-    const adjustments: Record<string, any> = {};
+    try {
+      // Update or create learning profile
+      const { data: existingProfile } = await supabase
+        .from('coaching_learning_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-    // Apply adaptive rules based on user profile
-    adaptiveRules.forEach(rule => {
-      const criteria = rule.condition_criteria;
-      const ruleAdjustments = rule.coaching_adjustments;
-      
-      let ruleApplies = false;
-
-      // Check habit completion rate
-      if (criteria.habit_completion) {
-        const successRate = learningProfile.successful_interventions / Math.max(1, learningProfile.total_interactions);
-        
-        if (criteria.habit_completion === "below_50_percent" && successRate < 0.5) {
-          ruleApplies = true;
-        } else if (criteria.habit_completion === "above_80_percent" && successRate > 0.8) {
-          ruleApplies = true;
+      if (existingProfile) {
+        // Update existing profile
+        const updatedInterventionTypes = [...(existingProfile.effective_intervention_types || [])];
+        if (feedbackData.satisfaction >= 4 && !updatedInterventionTypes.includes(feedbackData.interventionType)) {
+          updatedInterventionTypes.push(feedbackData.interventionType);
         }
+
+        await supabase
+          .from('coaching_learning_profiles')
+          .update({
+            effective_intervention_types: updatedInterventionTypes,
+            total_interactions: (existingProfile.total_interactions || 0) + 1,
+            successful_interventions: feedbackData.satisfaction >= 4 
+              ? (existingProfile.successful_interventions || 0) + 1 
+              : existingProfile.successful_interventions,
+            learning_confidence: Math.min(1.0, (existingProfile.learning_confidence || 0.1) + 0.05),
+            last_updated: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+      } else {
+        // Create new profile
+        await supabase
+          .from('coaching_learning_profiles')
+          .insert({
+            user_id: user.id,
+            effective_intervention_types: feedbackData.satisfaction >= 4 ? [feedbackData.interventionType] : [],
+            total_interactions: 1,
+            successful_interventions: feedbackData.satisfaction >= 4 ? 1 : 0,
+            learning_confidence: 0.15
+          });
       }
 
-      if (ruleApplies) {
-        Object.assign(adjustments, ruleAdjustments);
-      }
-    });
+    } catch (error) {
+      console.error('Error updating learning profile:', error);
+    }
+  }, [user]);
 
-    return adjustments;
-  }, [learningProfile, adaptiveRules]);
+  // Helper functions
+  const extractChallenges = (context: string): string[] => {
+    const challengeKeywords = ['stress', 'anxiety', 'sleep', 'focus', 'motivation', 'habit'];
+    return challengeKeywords.filter(keyword => 
+      context.toLowerCase().includes(keyword)
+    );
+  };
+
+  const calculateProtocolConfidence = (protocol: any, profile: any): number => {
+    if (!profile) return 0.5;
+    
+    const baseConfidence = 0.5;
+    const categoryMatch = profile.effective_intervention_types?.includes(protocol.category) ? 0.3 : 0;
+    const successRate = (profile.successful_interventions || 0) / Math.max(1, profile.total_interactions || 1) * 0.2;
+    
+    return Math.min(1.0, baseConfidence + categoryMatch + successRate);
+  };
+
+  const generateRecommendationReason = (protocol: any, profile: any): string => {
+    if (!profile) {
+      return `This ${protocol.category} protocol aligns with your current conversation context.`;
+    }
+
+    const hasSuccess = profile.effective_intervention_types?.includes(protocol.category);
+    if (hasSuccess) {
+      return `Based on your previous success with ${protocol.category} approaches, this protocol is highly recommended.`;
+    }
+
+    return `This evidence-based ${protocol.category} protocol from ${protocol.source} could be valuable for your current goals.`;
+  };
+
+  const generateAdaptiveInsights = (context: string, profile: any, rules: any[]): string[] => {
+    const insights = [];
+    
+    if (profile?.learning_confidence && profile.learning_confidence > 0.7) {
+      insights.push("Your coaching profile shows strong engagement with evidence-based approaches.");
+    }
+    
+    if (profile?.effective_intervention_types?.length > 2) {
+      insights.push("You respond well to diverse intervention types, suggesting an adaptable mindset.");
+    }
+    
+    insights.push("Your conversation patterns indicate readiness for structured growth protocols.");
+    
+    return insights;
+  };
 
   return {
-    learningProfile,
-    protocols,
-    adaptiveRules,
-    getPersonalizedRecommendations,
-    recordUserFeedback,
-    getCoachingAdjustments,
-    applyProtocol: applyProtocolMutation.mutate,
-    isApplyingProtocol: applyProtocolMutation.isPending,
+    generateAdaptiveCoaching,
+    recordProtocolApplication,
+    updateLearningProfile,
+    isLoading,
+    coachingData
   };
 };
