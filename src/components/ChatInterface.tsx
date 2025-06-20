@@ -11,8 +11,8 @@ import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatContextManager } from './chat/ChatContextManager';
-import { useConversationManager } from './chat/ConversationManager';
-import { useMessageManager } from './chat/MessageManager';
+import { useSimpleConversationManager } from './chat/SimpleConversationManager';
+import { useSimpleMessageManager } from './chat/SimpleMessageManager';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { ChatLoadingState } from './chat/ChatLoadingState';
 import { ChatOfflineState } from './chat/ChatOfflineState';
@@ -75,7 +75,7 @@ export const ChatInterface = () => {
         const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
         const session = await createSession('New Conversation', contextType, chatContext);
         if (!session) {
-          throw new Error('Failed to create chat session');
+          console.warn('Failed to create session, continuing without persistence');
         }
       }
 
@@ -92,7 +92,7 @@ export const ChatInterface = () => {
       }
     } catch (error) {
       console.error('ChatInterface: Error handling initial message:', error);
-      setInitializationError('Failed to initialize chat');
+      // Don't set initialization error - continue with basic functionality
     }
   };
 
@@ -100,19 +100,17 @@ export const ChatInterface = () => {
     textAreaRef.current?.focus();
   };
 
-  // Initialize conversation manager with error handling
-  const conversationManager = chatContext ? useConversationManager({
-    isCoachingMode: chatContext?.isCoachingMode || false,
+  // Initialize conversation manager
+  const conversationManager = useSimpleConversationManager({
     onMessageAdd: addMessage,
     onInputFocus: handleInputFocus
-  }) : null;
+  });
 
-  // Initialize message manager with error handling
-  const messageManager = (chatContext && conversationManager) ? useMessageManager({
-    isCoachingMode: chatContext?.isCoachingMode || false,
-    onConversation: conversationManager.handleConversation,
+  // Initialize message manager
+  const messageManager = useSimpleMessageManager({
+    onMessageAdd: addMessage,
     textAreaRef
-  }) : null;
+  });
 
   const handleSend = async () => {
     if (!messageManager || !conversationManager) {
@@ -121,14 +119,22 @@ export const ChatInterface = () => {
     }
 
     try {
-      // Create session if none exists
+      // Create session if none exists (but don't fail if it doesn't work)
       if (!currentSession) {
         const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
-        const session = await createSession('New Conversation', contextType, chatContext);
-        if (!session) return;
+        await createSession('New Conversation', contextType, chatContext);
       }
 
-      await messageManager.handleSend(addMessage);
+      // Get the input text before sending
+      const inputText = messageManager.inputText;
+      
+      // Send the user message
+      await messageManager.handleSend();
+      
+      // Generate AI response
+      if (inputText.trim()) {
+        await conversationManager.handleConversation(inputText);
+      }
     } catch (error) {
       console.error('ChatInterface: Error sending message:', error);
     }
@@ -192,15 +198,15 @@ export const ChatInterface = () => {
     try {
       setInitializationError(null);
       setIsInitialized(false);
-      // Attempt to reload sessions
+      // Simple retry - just reload
       window.location.reload();
     } catch (error) {
       console.error('ChatInterface: Retry failed:', error);
     }
   };
 
-  // Show loading state while initializing or if managers aren't ready
-  if (!isInitialized || sessionsLoading || !messageManager || !conversationManager) {
+  // Show loading state only while sessions are loading (simplified condition)
+  if (sessionsLoading) {
     return (
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
         <ChatLoadingState />
@@ -237,26 +243,26 @@ export const ChatInterface = () => {
         <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
         <MessageList
           messages={messages}
-          isDetectingIntent={messageManager.isDetectingIntent}
-          isGeneratingResponse={conversationManager.isGeneratingResponse}
+          isDetectingIntent={messageManager?.isDetectingIntent || false}
+          isGeneratingResponse={conversationManager?.isGeneratingResponse || false}
           messagesEndRef={messagesEndRef}
           onFeedback={handleCoachingFeedback}
         />
         <ChatInput
-          inputText={messageManager.inputText}
-          setInputText={messageManager.setInputText}
+          inputText={messageManager?.inputText || ''}
+          setInputText={messageManager?.setInputText || (() => {})}
           handleSend={handleSend}
-          handleFileChange={messageManager.handleFileChange}
-          handleVoiceTranscription={messageManager.handleVoiceTranscription}
+          handleFileChange={messageManager?.handleFileChange || (() => {})}
+          handleVoiceTranscription={messageManager?.handleVoiceTranscription || (() => {})}
           handleActivitySelect={handleActivitySelect}
-          fileAttachment={messageManager.fileAttachment}
-          setFileAttachment={messageManager.setFileAttachment}
-          selectedActivity={messageManager.selectedActivity}
-          setSelectedActivity={messageManager.setSelectedActivity}
+          fileAttachment={messageManager?.fileAttachment || null}
+          setFileAttachment={messageManager?.setFileAttachment || (() => {})}
+          selectedActivity={messageManager?.selectedActivity || null}
+          setSelectedActivity={messageManager?.setSelectedActivity || (() => {})}
           showActivitySelector={showActivitySelector}
           setShowActivitySelector={setShowActivitySelector}
-          isDetectingIntent={messageManager.isDetectingIntent}
-          isGeneratingResponse={conversationManager.isGeneratingResponse}
+          isDetectingIntent={messageManager?.isDetectingIntent || false}
+          isGeneratingResponse={conversationManager?.isGeneratingResponse || false}
           textAreaRef={textAreaRef}
         />
         
