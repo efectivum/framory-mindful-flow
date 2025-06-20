@@ -10,6 +10,9 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData?: any) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<any>;
+  resendEmailConfirmation: (email: string) => Promise<any>;
+  signOutFromAllDevices: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, userData = {}) => {
     // Automatically detect timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -50,7 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: {
           ...userData,
           timezone,
-        }
+        },
+        emailRedirectTo: redirectUrl
       }
     });
     
@@ -70,6 +75,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const resetPassword = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/auth?reset=true`;
+    
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl
+    });
+    
+    return { data, error };
+  };
+
+  const resendEmailConfirmation = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
+    });
+    
+    return { data, error };
+  };
+
+  const signOutFromAllDevices = async () => {
+    // Sign out from all devices by refreshing the session
+    const { error } = await supabase.auth.admin.signOut(user?.id || '', 'global');
+    if (error) {
+      // Fallback: just sign out from current device
+      await supabase.auth.signOut();
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -78,6 +116,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signUp,
       signIn,
       signOut,
+      resetPassword,
+      resendEmailConfirmation,
+      signOutFromAllDevices,
     }}>
       {children}
     </AuthContext.Provider>

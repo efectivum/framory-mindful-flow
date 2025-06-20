@@ -1,8 +1,10 @@
+
 import { UserPreferencesForm } from '@/components/UserPreferencesForm';
 import { ProfileOverview } from '@/components/ProfileOverview';
 import { AccountInformation } from '@/components/AccountInformation';
 import { AdditionalSettings } from '@/components/AdditionalSettings';
 import { PrivacySettings } from '@/components/PrivacySettings';
+import { SessionManagement } from '@/components/SessionManagement';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Profile = () => {
@@ -16,6 +18,7 @@ const Profile = () => {
       {/* Settings */}
       <div className="lg:col-span-2 space-y-6">
         <AccountInformation />
+        <SessionManagement />
         <UserPreferencesForm />
         <AdditionalSettings />
         <PrivacySettings />
@@ -23,7 +26,6 @@ const Profile = () => {
     </div>
   );
 
-  // Always use ResponsiveLayout
   return (
     <ResponsiveLayout title="Profile" subtitle="Manage your account and preferences">
       {content}

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,9 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp, signIn } = useAuth();
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const { signUp, signIn, resetPassword, resendEmailConfirmation } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -28,18 +31,28 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       if (mode === 'signup') {
         const { error } = await signUp(email, password, { name });
         if (error) throw error;
+        setEmailSent(true);
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email to verify your account before signing in.",
         });
       } else {
         const { error } = await signIn(email, password);
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            toast({
+              title: "Email not verified",
+              description: "Please check your email and click the verification link before signing in.",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw error;
+        }
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
-        // Redirect to home page after successful sign in
         navigate('/');
       }
     } catch (error: any) {
@@ -52,6 +65,148 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       setLoading(false);
     }
   };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await resetPassword(email);
+      if (error) throw error;
+      
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for instructions to reset your password.",
+      });
+      setShowPasswordReset(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to resend confirmation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await resendEmailConfirmation(email);
+      if (error) throw error;
+      
+      toast({
+        title: "Confirmation email sent",
+        description: "Check your email for the verification link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (emailSent && mode === 'signup') {
+    return (
+      <div className="w-full max-w-md mx-auto text-center space-y-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Check your email</h1>
+          <p className="text-gray-600 mt-2">
+            We've sent a verification link to {email}
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Click the link in your email to verify your account, then return here to sign in.
+          </p>
+          
+          <Button
+            onClick={handleResendConfirmation}
+            variant="outline"
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? 'Sending...' : 'Resend verification email'}
+          </Button>
+          
+          <Button
+            onClick={() => {
+              setEmailSent(false);
+              onToggleMode();
+            }}
+            variant="ghost"
+            className="w-full"
+          >
+            Back to sign in
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showPasswordReset) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <form onSubmit={handlePasswordReset} className="space-y-4">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold">Reset your password</h1>
+            <p className="text-gray-600 mt-2">
+              Enter your email address and we'll send you a reset link
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reset-email">Email</Label>
+            <Input
+              id="reset-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="your@email.com"
+            />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Sending...' : 'Send reset link'}
+          </Button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowPasswordReset(false)}
+              className="text-blue-600 hover:underline text-sm"
+            >
+              Back to sign in
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -105,6 +260,18 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             minLength={6}
           />
         </div>
+
+        {mode === 'signin' && (
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => setShowPasswordReset(true)}
+              className="text-blue-600 hover:underline text-sm"
+            >
+              Forgot your password?
+            </button>
+          </div>
+        )}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
