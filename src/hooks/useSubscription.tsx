@@ -10,7 +10,7 @@ interface SubscriptionContextType {
   isBeta: boolean;
   subscriptionTier: 'free' | 'premium' | 'beta';
   subscriptionEnd: string | null;
-  checkSubscription: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   createCheckout: () => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
@@ -25,20 +25,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [isBeta, setIsBeta] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium' | 'beta'>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [hasTimedOut, setHasTimedOut] = useState(false);
-
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        console.warn('Subscription check timed out, assuming free tier');
-        setIsLoading(false);
-        setHasTimedOut(true);
-      }
-    }, 8000); // 8 second timeout
-
-    return () => clearTimeout(timer);
-  }, [isLoading]);
 
   const checkSubscriptionFromDatabase = useCallback(async () => {
     if (!user) {
@@ -117,46 +103,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   }, [user]);
 
-  // This function only hits Stripe when manually called (e.g., after checkout or manual refresh)
-  const checkSubscription = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
-      
-      // Add timeout for Stripe check - use Promise.race for timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
-      );
-
-      const { data, error } = await Promise.race([
-        supabase.functions.invoke('check-subscription'),
-        timeoutPromise
-      ]) as any;
-      
-      if (error) {
-        console.error('Error checking subscription with Stripe:', error);
-        // Fall back to database check if Stripe fails
-        await checkSubscriptionFromDatabase();
-        return;
-      }
-      
-      const tier = data.subscription_tier || 'free';
-      const isSubscribed = data.subscribed || false;
-      
-      setSubscriptionTier(tier);
-      setIsPremium(isSubscribed || tier === 'premium');
-      setIsBeta(tier === 'beta');
-      setSubscriptionEnd(data.subscription_end || null);
-      
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      // Fall back to database check
-      await checkSubscriptionFromDatabase();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, checkSubscriptionFromDatabase]);
+  // Manual refresh function for users who want to check status
+  const refreshSubscription = useCallback(async () => {
+    await checkSubscriptionFromDatabase();
+  }, [checkSubscriptionFromDatabase]);
 
   const createCheckout = async () => {
     if (!user) {
@@ -209,7 +159,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (user) {
-      // Only check database on initial load - much faster and no API calls
       checkSubscriptionFromDatabase();
     } else {
       setIsLoading(false);
@@ -223,12 +172,12 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   return (
     <SubscriptionContext.Provider
       value={{
-        isLoading: isLoading && !hasTimedOut, // Don't show loading if timed out
+        isLoading,
         isPremium,
         isBeta,
         subscriptionTier,
         subscriptionEnd,
-        checkSubscription, // Now only used for manual refreshes
+        refreshSubscription,
         createCheckout,
         openCustomerPortal,
       }}

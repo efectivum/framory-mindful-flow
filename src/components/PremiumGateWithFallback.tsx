@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Crown, Sparkles, AlertCircle } from 'lucide-react';
+import { Crown, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface PremiumGateWithFallbackProps {
   feature: string;
@@ -21,67 +21,25 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
   showPreview = false,
   className = ""
 }) => {
-  const { isPremium, isBeta, createCheckout, isLoading } = useSubscription();
-  const [hasTimedOut, setHasTimedOut] = React.useState(false);
-  const [allowAccess, setAllowAccess] = React.useState(false);
+  const { isPremium, isBeta, createCheckout, isLoading, refreshSubscription } = useSubscription();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  // Timeout after 10 seconds to prevent infinite loading
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasTimedOut(true);
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // If loading has timed out, allow access with warning
-  if (hasTimedOut && isLoading) {
-    if (allowAccess) {
-      return <>{children}</>;
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshSubscription();
+    } finally {
+      setIsRefreshing(false);
     }
-
-    return (
-      <Card className={`bg-gradient-to-br from-orange-500/10 to-red-600/10 border-orange-500/30 ${className}`}>
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-orange-400" />
-            Connection Issue
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center space-y-3">
-            <p className="text-gray-300 text-sm">
-              We're having trouble verifying your subscription status. You can continue using the feature, but some functionality may be limited.
-            </p>
-            
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => setAllowAccess(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-              >
-                Continue Anyway
-              </Button>
-              <Button 
-                onClick={() => window.location.reload()}
-                variant="outline"
-                className="border-orange-400 text-orange-300 hover:bg-orange-400/10"
-              >
-                Retry
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  };
 
   // Allow access for both premium and beta users
   if (isPremium || isBeta) {
     return <>{children}</>;
   }
 
-  // Show loading only for a reasonable time
-  if (isLoading && !hasTimedOut) {
+  // Show loading for a reasonable time
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-400">Checking subscription status...</div>
@@ -97,9 +55,20 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
             <Crown className="w-5 h-5 text-yellow-400" />
             {feature}
           </CardTitle>
-          <Badge variant="outline" className="border-purple-400 text-purple-300">
-            Premium
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-purple-400 text-purple-300">
+              Premium
+            </Badge>
+            <Button
+              onClick={handleRefresh}
+              variant="ghost"
+              size="sm"
+              disabled={isRefreshing}
+              className="text-gray-400 hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -127,6 +96,11 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
           
           <div className="text-xs text-gray-400">
             ✨ AI-powered insights • 📊 Advanced analytics • 🎯 Unlimited habits
+          </div>
+          
+          <div className="text-xs text-gray-500 flex items-center justify-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Already subscribed? Try refreshing your status above
           </div>
         </div>
       </CardContent>

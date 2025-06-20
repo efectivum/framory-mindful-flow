@@ -3,22 +3,31 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageAnalytics } from '@/hooks/useUsageAnalytics';
 import { UsageAnalyticsCard } from '@/components/UsageAnalyticsCard';
-import { Crown, Calendar, CreditCard, TrendingUp, Settings, ExternalLink, Zap } from 'lucide-react';
+import { Crown, Calendar, Settings, Zap, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const SubscriptionDashboard = () => {
-  const { subscriptionTier, isPremium, isBeta, subscriptionEnd, createCheckout, openCustomerPortal } = useSubscription();
+  const { subscriptionTier, isPremium, isBeta, subscriptionEnd, createCheckout, openCustomerPortal, refreshSubscription } = useSubscription();
   const { usageData } = useUsageAnalytics();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const handleManageBilling = async () => {
     try {
       await openCustomerPortal();
     } catch (error) {
       console.error('Failed to open billing portal:', error);
+    }
+  };
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshSubscription();
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -75,10 +84,21 @@ export const SubscriptionDashboard = () => {
       {/* Subscription Status Card */}
       <Card className={`bg-gradient-to-br ${isBeta ? 'from-blue-500/10 to-cyan-600/10 border-blue-500/30' : 'from-purple-500/10 to-blue-600/10 border-purple-500/30'}`}>
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            {isBeta ? <Zap className="w-5 h-5 text-blue-400" /> : <Crown className="w-5 h-5 text-yellow-400" />}
-            Subscription Status
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              {isBeta ? <Zap className="w-5 h-5 text-blue-400" /> : <Crown className="w-5 h-5 text-yellow-400" />}
+              Subscription Status
+            </CardTitle>
+            <Button
+              onClick={handleRefreshStatus}
+              variant="ghost"
+              size="sm"
+              disabled={isRefreshing}
+              className="text-gray-400 hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">

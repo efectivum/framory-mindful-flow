@@ -1,19 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Sparkles, CheckCircle, ArrowRight } from 'lucide-react';
+import { Crown, Sparkles, CheckCircle, ArrowRight, Clock } from 'lucide-react';
 
 export const PremiumSuccess: React.FC = () => {
-  const { checkSubscription } = useSubscription();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check subscription status when landing on success page
-    checkSubscription();
-  }, [checkSubscription]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -27,8 +20,15 @@ export const PremiumSuccess: React.FC = () => {
         <CardContent className="space-y-6 text-center">
           <div className="space-y-3">
             <p className="text-gray-300">
-              Congratulations! You now have access to all premium features.
+              Thank you for upgrading! Your premium features are now being activated.
             </p>
+            
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-blue-300 text-sm">
+                <Clock className="w-4 h-4" />
+                <span>Premium features may take a few minutes to fully activate</span>
+              </div>
+            </div>
             
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center gap-2">
