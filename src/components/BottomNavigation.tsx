@@ -24,15 +24,14 @@ export const BottomNavigation: React.FC = () => {
 
   const currentPageId = getCurrentPageId();
 
-  // Debounced navigation to prevent rapid taps
   const handleNavigation = React.useCallback((path: string, label: string) => {
     console.log(`Bottom nav clicked: ${label} (${path})`);
     navigate(path);
   }, [navigate]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 md:hidden safe-area-pb">
-      <div className="flex items-center justify-around py-1 px-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 md:hidden safe-area-pb">
+      <div className="flex items-center justify-around py-2 px-2">
         {navItems.map((item) => {
           const isActive = currentPageId === item.id;
           const Icon = item.icon;
@@ -42,12 +41,12 @@ export const BottomNavigation: React.FC = () => {
               key={item.id}
               onClick={() => handleNavigation(item.path, item.label)}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-16 min-h-14 touch-manipulation haptic-light",
+                "flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 min-w-16 min-h-16 touch-manipulation",
                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
                 "active:scale-95",
                 isActive 
                   ? "text-blue-600 bg-blue-50" 
-                  : "text-gray-400 active:text-gray-600 active:bg-gray-50"
+                  : "text-gray-500 active:text-gray-700 active:bg-gray-50"
               )}
               style={{
                 WebkitTapHighlightColor: 'transparent',
