@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Target, X } from 'lucide-react';
+import { Calendar, TrendingUp, Target } from 'lucide-react';
 import { HabitAnalyticsCharts } from './HabitAnalyticsCharts';
 import type { Habit } from '@/hooks/useHabits';
 
@@ -32,33 +31,21 @@ export const HabitProgressModal: React.FC<HabitProgressModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900/95 border-gray-700">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <DialogTitle className="text-2xl font-light text-white mb-2">
-                {habit.title} Analytics
-              </DialogTitle>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
-                <Badge className={getFrequencyBadgeColor(habit.frequency_type)}>
-                  {habit.frequency_type}
-                </Badge>
-                <div className="flex items-center gap-1">
-                  <Target className="w-4 h-4" />
-                  {habit.target_days} day goal
-                </div>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4" />
-                  {habit.current_streak} day streak
-                </div>
-              </div>
+          <DialogTitle className="text-2xl font-light text-white mb-2">
+            {habit.title} Analytics
+          </DialogTitle>
+          <div className="flex items-center gap-3 text-sm text-gray-400">
+            <Badge className={getFrequencyBadgeColor(habit.frequency_type)}>
+              {habit.frequency_type}
+            </Badge>
+            <div className="flex items-center gap-1">
+              <Target className="w-4 h-4" />
+              {habit.target_days} day goal
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-4 h-4" />
+              {habit.current_streak} day streak
+            </div>
           </div>
         </DialogHeader>
 
