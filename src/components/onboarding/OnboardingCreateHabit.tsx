@@ -34,7 +34,9 @@ export const OnboardingCreateHabit: React.FC<OnboardingCreateHabitProps> = ({ on
         description: description.trim() || undefined,
         frequency_type: 'daily',
         frequency_value: 1,
-        target_days: 30
+        target_days: 30,
+        is_active: true,
+        user_id: '', // This will be set by the hook
       });
       onNext();
     } catch (error) {

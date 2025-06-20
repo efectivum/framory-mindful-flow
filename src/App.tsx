@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,6 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { AppRoutes } from "@/components/AppRoutes";
 import { OnboardingManager } from "@/components/OnboardingManager";
 import { useErrorTracking } from "@/hooks/useErrorTracking";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
 const ErrorTrackingProvider = ({ children }: { children: React.ReactNode }) => {
   const { logError } = useErrorTracking();
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Make error logging available globally
     window.logError = logError;
 
