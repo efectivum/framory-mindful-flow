@@ -5,6 +5,7 @@ import { useWeeklyInsights } from "@/hooks/useWeeklyInsights";
 import { useQuickAnalysis } from "@/hooks/useQuickAnalysis";
 import { useProgressStats } from "@/hooks/useProgressStats";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAchievements } from "@/hooks/useAchievements";
 import { StatCardRow } from "@/components/StatCardRow";
 import { AIInsightCard, WeeklyInsightCard } from "@/components/InsightCard";
 import { PremiumGate } from "@/components/PremiumGate";
@@ -16,11 +17,19 @@ export const TodayProgressCards: React.FC = () => {
   const { mode } = useTimeOfDay();
   const { weeklyInsights, getLatestInsight } = useWeeklyInsights();
   const { isPremium } = useSubscription();
+  const { checkAchievements } = useAchievements();
 
   // Use the latest journal entry for QuickAnalysis
   const latestEntry = entries.length > 0 ? entries[0] : null;
   const { getQuickAnalysis } = useQuickAnalysis();
   const { data: quickAnalysis } = getQuickAnalysis(latestEntry ? latestEntry.id : "");
+
+  // Check for achievements when stats change
+  React.useEffect(() => {
+    if (entries.length > 0 || activeHabits.length > 0) {
+      checkAchievements();
+    }
+  }, [entries.length, activeHabits.length, stats.currentStreak, checkAchievements]);
 
   const statCards = [
     {

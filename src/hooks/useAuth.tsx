@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,10 +30,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Initialize onboarding for new users
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(async () => {
+            try {
+              await supabase.rpc('initialize_user_onboarding', {
+                user_id_param: session.user.id
+              });
+            } catch (error) {
+              console.error('Failed to initialize onboarding:', error);
+            }
+          }, 0);
+        }
       }
     );
 

@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { AppRoutes } from "@/components/AppRoutes";
+import { OnboardingManager } from "@/components/OnboardingManager";
 import { useErrorTracking } from "@/hooks/useErrorTracking";
 import { useEffect } from "react";
 
@@ -65,6 +66,7 @@ const App = () => {
                 <Sonner />
                 <NetworkStatusIndicator />
                 <PWAInstallBanner />
+                <OnboardingManager />
                 <BrowserRouter>
                   <AppRoutes />
                 </BrowserRouter>

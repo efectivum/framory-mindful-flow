@@ -632,6 +632,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sample_templates: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          sort_order: number | null
+          title: string
+          type: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title: string
+          type: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -665,6 +701,45 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_key: string
+          achievement_type: string
+          category: string | null
+          description: string | null
+          earned_at: string
+          icon: string | null
+          id: string
+          is_seen: boolean | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          achievement_key: string
+          achievement_type: string
+          category?: string | null
+          description?: string | null
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          is_seen?: boolean | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          achievement_key?: string
+          achievement_type?: string
+          category?: string | null
+          description?: string | null
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          is_seen?: boolean | null
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -753,6 +828,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_feedback: {
+        Row: {
+          created_at: string
+          feature_context: string | null
+          feedback_type: string
+          id: string
+          message: string | null
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_context?: string | null
+          feedback_type: string
+          id?: string
+          message?: string | null
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_context?: string | null
+          feedback_type?: string
+          id?: string
+          message?: string | null
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding: {
+        Row: {
+          completed_steps: string[] | null
+          completion_percentage: number | null
+          created_at: string
+          current_step: string | null
+          id: string
+          onboarding_completed: boolean | null
+          tour_completed: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_steps?: string[] | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_step?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          tour_completed?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_steps?: string[] | null
+          completion_percentage?: number | null
+          created_at?: string
+          current_step?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          tour_completed?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_patterns: {
         Row: {
@@ -927,12 +1068,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_achievements: {
+        Args: { user_id_param: string }
+        Returns: undefined
+      }
       cleanup_expired_exports: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       cleanup_expired_signups: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      initialize_user_onboarding: {
+        Args: { user_id_param: string }
         Returns: undefined
       }
       reset_weekly_coaching_counts: {
