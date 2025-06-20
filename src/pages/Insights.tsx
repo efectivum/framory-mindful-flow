@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { HabitTrackingOverview } from '@/components/HabitTrackingOverview';
 import { MiniCalendar } from '@/components/MiniCalendar';
 import { EmotionBubbleChart } from '@/components/EmotionBubbleChart';
-import { PersonalityInsight } from '@/components/PersonalityInsight';
 import { RecurringTopics } from '@/components/RecurringTopics';
 import { InsightsSuggestions } from '@/components/InsightsSuggestions';
 import { InsightsAI } from '@/components/InsightsAI';
+import { AdvancedInsights } from '@/components/AdvancedInsights';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 
 const Insights = () => {
@@ -51,10 +51,10 @@ const Insights = () => {
       subtitle="Discover patterns in your personal growth journey"
     >
       <div className="space-y-8">
-        {/* Habit Tracking Overview */}
-        <HabitTrackingOverview />
+        {/* Advanced Analytics - Now with real data */}
+        <AdvancedInsights />
 
-        {/* Calendar View */}
+        {/* Calendar and Emotion Analysis */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <MiniCalendar />
           
@@ -65,9 +65,6 @@ const Insights = () => {
             onAskQuestions={handleAskQuestions}
           />
         </div>
-
-        {/* Personality Overview */}
-        <PersonalityInsight />
 
         {/* Recurring Topics */}
         <RecurringTopics />
