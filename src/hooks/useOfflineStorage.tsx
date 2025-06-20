@@ -220,9 +220,11 @@ export const useOfflineStorage = () => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
 
-      // Get all synced entries
+      // Get all synced entries - fixed IndexedDB query
       const syncedEntries = await new Promise<OfflineEntry[]>((resolve, reject) => {
-        const request = store.index('synced').getAll(true);
+        const index = store.index('synced');
+        const keyRange = IDBKeyRange.only(true);
+        const request = index.getAll(keyRange);
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
