@@ -45,6 +45,42 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_events: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          processed_at: string | null
+          stripe_event_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          stripe_event_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          stripe_event_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       challenge_completions: {
         Row: {
           challenge_id: string
@@ -390,6 +426,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_limits: {
+        Row: {
+          created_at: string
+          feature_name: string
+          id: string
+          limit_type: string
+          limit_value: number
+          reset_period: string | null
+          subscription_tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_name: string
+          id?: string
+          limit_type?: string
+          limit_value: number
+          reset_period?: string | null
+          subscription_tier: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_name?: string
+          id?: string
+          limit_type?: string
+          limit_value?: number
+          reset_period?: string | null
+          subscription_tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -599,6 +668,36 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_feature_usage: {
+        Row: {
+          created_at: string
+          feature_category: string
+          feature_name: string
+          id: string
+          session_id: string | null
+          usage_context: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_category: string
+          feature_name: string
+          id?: string
+          session_id?: string | null
+          usage_context?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_category?: string
+          feature_name?: string
+          id?: string
+          session_id?: string | null
+          usage_context?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -701,6 +800,36 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscription_analytics: {
+        Row: {
+          created_at: string
+          date_recorded: string
+          id: string
+          metric_data: Json | null
+          metric_type: string
+          metric_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          metric_data?: Json | null
+          metric_type: string
+          metric_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          metric_data?: Json | null
+          metric_type?: string
+          metric_value?: number
+          user_id?: string
         }
         Relationships: []
       }
