@@ -7,16 +7,27 @@ import { PrivacySettings } from '@/components/PrivacySettings';
 import { SessionManagement } from '@/components/SessionManagement';
 import { EmailPreferences } from '@/components/EmailPreferences';
 import { SubscriptionDashboard } from '@/components/SubscriptionDashboard';
+import { BetaUserManagement } from '@/components/BetaUserManagement';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAdmin } from '@/hooks/useAdmin';
+import { Shield } from 'lucide-react';
 
 const Profile = () => {
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
+
   const content = (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3 bg-gray-800/50">
+      <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} bg-gray-800/50`}>
         <TabsTrigger value="overview" className="text-gray-300">Overview</TabsTrigger>
         <TabsTrigger value="subscription" className="text-gray-300">Subscription</TabsTrigger>
         <TabsTrigger value="settings" className="text-gray-300">Settings</TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger value="admin" className="text-gray-300">
+            <Shield className="w-4 h-4 mr-1" />
+            Admin
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
@@ -47,6 +58,12 @@ const Profile = () => {
           </div>
         </div>
       </TabsContent>
+
+      {isAdmin && (
+        <TabsContent value="admin" className="space-y-6">
+          <BetaUserManagement />
+        </TabsContent>
+      )}
     </Tabs>
   );
 

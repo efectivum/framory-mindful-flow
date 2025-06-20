@@ -42,6 +42,57 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_user_email: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_user_email?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_user_email?: string | null
+        }
+        Relationships: []
+      }
+      admin_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           confidence_score: number | null
@@ -1557,6 +1608,10 @@ export type Database = {
       initialize_user_onboarding: {
         Args: { user_id_param: string }
         Returns: undefined
+      }
+      is_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
       }
       reset_weekly_coaching_counts: {
         Args: Record<PropertyKey, never>

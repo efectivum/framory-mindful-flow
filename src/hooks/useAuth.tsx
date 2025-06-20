@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;
+  checkAdminStatus: () => Promise<boolean>;
   signUp: (email: string, password: string, userData?: UserData) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -26,6 +27,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  const checkAdminStatus = React.useCallback(async (): Promise<boolean> => {
+    if (!user) {
+      setIsAdmin(false);
+      return false;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('is_admin', {
+        user_id_param: user.id
+      });
+
+      if (error) throw error;
+      const adminStatus = data || false;
+      setIsAdmin(adminStatus);
+      return adminStatus;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+      return false;
+    }
+  }, [user]);
 
   React.useEffect(() => {
     // Set up auth state listener
@@ -34,6 +58,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Check admin status when user signs in
+        if (session?.user) {
+          checkAdminStatus();
+        } else {
+          setIsAdmin(false);
+        }
         
         // Initialize onboarding for new users
         if (event === 'SIGNED_IN' && session?.user) {
@@ -55,10 +86,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        checkAdminStatus();
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [checkAdminStatus]);
 
   const signUp = async (email: string, password: string, userData: UserData = {}) => {
     // Automatically detect timezone
@@ -164,6 +199,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user,
       session,
       loading,
+      isAdmin,
+      checkAdminStatus,
       signUp,
       signIn,
       signOut,
