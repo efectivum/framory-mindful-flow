@@ -1,52 +1,48 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
-import { useChatSessions } from '@/hooks/useChatSessions';
-import { useChatMessages } from '@/hooks/useChatMessages';
+import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatSessionSidebar } from './ChatSessionSidebar';
-import { ChatContextManager } from './chat/ChatContextManager';
-import { useSimpleConversationManager } from './chat/SimpleConversationManager';
-import { useSimpleMessageManager } from './chat/SimpleMessageManager';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { ChatLoadingState } from './chat/ChatLoadingState';
 import { ChatOfflineState } from './chat/ChatOfflineState';
 
 export const ChatInterface = () => {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Simple state management
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+  const [fileAttachment, setFileAttachment] = useState<File | null>(null);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
-  const [chatContext, setChatContext] = useState<any>(null);
-  const [isContextReady, setIsContextReady] = useState(false);
-  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const initialMessageProcessed = useRef(false);
   
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
-  
-  // Session management with error handling
-  const { 
-    currentSession, 
-    createSession, 
-    isLoading: sessionsLoading, 
-    error: sessionsError 
-  } = useChatSessions();
-  
-  const { 
-    messages, 
-    addMessage, 
-    clearMessages, 
-    isLoading: messagesLoading, 
-    error: messagesError 
-  } = useChatMessages(currentSession?.id || null);
+  const { generateResponse, detectIntent, isDetectingIntent } = useConversationalAI();
 
+  // Context detection
+  const emotionFromParams = searchParams.get('emotion');
+  const journalContext = location.state?.journalContext;
+  const contextType = location.state?.contextType;
+  const isCoachingMode = location.pathname === '/coach' || contextType === 'journal-entry';
+
+  // Scroll to bottom when messages change
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
@@ -55,122 +51,196 @@ export const ChatInterface = () => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const handleContextReady = useCallback((context: any) => {
-    try {
-      console.log('ChatInterface: Context ready', context);
-      setChatContext(context);
-      setIsContextReady(true);
-      setInitializationError(null);
-    } catch (error) {
-      console.error('ChatInterface: Error setting context', error);
-      setInitializationError('Failed to initialize chat context');
-    }
+  // Add message helper
+  const addMessage = useCallback((message: Message) => {
+    setMessages(prev => [...prev, message]);
   }, []);
 
-  const handleInitialMessage = useCallback(async (message: Message) => {
-    // Prevent processing the same initial message multiple times
-    if (initialMessageProcessed.current) {
-      console.log('ChatInterface: Initial message already processed, skipping');
-      return;
+  // Initialize with welcome message
+  useEffect(() => {
+    if (isInitialized) return;
+
+    let initialMessage: Message;
+
+    if (isCoachingMode && journalContext) {
+      initialMessage = {
+        id: '1',
+        type: 'bot',
+        content: `I can see you'd like to explore your journal entry further. Let's dive deeper into what you've shared: "${journalContext.substring(0, 150)}${journalContext.length > 150 ? '...' : ''}"
+
+What aspect of this would you like to explore more? What feelings or thoughts came up for you while writing this?`,
+        timestamp: new Date(),
+      };
+    } else if (emotionFromParams) {
+      initialMessage = {
+        id: '1',
+        type: 'bot',
+        content: `I see you want to explore your ${emotionFromParams} experiences. I'm ready to help you analyze patterns and insights related to this emotion. What would you like to know?`,
+        timestamp: new Date(),
+      };
+    } else if (isCoachingMode) {
+      initialMessage = {
+        id: '1',
+        type: 'bot',
+        content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+        timestamp: new Date(),
+      };
+    } else {
+      initialMessage = {
+        id: '1',
+        type: 'bot',
+        content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+        timestamp: new Date(),
+      };
     }
 
-    try {
-      console.log('ChatInterface: Processing initial message', message);
-      initialMessageProcessed.current = true;
-      
-      // Create new session if none exists
-      if (!currentSession && chatContext) {
-        const contextType = chatContext.isCoachingMode ? 'coaching' : 'general';
-        const session = await createSession('New Conversation', contextType, chatContext);
-        if (!session) {
-          console.warn('Failed to create session, continuing without persistence');
-        }
-      }
+    setMessages([initialMessage]);
+    setIsInitialized(true);
 
-      await addMessage(message);
-      
-      // Set up input text for emotion context
-      if (chatContext?.emotionFromParams && messageManager) {
-        const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
-        messageManager.setInputText(emotionPrompt);
-        
-        setTimeout(() => {
-          textAreaRef.current?.focus();
-        }, 100);
-      }
-    } catch (error) {
-      console.error('ChatInterface: Error handling initial message:', error);
-      initialMessageProcessed.current = false; // Reset on error so it can be retried
+    // Set up input text for emotion context
+    if (emotionFromParams) {
+      const emotionPrompt = `I'd like to explore my ${emotionFromParams} entries. What patterns do you see with my ${emotionFromParams} experiences? Can you help me understand when and why I feel ${emotionFromParams}?`;
+      setInputText(emotionPrompt);
+      setTimeout(() => {
+        textAreaRef.current?.focus();
+      }, 100);
     }
-  }, [currentSession, chatContext, createSession, addMessage]);
+  }, [isInitialized, isCoachingMode, journalContext, emotionFromParams]);
 
-  const handleInputFocus = useCallback(() => {
-    textAreaRef.current?.focus();
-  }, []);
-
-  // Initialize conversation manager
-  const conversationManager = useSimpleConversationManager({
-    onMessageAdd: addMessage,
-    onInputFocus: handleInputFocus
-  });
-
-  // Initialize message manager
-  const messageManager = useSimpleMessageManager({
-    onMessageAdd: addMessage,
-    textAreaRef
-  });
-
+  // Handle sending messages
   const handleSend = useCallback(async () => {
-    if (!messageManager || !conversationManager) {
-      console.error('ChatInterface: Managers not initialized');
-      return;
+    if (!inputText.trim() && !fileAttachment) return;
+    
+    let attachmentUrl: string | undefined = undefined;
+    let attachmentType: string | undefined = undefined;
+    if (fileAttachment) {
+      attachmentUrl = URL.createObjectURL(fileAttachment);
+      attachmentType = fileAttachment.type;
     }
 
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputText,
+      activityType: selectedActivity || undefined,
+      timestamp: new Date(),
+      ...(attachmentUrl ? { attachmentUrl, attachmentType } : {}),
+    };
+
+    addMessage(userMessage);
+    const currentInput = inputText;
+    setInputText('');
+    setFileAttachment(null);
+    setSelectedActivity(null);
+    textAreaRef.current?.focus();
+
+    if (attachmentUrl && !currentInput.trim()) return;
+
+    // Generate AI response
+    setIsGeneratingResponse(true);
     try {
-      // Create session if none exists (but don't fail if it doesn't work)
-      if (!currentSession && chatContext) {
-        const contextType = chatContext.isCoachingMode ? 'coaching' : 'general';
-        await createSession('New Conversation', contextType, chatContext);
+      let aiResponse: string | null = null;
+      
+      if (isCoachingMode) {
+        // Enhanced coaching mode
+        const conversationHistory = messages.map(msg => ({
+          role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+        
+        aiResponse = await generateResponse(currentInput, conversationHistory, false, 'coaching');
+      } else {
+        // Regular mode with intent detection
+        const intentResult = await detectIntent(currentInput, selectedActivity, []);
+        
+        if (intentResult?.intent === 'journal' && intentResult.confidence > 0.7) {
+          userMessage.isJournalEntry = true;
+          createEntry({
+            content: currentInput,
+            title: selectedActivity ? `${selectedActivity} entry` : undefined,
+          });
+        }
+        
+        const conversationHistory = messages.map(msg => ({
+          role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+        
+        aiResponse = await generateResponse(currentInput, conversationHistory, false);
       }
 
-      // Get the input text before sending
-      const inputText = messageManager.inputText;
-      
-      // Send the user message
-      await messageManager.handleSend();
-      
-      // Generate AI response
-      if (inputText.trim()) {
-        await conversationManager.handleConversation(inputText);
+      if (aiResponse) {
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: aiResponse,
+          timestamp: new Date(),
+        };
+        addMessage(botResponse);
+
+        // Check for journaling suggestions
+        if (isCoachingMode && (
+          aiResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
+          aiResponse.toLowerCase().includes('capture these insights in your journal')
+        )) {
+          const conversationSummary = messages.map(msg => 
+            `${msg.type === 'user' ? 'You' : 'Coach'}: ${msg.content}`
+          ).join('\n\n');
+          journalSuggestion.setSuggestion(conversationSummary);
+        }
+      } else {
+        const errorResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: "I'm sorry, I'm having trouble responding right now. Please try again.",
+          timestamp: new Date(),
+        };
+        addMessage(errorResponse);
       }
     } catch (error) {
-      console.error('ChatInterface: Error sending message:', error);
+      console.error('Error generating response:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "I'm sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      };
+      addMessage(errorResponse);
+    } finally {
+      setIsGeneratingResponse(false);
     }
-  }, [messageManager, conversationManager, currentSession, chatContext, createSession]);
+  }, [inputText, fileAttachment, selectedActivity, messages, addMessage, isCoachingMode, generateResponse, detectIntent, createEntry, journalSuggestion]);
 
-  // Handle coaching feedback
-  const handleCoachingFeedback = useCallback((feedbackData: {
-    satisfaction: number;
-    interventionType: string;
-    successMetric: string;
-    notes?: string;
-  }) => {
-    if (conversationManager?.recordUserFeedback) {
-      const interactionId = `interaction_${Date.now()}`;
-      conversationManager.recordUserFeedback(
-        interactionId,
-        feedbackData.satisfaction,
-        feedbackData.interventionType,
-        feedbackData.successMetric,
-        feedbackData.notes
-      );
+  // File handling
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      console.warn('Unsupported file type');
+      return;
     }
-  }, [conversationManager]);
+    setFileAttachment(file);
+    textAreaRef.current?.focus();
+  };
 
+  // Voice transcription
+  const handleVoiceTranscription = (transcribedText: string) => {
+    setInputText(transcribedText);
+    textAreaRef.current?.focus();
+  };
+
+  // Activity selection
+  const handleActivitySelect = (activity: string) => {
+    setSelectedActivity(activity);
+    setShowActivitySelector(false);
+    textAreaRef.current?.focus();
+  };
+
+  // Journal handling
   const handleJournalSave = useCallback((content: string) => {
     createEntry({
       content: content,
-      title: messageManager?.selectedActivity ? `${messageManager.selectedActivity} entry` : undefined,
+      title: selectedActivity ? `${selectedActivity} entry` : undefined,
     });
 
     const botResponse: Message = {
@@ -181,7 +251,7 @@ export const ChatInterface = () => {
     };
     addMessage(botResponse);
     journalSuggestion.clearSuggestion();
-  }, [createEntry, messageManager, addMessage, journalSuggestion]);
+  }, [createEntry, selectedActivity, addMessage, journalSuggestion]);
 
   const handleJournalCancel = useCallback(() => {
     const botResponse: Message = {
@@ -194,91 +264,44 @@ export const ChatInterface = () => {
     journalSuggestion.clearSuggestion();
   }, [addMessage, journalSuggestion]);
 
-  const handleActivitySelect = useCallback((activity: string) => {
-    if (messageManager) {
-      messageManager.setSelectedActivity(activity);
-    }
-    setShowActivitySelector(false);
-    textAreaRef.current?.focus();
-  }, [messageManager]);
-
-  const handleRetry = useCallback(async () => {
-    try {
-      setInitializationError(null);
-      setIsContextReady(false);
-      initialMessageProcessed.current = false;
-      // Simple retry - just reload
-      window.location.reload();
-    } catch (error) {
-      console.error('ChatInterface: Retry failed:', error);
-    }
+  // Coaching feedback (placeholder)
+  const handleCoachingFeedback = useCallback((feedbackData: {
+    satisfaction: number;
+    interventionType: string;
+    successMetric: string;
+    notes?: string;
+  }) => {
+    console.log('Coaching feedback received:', feedbackData);
   }, []);
-
-  // Reset initial message flag when session changes
-  useEffect(() => {
-    initialMessageProcessed.current = false;
-  }, [currentSession?.id]);
-
-  // Show loading state only while sessions are loading
-  if (sessionsLoading) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatLoadingState />
-      </div>
-    );
-  }
-
-  // Show error state for initialization failures
-  if (initializationError) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatOfflineState onRetry={handleRetry} />
-      </div>
-    );
-  }
-
-  // Show offline state for connection errors
-  if (sessionsError?.includes('Failed to fetch') || messagesError?.includes('Failed to fetch')) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatOfflineState onRetry={handleRetry} />
-      </div>
-    );
-  }
 
   return (
     <ChatErrorBoundary>
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        {!isContextReady && (
-          <ChatContextManager 
-            onContextReady={handleContextReady}
-            onInitialMessage={handleInitialMessage}
-          />
-        )}
-        
         <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
+        
         <MessageList
           messages={messages}
-          isDetectingIntent={messageManager?.isDetectingIntent || false}
-          isGeneratingResponse={conversationManager?.isGeneratingResponse || false}
+          isDetectingIntent={isDetectingIntent}
+          isGeneratingResponse={isGeneratingResponse}
           messagesEndRef={messagesEndRef}
           onFeedback={handleCoachingFeedback}
         />
+        
         <ChatInput
-          inputText={messageManager?.inputText || ''}
-          setInputText={messageManager?.setInputText || (() => {})}
+          inputText={inputText}
+          setInputText={setInputText}
           handleSend={handleSend}
-          handleFileChange={messageManager?.handleFileChange || (() => {})}
-          handleVoiceTranscription={messageManager?.handleVoiceTranscription || (() => {})}
+          handleFileChange={handleFileChange}
+          handleVoiceTranscription={handleVoiceTranscription}
           handleActivitySelect={handleActivitySelect}
-          fileAttachment={messageManager?.fileAttachment || null}
-          setFileAttachment={messageManager?.setFileAttachment || (() => {})}
-          selectedActivity={messageManager?.selectedActivity || null}
-          setSelectedActivity={messageManager?.setSelectedActivity || (() => {})}
+          fileAttachment={fileAttachment}
+          setFileAttachment={setFileAttachment}
+          selectedActivity={selectedActivity}
+          setSelectedActivity={setSelectedActivity}
           showActivitySelector={showActivitySelector}
           setShowActivitySelector={setShowActivitySelector}
-          isDetectingIntent={messageManager?.isDetectingIntent || false}
-          isGeneratingResponse={conversationManager?.isGeneratingResponse || false}
+          isDetectingIntent={isDetectingIntent}
+          isGeneratingResponse={isGeneratingResponse}
           textAreaRef={textAreaRef}
         />
         
