@@ -59,11 +59,29 @@ export const useCoachHabitSuggestion = () => {
   };
 
   const parseHabitFromCoachResponse = (coachResponse: string): HabitSuggestion | null => {
-    // Extract habit details from coach response using pattern matching
+    // Only suggest habits when coach explicitly offers to create one
     const lines = coachResponse.toLowerCase();
     
-    // Common patterns for extracting habit information
-    if (lines.includes('deep breathing')) {
+    // Look for explicit habit creation offers from the coach
+    const explicitOffers = [
+      'let me create a habit for',
+      'i can help you set up a habit',
+      'would you like me to create a habit',
+      'i can set up a daily practice',
+      'let me help you create a habit',
+      'i recommend creating a habit for this',
+      'this sounds like a perfect daily habit',
+      'let me create a daily practice'
+    ];
+
+    const hasExplicitOffer = explicitOffers.some(offer => lines.includes(offer));
+    
+    if (!hasExplicitOffer) {
+      return null;
+    }
+
+    // Extract specific habit details based on context
+    if (lines.includes('deep breathing') || lines.includes('breathing practice')) {
       return {
         title: 'Daily Deep Breathing',
         description: 'Practice deep breathing exercises: breathe in for 4 counts, hold for 4, exhale for 6. Repeat 5 times.',
@@ -83,7 +101,7 @@ export const useCoachHabitSuggestion = () => {
       };
     }
 
-    if (lines.includes('journaling') || lines.includes('writing')) {
+    if (lines.includes('journaling') || lines.includes('writing practice')) {
       return {
         title: 'Daily Journaling',
         description: 'Write down thoughts, reflections, and insights to support personal growth.',
@@ -93,7 +111,7 @@ export const useCoachHabitSuggestion = () => {
       };
     }
 
-    if (lines.includes('exercise') || lines.includes('workout')) {
+    if (lines.includes('exercise') || lines.includes('workout') || lines.includes('physical activity')) {
       return {
         title: 'Daily Exercise',
         description: 'Stay active and maintain physical health through regular exercise.',
@@ -113,18 +131,34 @@ export const useCoachHabitSuggestion = () => {
       };
     }
 
-    // Generic habit creation for other suggestions
-    if (lines.includes('habit') && (lines.includes('create') || lines.includes('set up'))) {
+    if (lines.includes('reading') || lines.includes('learning')) {
       return {
-        title: 'Personal Growth Practice',
-        description: 'A practice recommended by your coach to support your personal development.',
+        title: 'Daily Learning',
+        description: 'Dedicate time each day to reading or learning something new.',
         frequency_type: 'daily',
         target_days: 30,
         conversationContext: coachResponse
       };
     }
 
-    return null;
+    if (lines.includes('gratitude')) {
+      return {
+        title: 'Gratitude Practice',
+        description: 'Take time each day to reflect on things you are grateful for.',
+        frequency_type: 'daily',
+        target_days: 21,
+        conversationContext: coachResponse
+      };
+    }
+
+    // Generic habit creation only if coach explicitly offers it
+    return {
+      title: 'Personal Growth Practice',
+      description: 'A practice recommended by your coach to support your personal development.',
+      frequency_type: 'daily',
+      target_days: 30,
+      conversationContext: coachResponse
+    };
   };
 
   return {

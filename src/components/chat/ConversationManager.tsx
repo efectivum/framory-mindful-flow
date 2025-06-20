@@ -62,8 +62,24 @@ export const useConversationManager = ({
       const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
       
       if (aiResponse) {
-        // Check if the response contains a habit suggestion
-        const habitSuggestion = parseHabitFromCoachResponse(aiResponse);
+        // Only check for habit suggestions if the response explicitly offers to create one
+        let habitSuggestion = null;
+        const explicitHabitOffers = [
+          'let me create a habit',
+          'i can help you set up a habit',
+          'would you like me to create a habit',
+          'i can set up a daily practice',
+          'let me help you create a habit',
+          'this sounds like a perfect daily habit'
+        ];
+        
+        const hasExplicitOffer = explicitHabitOffers.some(offer => 
+          aiResponse.toLowerCase().includes(offer)
+        );
+        
+        if (hasExplicitOffer) {
+          habitSuggestion = parseHabitFromCoachResponse(aiResponse);
+        }
         
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
