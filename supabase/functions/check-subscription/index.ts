@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -13,27 +12,40 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Simple in-memory rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10;
+// Enhanced in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number; lastRequest: number }>();
+const RATE_LIMIT_WINDOW = 120000; // 2 minutes
+const MAX_REQUESTS_PER_WINDOW = 3; // Max 3 requests per 2 minutes
+const MIN_REQUEST_INTERVAL = 30000; // Minimum 30 seconds between requests
 
-const checkRateLimit = (userId: string): boolean => {
+const checkRateLimit = (userId: string): { allowed: boolean; retryAfter?: number } => {
   const now = Date.now();
   const userLimit = rateLimitMap.get(userId);
   
   if (!userLimit || now > userLimit.resetTime) {
     // Create new or reset expired limit
-    rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
+    rateLimitMap.set(userId, { 
+      count: 1, 
+      resetTime: now + RATE_LIMIT_WINDOW,
+      lastRequest: now
+    });
+    return { allowed: true };
+  }
+  
+  // Check if too soon since last request
+  if (now - userLimit.lastRequest < MIN_REQUEST_INTERVAL) {
+    const retryAfter = Math.ceil((MIN_REQUEST_INTERVAL - (now - userLimit.lastRequest)) / 1000);
+    return { allowed: false, retryAfter };
   }
   
   if (userLimit.count >= MAX_REQUESTS_PER_WINDOW) {
-    return false; // Rate limited
+    const retryAfter = Math.ceil((userLimit.resetTime - now) / 1000);
+    return { allowed: false, retryAfter };
   }
   
   userLimit.count++;
-  return true;
+  userLimit.lastRequest = now;
+  return { allowed: true };
 };
 
 serve(async (req) => {
@@ -58,7 +70,6 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     
-    // Use the anon key client for auth verification
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -75,16 +86,34 @@ serve(async (req) => {
       throw new Error("User not authenticated or email not available");
     }
 
-    // Check rate limit
-    if (!checkRateLimit(user.id)) {
-      logStep("Rate limit exceeded for user", { userId: user.id });
+    // Enhanced rate limit check
+    const rateLimitResult = checkRateLimit(user.id);
+    if (!rateLimitResult.allowed) {
+      logStep("Rate limit exceeded for user", { 
+        userId: user.id, 
+        retryAfter: rateLimitResult.retryAfter 
+      });
+      
+      // Return cached data from Supabase instead of error
+      const { data: cachedData } = await supabaseClient
+        .from("subscribers")
+        .select("*")
+        .eq("email", user.email)
+        .maybeSingle();
+      
+      // Return the cached data or default values
       return new Response(JSON.stringify({ 
-        error: "Rate limit exceeded. Please wait before checking again.",
-        subscribed: false,
-        subscription_tier: "free"
+        subscribed: cachedData?.subscribed || false,
+        subscription_tier: cachedData?.subscription_tier || "free",
+        subscription_end: cachedData?.subscription_end || null,
+        cached: true
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 429,
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Retry-After": rateLimitResult.retryAfter?.toString() || "60"
+        },
+        status: 200, // Return 200 instead of 429 to prevent error notifications
       });
     }
 
@@ -95,12 +124,12 @@ serve(async (req) => {
       .from("subscribers")
       .select("*")
       .eq("email", user.email)
-      .single();
+      .maybeSingle();
 
     if (subscriberData?.subscription_tier === 'beta') {
       logStep("Beta user found", { email: user.email });
       return new Response(JSON.stringify({
-        subscribed: false, // Not a paid subscription
+        subscribed: false,
         subscription_tier: "beta",
         subscription_end: null
       }), {
@@ -112,7 +141,6 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       logStep("ERROR: STRIPE_SECRET_KEY is not set");
-      // Return free tier instead of throwing error
       return new Response(JSON.stringify({
         subscribed: false,
         subscription_tier: "free",
@@ -131,25 +159,22 @@ serve(async (req) => {
     } catch (stripeError: any) {
       logStep("Stripe API error", { error: stripeError.message });
       
-      if (stripeError.message?.includes('rate limit')) {
-        // Return cached/default data when rate limited
-        const { data: cachedData } = await supabaseClient
-          .from("subscribers")
-          .select("*")
-          .eq("email", user.email)
-          .single();
-        
-        return new Response(JSON.stringify({
-          subscribed: cachedData?.subscribed || false,
-          subscription_tier: cachedData?.subscription_tier || "free",
-          subscription_end: cachedData?.subscription_end || null
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
+      // Always return cached data for Stripe errors to prevent error spam
+      const { data: cachedData } = await supabaseClient
+        .from("subscribers")
+        .select("*")
+        .eq("email", user.email)
+        .maybeSingle();
       
-      throw stripeError;
+      return new Response(JSON.stringify({
+        subscribed: cachedData?.subscribed || false,
+        subscription_tier: cachedData?.subscription_tier || "free",
+        subscription_end: cachedData?.subscription_end || null,
+        cached: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
     
     if (customers.data.length === 0) {
@@ -182,25 +207,22 @@ serve(async (req) => {
     } catch (stripeError: any) {
       logStep("Stripe subscription check error", { error: stripeError.message });
       
-      if (stripeError.message?.includes('rate limit')) {
-        // Return cached data
-        const { data: cachedData } = await supabaseClient
-          .from("subscribers")
-          .select("*")
-          .eq("email", user.email)
-          .single();
-        
-        return new Response(JSON.stringify({
-          subscribed: cachedData?.subscribed || false,
-          subscription_tier: cachedData?.subscription_tier || "free",
-          subscription_end: cachedData?.subscription_end || null
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
+      // Return cached data for subscription check errors too
+      const { data: cachedData } = await supabaseClient
+        .from("subscribers")
+        .select("*")
+        .eq("email", user.email)
+        .maybeSingle();
       
-      throw stripeError;
+      return new Response(JSON.stringify({
+        subscribed: cachedData?.subscribed || false,
+        subscription_tier: cachedData?.subscription_tier || "free",
+        subscription_end: cachedData?.subscription_end || null,
+        cached: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     const hasActiveSub = subscriptions.data.length > 0;
@@ -243,7 +265,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       subscribed: false,
       subscription_tier: "free",
-      subscription_end: null
+      subscription_end: null,
+      cached: true
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

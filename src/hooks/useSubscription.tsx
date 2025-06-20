@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,12 +17,13 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-// Rate limiting state
+// Enhanced rate limiting state
 let lastCheckTime = 0;
 let checkAttempts = 0;
 let isCurrentlyChecking = false;
-const RATE_LIMIT_WINDOW = 30000; // 30 seconds
-const MAX_ATTEMPTS_PER_WINDOW = 3;
+const RATE_LIMIT_WINDOW = 60000; // Increased to 60 seconds
+const MAX_ATTEMPTS_PER_WINDOW = 2; // Reduced to 2 attempts
+const MIN_CHECK_INTERVAL = 30000; // Minimum 30 seconds between checks
 
 export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -32,24 +33,40 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [isBeta, setIsBeta] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium' | 'beta'>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [lastErrorTime, setLastErrorTime] = useState(0);
+  const checkTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       return;
     }
 
-    // Rate limiting logic
     const now = Date.now();
+    
+    // Enhanced rate limiting
+    if (now - lastCheckTime < MIN_CHECK_INTERVAL && lastCheckTime > 0) {
+      console.log('Subscription check skipped - too soon since last check');
+      setIsLoading(false);
+      return;
+    }
+
     if (now - lastCheckTime > RATE_LIMIT_WINDOW) {
-      // Reset attempts after window expires
       checkAttempts = 0;
       lastCheckTime = now;
     }
 
     if (checkAttempts >= MAX_ATTEMPTS_PER_WINDOW) {
-      console.log('Rate limit exceeded for subscription check, skipping...');
+      console.log('Rate limit exceeded for subscription check, will retry later');
       setIsLoading(false);
+      // Schedule a retry in 2 minutes
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+      checkTimeoutRef.current = setTimeout(() => {
+        checkAttempts = 0;
+        checkSubscription();
+      }, 120000);
       return;
     }
 
@@ -62,15 +79,36 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsLoading(true);
       isCurrentlyChecking = true;
       checkAttempts++;
+      lastCheckTime = now;
       
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        // Don't show toast for rate limit errors to prevent spam
+        // Only show error toast if it's been more than 5 minutes since last error
+        const timeSinceLastError = now - lastErrorTime;
         if (error.message && error.message.includes('rate limit')) {
           console.warn('Subscription check rate limited, will retry later');
+          // Schedule retry in 5 minutes for rate limit errors
+          if (checkTimeoutRef.current) {
+            clearTimeout(checkTimeoutRef.current);
+          }
+          checkTimeoutRef.current = setTimeout(() => {
+            checkAttempts = 0;
+            checkSubscription();
+          }, 300000);
           return;
         }
+        
+        // Only show error notification if more than 5 minutes since last error
+        if (timeSinceLastError > 300000) {
+          setLastErrorTime(now);
+          toast({
+            title: "Subscription Check Failed",
+            description: "Unable to verify subscription status. Retrying in background.",
+            variant: "destructive",
+          });
+        }
+        
         throw error;
       }
       
@@ -82,25 +120,24 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsBeta(tier === 'beta');
       setSubscriptionEnd(data.subscription_end || null);
       
-      // Reset attempts on successful check
+      // Reset attempts and error tracking on successful check
       checkAttempts = 0;
+      setLastErrorTime(0);
+      
     } catch (error) {
       console.error('Error checking subscription:', error);
       
-      // Only show toast for non-rate-limit errors and not too frequently
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (!errorMessage.includes('rate limit') && checkAttempts <= 1) {
-        toast({
-          title: "Subscription Check Failed",
-          description: "Unable to verify subscription status. Please try refreshing the page.",
-          variant: "destructive",
-        });
-      }
+      // Fallback to cached data or defaults
+      setSubscriptionTier('free');
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionEnd(null);
+      
     } finally {
       setIsLoading(false);
       isCurrentlyChecking = false;
     }
-  };
+  }, [user, toast, lastErrorTime]);
 
   const createCheckout = async () => {
     if (!user) {
@@ -152,17 +189,37 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    // Only check subscription once when user changes or on mount
+    // Clear any existing timeout when user changes
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+
     if (user) {
-      checkSubscription();
+      // Debounce the initial check to prevent multiple rapid calls
+      const timeoutId = setTimeout(() => {
+        checkSubscription();
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
     } else {
       setIsLoading(false);
       setIsPremium(false);
       setIsBeta(false);
       setSubscriptionTier('free');
       setSubscriptionEnd(null);
+      checkAttempts = 0;
+      lastCheckTime = 0;
     }
-  }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
+  }, [user?.id, checkSubscription]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <SubscriptionContext.Provider
