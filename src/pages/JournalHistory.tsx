@@ -1,17 +1,22 @@
-
 import { useState } from 'react';
+import { Search } from 'lucide-react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalEntryAnalysis } from '@/hooks/useJournalEntryAnalysis';
 import { useJournalFiltering } from '@/hooks/useJournalFiltering';
+import { useJournalSearch } from '@/hooks/useJournalSearch';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
 import { JournalFilterDropdown } from '@/components/JournalFilterDropdown';
+import { JournalSearchModal } from '@/components/JournalSearchModal';
+import { JournalSearchBar } from '@/components/JournalSearchBar';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { AnalysisStatusButton } from '@/components/AnalysisStatusButton';
 import { LoadingCard } from '@/components/ui/loading-card';
+import { Button } from '@/components/ui/button';
 
 const JournalHistory = () => {
   const { entries, isLoading, triggerMissingAnalysis } = useJournalEntries();
   const { isAnalyzing, analysisError } = useJournalEntryAnalysis();
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   
   const {
     filters,
@@ -23,11 +28,24 @@ const JournalHistory = () => {
     activeFilterCount,
   } = useJournalFiltering(entries);
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    isSearchActive,
+    setIsSearchActive,
+    clearSearch,
+    resultCount,
+  } = useJournalSearch(filteredEntries);
+
   // Calculate entries needing analysis
   const entriesNeedingAnalysis = entries.filter(entry => {
     const wordCount = entry.content.trim().split(' ').length;
     return wordCount >= 50 && !entry.ai_detected_emotions && !entry.ai_detected_mood;
   }).length;
+
+  // Determine which entries to display
+  const displayEntries = searchQuery.trim() ? searchResults : filteredEntries;
 
   if (isLoading) {
     return (
@@ -43,6 +61,11 @@ const JournalHistory = () => {
 
   const getSubtitle = () => {
     const totalCount = entries.length;
+    
+    if (searchQuery.trim()) {
+      return `${resultCount} search results`;
+    }
+    
     const filteredCount = filteredEntries.length;
     
     if (activeFilterCount === 0) {
@@ -52,33 +75,73 @@ const JournalHistory = () => {
     }
   };
 
+  const handleSearchOpen = () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setIsSearchActive(true);
+    } else {
+      setIsSearchModalOpen(true);
+    }
+  };
+
+  const handleSearchClose = () => {
+    setIsSearchActive(false);
+    setIsSearchModalOpen(false);
+    clearSearch();
+  };
+
   return (
     <ResponsiveLayout 
       title="Journal History" 
       subtitle={getSubtitle()}
     >
       <div className="max-w-4xl mx-auto">
-        {/* Header with Analysis Status and Filter */}
-        <div className="flex items-center justify-between mb-6">
-          <AnalysisStatusButton
-            onTriggerAnalysis={triggerMissingAnalysis}
-            isAnalyzing={isAnalyzing}
-            hasAnalysisError={!!analysisError}
-            entriesNeedingAnalysis={entriesNeedingAnalysis}
-          />
-          
-          <JournalFilterDropdown
-            filters={filters}
-            availableTags={availableTags}
-            availableEmotions={availableEmotions}
-            activeFilterCount={activeFilterCount}
-            onFilterChange={updateFilter}
-            onClearAll={clearAllFilters}
-          />
-        </div>
+        {/* Mobile Search Bar */}
+        {isSearchActive && (
+          <div className="md:hidden -mx-4 mb-6">
+            <JournalSearchBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onClose={handleSearchClose}
+              resultCount={resultCount}
+            />
+          </div>
+        )}
+
+        {/* Header with Analysis Status, Search, and Filter */}
+        {!isSearchActive && (
+          <div className="flex items-center justify-between mb-6">
+            <AnalysisStatusButton
+              onTriggerAnalysis={triggerMissingAnalysis}
+              isAnalyzing={isAnalyzing}
+              hasAnalysisError={!!analysisError}
+              entriesNeedingAnalysis={entriesNeedingAnalysis}
+            />
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSearchOpen}
+                className="bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/50 text-gray-300"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+              
+              <JournalFilterDropdown
+                filters={filters}
+                availableTags={availableTags}
+                availableEmotions={availableEmotions}
+                activeFilterCount={activeFilterCount}
+                onFilterChange={updateFilter}
+                onClearAll={clearAllFilters}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Active Filters Summary */}
-        {activeFilterCount > 0 && (
+        {activeFilterCount > 0 && !isSearchActive && (
           <div className="mb-4 p-3 bg-gray-800/20 border border-gray-700/30 rounded-lg">
             <div className="flex flex-wrap gap-2 text-sm text-gray-300">
               <span className="text-gray-400">Active filters:</span>
@@ -106,10 +169,32 @@ const JournalHistory = () => {
           </div>
         )}
 
+        {/* Search Results Info */}
+        {searchQuery.trim() && (
+          <div className="mb-4 p-3 bg-blue-600/10 border border-blue-600/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-blue-300">
+                Searching for: <strong>"{searchQuery}"</strong>
+              </span>
+              <button
+                onClick={clearSearch}
+                className="text-xs text-blue-400 hover:text-blue-300 underline"
+              >
+                Clear search
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Entries List */}
-        {filteredEntries.length === 0 ? (
+        {displayEntries.length === 0 ? (
           <div className="text-center py-12">
-            {entries.length === 0 ? (
+            {searchQuery.trim() ? (
+              <>
+                <h3 className="text-lg font-semibold text-white mb-2">No search results</h3>
+                <p className="text-gray-400">Try different keywords or check your spelling.</p>
+              </>
+            ) : entries.length === 0 ? (
               <>
                 <h3 className="text-lg font-semibold text-white mb-2">No entries yet</h3>
                 <p className="text-gray-400">Start writing your first journal entry to see it here.</p>
@@ -123,11 +208,21 @@ const JournalHistory = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredEntries.map((entry) => (
+            {displayEntries.map((entry) => (
               <JournalEntryCard key={entry.id} entry={entry} />
             ))}
           </div>
         )}
+
+        {/* Desktop Search Modal */}
+        <JournalSearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+          entries={filteredEntries}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchResults={searchResults}
+        />
       </div>
     </ResponsiveLayout>
   );
