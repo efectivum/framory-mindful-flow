@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUsageAnalytics } from '@/hooks/useUsageAnalytics';
 import { UsageAnalyticsCard } from '@/components/UsageAnalyticsCard';
-import { Crown, Calendar, Settings, Zap, RefreshCw } from 'lucide-react';
+import { Crown, Calendar, Settings, Zap, RefreshCw, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const SubscriptionDashboard = () => {
