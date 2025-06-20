@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Habit, CreateHabitInput, UpdateHabitInput, CompleteHabitInput } from '@/types/habits';
 
@@ -47,7 +46,7 @@ export const createHabit = async (userId: string, newHabit: CreateHabitInput): P
     { habit_id: data.id, frequency_type: newHabit.frequency_type }
   );
 
-  return data;
+  return data as Habit;
 };
 
 export const updateHabit = async (userId: string, habitId: string, updates: UpdateHabitInput): Promise<Habit> => {
@@ -70,7 +69,7 @@ export const updateHabit = async (userId: string, habitId: string, updates: Upda
     { habit_id: habitId, changes: updates }
   );
 
-  return data;
+  return data as Habit;
 };
 
 export const deleteHabit = async (userId: string, habitId: string): Promise<void> => {
