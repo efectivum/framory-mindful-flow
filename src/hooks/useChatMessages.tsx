@@ -21,6 +21,7 @@ export const useChatMessages = (sessionId: string | null) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Convert database message to Message type
   const convertToMessage = useCallback((dbMessage: SessionMessage): Message => {
@@ -42,29 +43,41 @@ export const useChatMessages = (sessionId: string | null) => {
   const loadMessages = useCallback(async () => {
     if (!user || !sessionId) {
       setMessages([]);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
+    setError(null);
+    
     try {
-      const { data, error } = await supabase
+      const { data, error: queryError } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (queryError) {
+        console.error('Database query error:', queryError);
+        throw new Error(`Failed to load messages: ${queryError.message}`);
+      }
 
       const convertedMessages = (data || []).map(convertToMessage);
       setMessages(convertedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat messages",
-        variant: "destructive"
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      
+      // Only show toast for unexpected errors, not connection issues
+      if (!errorMessage.includes('Failed to fetch')) {
+        toast({
+          title: "Error",
+          description: "Failed to load chat messages",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -97,23 +110,34 @@ export const useChatMessages = (sessionId: string | null) => {
       if (error) throw error;
     } catch (error) {
       console.error('Error saving message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
+      
       toast({
         title: "Error",
-        description: "Failed to save message",
+        description: errorMessage,
         variant: "destructive"
       });
+      throw error;
     }
   }, [user, sessionId, toast]);
 
   // Add message to local state and save to database
   const addMessage = useCallback(async (message: Message) => {
     setMessages(prev => [...prev, message]);
-    await saveMessage(message);
+    
+    try {
+      await saveMessage(message);
+    } catch (error) {
+      // Revert local state if save failed
+      setMessages(prev => prev.filter(m => m.id !== message.id));
+      throw error;
+    }
   }, [saveMessage]);
 
   // Clear messages (for new session)
   const clearMessages = useCallback(() => {
     setMessages([]);
+    setError(null);
   }, []);
 
   // Load messages when session changes
@@ -124,6 +148,7 @@ export const useChatMessages = (sessionId: string | null) => {
   return {
     messages,
     isLoading,
+    error,
     addMessage,
     clearMessages,
     loadMessages

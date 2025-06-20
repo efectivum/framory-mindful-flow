@@ -16,45 +16,51 @@ export interface ChatSession {
   updated_at: string;
 }
 
-export interface ChatSessionMessage {
-  id: string;
-  session_id: string;
-  user_id: string;
-  type: 'user' | 'bot';
-  content: string;
-  metadata: any;
-  created_at: string;
-  updated_at: string;
-}
-
 export const useChatSessions = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Load user's chat sessions
   const loadSessions = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setSessions([]);
+      setError(null);
+      return;
+    }
 
     setIsLoading(true);
+    setError(null);
+    
     try {
-      const { data, error } = await supabase
+      const { data, error: queryError } = await supabase
         .from('chat_sessions')
         .select('*')
         .eq('user_id', user.id)
         .order('last_message_at', { ascending: false });
 
-      if (error) throw error;
+      if (queryError) {
+        console.error('Database query error:', queryError);
+        throw new Error(`Failed to load sessions: ${queryError.message}`);
+      }
+      
       setSessions(data || []);
     } catch (error) {
       console.error('Error loading chat sessions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat sessions",
-        variant: "destructive"
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      
+      // Only show toast for unexpected errors, not connection issues
+      if (!errorMessage.includes('Failed to fetch')) {
+        toast({
+          title: "Error",
+          description: "Failed to load chat sessions",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -176,6 +182,7 @@ export const useChatSessions = () => {
     sessions,
     currentSession,
     isLoading,
+    error,
     createSession,
     updateSessionTitle,
     deleteSession,

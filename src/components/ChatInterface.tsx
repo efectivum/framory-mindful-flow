@@ -13,11 +13,15 @@ import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatContextManager } from './chat/ChatContextManager';
 import { useConversationManager } from './chat/ConversationManager';
 import { useMessageManager } from './chat/MessageManager';
+import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
+import { ChatLoadingState } from './chat/ChatLoadingState';
+import { ChatOfflineState } from './chat/ChatOfflineState';
 
 export const ChatInterface = () => {
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   const [chatContext, setChatContext] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -25,9 +29,21 @@ export const ChatInterface = () => {
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
   
-  // Session management
-  const { currentSession, createSession } = useChatSessions();
-  const { messages, addMessage, clearMessages } = useChatMessages(currentSession?.id || null);
+  // Session management with error handling
+  const { 
+    currentSession, 
+    createSession, 
+    isLoading: sessionsLoading, 
+    error: sessionsError 
+  } = useChatSessions();
+  
+  const { 
+    messages, 
+    addMessage, 
+    clearMessages, 
+    isLoading: messagesLoading, 
+    error: messagesError 
+  } = useChatMessages(currentSession?.id || null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,26 +55,31 @@ export const ChatInterface = () => {
 
   const handleContextReady = (context: any) => {
     setChatContext(context);
+    setIsInitialized(true);
   };
 
   const handleInitialMessage = async (message: Message) => {
-    // Create new session if none exists
-    if (!currentSession) {
-      const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
-      const session = await createSession('New Conversation', contextType, chatContext);
-      if (!session) return;
-    }
+    try {
+      // Create new session if none exists
+      if (!currentSession) {
+        const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+        const session = await createSession('New Conversation', contextType, chatContext);
+        if (!session) return;
+      }
 
-    await addMessage(message);
-    
-    // Set up input text for emotion context
-    if (chatContext?.emotionFromParams) {
-      const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
-      messageManager.setInputText(emotionPrompt);
+      await addMessage(message);
       
-      setTimeout(() => {
-        textAreaRef.current?.focus();
-      }, 100);
+      // Set up input text for emotion context
+      if (chatContext?.emotionFromParams) {
+        const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
+        messageManager.setInputText(emotionPrompt);
+        
+        setTimeout(() => {
+          textAreaRef.current?.focus();
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error handling initial message:', error);
     }
   };
 
@@ -66,14 +87,14 @@ export const ChatInterface = () => {
     textAreaRef.current?.focus();
   };
 
-  // Initialize conversation manager
+  // Initialize conversation manager with error handling
   const conversationManager = useConversationManager({
     isCoachingMode: chatContext?.isCoachingMode || false,
     onMessageAdd: addMessage,
     onInputFocus: handleInputFocus
   });
 
-  // Initialize message manager
+  // Initialize message manager with error handling
   const messageManager = useMessageManager({
     isCoachingMode: chatContext?.isCoachingMode || false,
     onConversation: conversationManager.handleConversation,
@@ -81,14 +102,18 @@ export const ChatInterface = () => {
   });
 
   const handleSend = async () => {
-    // Create session if none exists
-    if (!currentSession) {
-      const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
-      const session = await createSession('New Conversation', contextType, chatContext);
-      if (!session) return;
-    }
+    try {
+      // Create session if none exists
+      if (!currentSession) {
+        const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+        const session = await createSession('New Conversation', contextType, chatContext);
+        if (!session) return;
+      }
 
-    await messageManager.handleSend(addMessage);
+      await messageManager.handleSend(addMessage);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   // Handle coaching feedback
@@ -143,51 +168,80 @@ export const ChatInterface = () => {
     textAreaRef.current?.focus();
   };
 
-  return (
-    <div className="flex flex-col h-screen w-full bg-[#171c26]">
-      <ChatContextManager 
-        onContextReady={handleContextReady}
-        onInitialMessage={handleInitialMessage}
-      />
-      
-      <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
-      <MessageList
-        messages={messages}
-        isDetectingIntent={messageManager.isDetectingIntent}
-        isGeneratingResponse={conversationManager.isGeneratingResponse}
-        messagesEndRef={messagesEndRef}
-        onFeedback={handleCoachingFeedback}
-      />
-      <ChatInput
-        inputText={messageManager.inputText}
-        setInputText={messageManager.setInputText}
-        handleSend={handleSend}
-        handleFileChange={messageManager.handleFileChange}
-        handleVoiceTranscription={messageManager.handleVoiceTranscription}
-        handleActivitySelect={handleActivitySelect}
-        fileAttachment={messageManager.fileAttachment}
-        setFileAttachment={messageManager.setFileAttachment}
-        selectedActivity={messageManager.selectedActivity}
-        setSelectedActivity={messageManager.setSelectedActivity}
-        showActivitySelector={showActivitySelector}
-        setShowActivitySelector={setShowActivitySelector}
-        isDetectingIntent={messageManager.isDetectingIntent}
-        isGeneratingResponse={conversationManager.isGeneratingResponse}
-        textAreaRef={textAreaRef}
-      />
-      
-      <JournalPreviewModal
-        isOpen={journalSuggestion.showPreview}
-        onClose={journalSuggestion.clearSuggestion}
-        suggestedContent={journalSuggestion.suggestedContent}
-        onSave={handleJournalSave}
-        onCancel={handleJournalCancel}
-      />
+  const handleRetry = async () => {
+    try {
+      // Attempt to reconnect and reload sessions
+      window.location.reload();
+    } catch (error) {
+      console.error('Retry failed:', error);
+    }
+  };
 
-      <ChatSessionSidebar
-        isOpen={showSessionSidebar}
-        onClose={() => setShowSessionSidebar(false)}
-      />
-    </div>
+  // Show loading state while initializing
+  if (!isInitialized || sessionsLoading) {
+    return (
+      <div className="flex flex-col h-screen w-full bg-[#171c26]">
+        <ChatLoadingState />
+      </div>
+    );
+  }
+
+  // Show offline state for connection errors
+  if (sessionsError?.includes('Failed to fetch') || messagesError?.includes('Failed to fetch')) {
+    return (
+      <div className="flex flex-col h-screen w-full bg-[#171c26]">
+        <ChatOfflineState onRetry={handleRetry} />
+      </div>
+    );
+  }
+
+  return (
+    <ChatErrorBoundary>
+      <div className="flex flex-col h-screen w-full bg-[#171c26]">
+        <ChatContextManager 
+          onContextReady={handleContextReady}
+          onInitialMessage={handleInitialMessage}
+        />
+        
+        <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
+        <MessageList
+          messages={messages}
+          isDetectingIntent={messageManager.isDetectingIntent}
+          isGeneratingResponse={conversationManager.isGeneratingResponse}
+          messagesEndRef={messagesEndRef}
+          onFeedback={handleCoachingFeedback}
+        />
+        <ChatInput
+          inputText={messageManager.inputText}
+          setInputText={messageManager.setInputText}
+          handleSend={handleSend}
+          handleFileChange={messageManager.handleFileChange}
+          handleVoiceTranscription={messageManager.handleVoiceTranscription}
+          handleActivitySelect={handleActivitySelect}
+          fileAttachment={messageManager.fileAttachment}
+          setFileAttachment={messageManager.setFileAttachment}
+          selectedActivity={messageManager.selectedActivity}
+          setSelectedActivity={messageManager.setSelectedActivity}
+          showActivitySelector={showActivitySelector}
+          setShowActivitySelector={setShowActivitySelector}
+          isDetectingIntent={messageManager.isDetectingIntent}
+          isGeneratingResponse={conversationManager.isGeneratingResponse}
+          textAreaRef={textAreaRef}
+        />
+        
+        <JournalPreviewModal
+          isOpen={journalSuggestion.showPreview}
+          onClose={journalSuggestion.clearSuggestion}
+          suggestedContent={journalSuggestion.suggestedContent}
+          onSave={handleJournalSave}
+          onCancel={handleJournalCancel}
+        />
+
+        <ChatSessionSidebar
+          isOpen={showSessionSidebar}
+          onClose={() => setShowSessionSidebar(false)}
+        />
+      </div>
+    </ChatErrorBoundary>
   );
 };
