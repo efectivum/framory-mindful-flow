@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -12,42 +13,6 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Enhanced in-memory rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number; lastRequest: number }>();
-const RATE_LIMIT_WINDOW = 120000; // 2 minutes
-const MAX_REQUESTS_PER_WINDOW = 3; // Max 3 requests per 2 minutes
-const MIN_REQUEST_INTERVAL = 30000; // Minimum 30 seconds between requests
-
-const checkRateLimit = (userId: string): { allowed: boolean; retryAfter?: number } => {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(userId);
-  
-  if (!userLimit || now > userLimit.resetTime) {
-    // Create new or reset expired limit
-    rateLimitMap.set(userId, { 
-      count: 1, 
-      resetTime: now + RATE_LIMIT_WINDOW,
-      lastRequest: now
-    });
-    return { allowed: true };
-  }
-  
-  // Check if too soon since last request
-  if (now - userLimit.lastRequest < MIN_REQUEST_INTERVAL) {
-    const retryAfter = Math.ceil((MIN_REQUEST_INTERVAL - (now - userLimit.lastRequest)) / 1000);
-    return { allowed: false, retryAfter };
-  }
-  
-  if (userLimit.count >= MAX_REQUESTS_PER_WINDOW) {
-    const retryAfter = Math.ceil((userLimit.resetTime - now) / 1000);
-    return { allowed: false, retryAfter };
-  }
-  
-  userLimit.count++;
-  userLimit.lastRequest = now;
-  return { allowed: true };
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,7 +25,7 @@ serve(async (req) => {
   );
 
   try {
-    logStep("Function started");
+    logStep("Function started - manual subscription verification");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -84,37 +49,6 @@ serve(async (req) => {
     if (!user?.email) {
       logStep("ERROR: User not authenticated or email not available");
       throw new Error("User not authenticated or email not available");
-    }
-
-    // Enhanced rate limit check
-    const rateLimitResult = checkRateLimit(user.id);
-    if (!rateLimitResult.allowed) {
-      logStep("Rate limit exceeded for user", { 
-        userId: user.id, 
-        retryAfter: rateLimitResult.retryAfter 
-      });
-      
-      // Return cached data from Supabase instead of error
-      const { data: cachedData } = await supabaseClient
-        .from("subscribers")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-      
-      // Return the cached data or default values
-      return new Response(JSON.stringify({ 
-        subscribed: cachedData?.subscribed || false,
-        subscription_tier: cachedData?.subscription_tier || "free",
-        subscription_end: cachedData?.subscription_end || null,
-        cached: true
-      }), {
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json",
-          "Retry-After": rateLimitResult.retryAfter?.toString() || "60"
-        },
-        status: 200, // Return 200 instead of 429 to prevent error notifications
-      });
     }
 
     logStep("User authenticated", { userId: user.id, email: user.email });
@@ -153,29 +87,8 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
-    let customers;
-    try {
-      customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    } catch (stripeError: any) {
-      logStep("Stripe API error", { error: stripeError.message });
-      
-      // Always return cached data for Stripe errors to prevent error spam
-      const { data: cachedData } = await supabaseClient
-        .from("subscribers")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-      
-      return new Response(JSON.stringify({
-        subscribed: cachedData?.subscribed || false,
-        subscription_tier: cachedData?.subscription_tier || "free",
-        subscription_end: cachedData?.subscription_end || null,
-        cached: true
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    // Get Stripe customer
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
@@ -197,33 +110,12 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    let subscriptions;
-    try {
-      subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "active",
-        limit: 1,
-      });
-    } catch (stripeError: any) {
-      logStep("Stripe subscription check error", { error: stripeError.message });
-      
-      // Return cached data for subscription check errors too
-      const { data: cachedData } = await supabaseClient
-        .from("subscribers")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-      
-      return new Response(JSON.stringify({
-        subscribed: cachedData?.subscribed || false,
-        subscription_tier: cachedData?.subscription_tier || "free",
-        subscription_end: cachedData?.subscription_end || null,
-        cached: true
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    // Get active subscriptions
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 1,
+    });
 
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionTier = "free";
@@ -238,6 +130,7 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    // Update database with current status and end date
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
@@ -261,15 +154,11 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     
-    // Return free tier as fallback instead of error
     return new Response(JSON.stringify({ 
-      subscribed: false,
-      subscription_tier: "free",
-      subscription_end: null,
-      cached: true
+      error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+      status: 500,
     });
   }
 });

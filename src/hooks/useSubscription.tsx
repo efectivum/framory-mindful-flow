@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,14 +17,6 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-// Enhanced rate limiting state
-let lastCheckTime = 0;
-let checkAttempts = 0;
-let isCurrentlyChecking = false;
-const RATE_LIMIT_WINDOW = 60000; // Increased to 60 seconds
-const MAX_ATTEMPTS_PER_WINDOW = 2; // Reduced to 2 attempts
-const MIN_CHECK_INTERVAL = 30000; // Minimum 30 seconds between checks
-
 export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -33,83 +25,94 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [isBeta, setIsBeta] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium' | 'beta'>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [lastErrorTime, setLastErrorTime] = useState(0);
-  const checkTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const checkSubscription = useCallback(async () => {
+  const checkSubscriptionFromDatabase = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       return;
     }
 
-    const now = Date.now();
-    
-    // Enhanced rate limiting
-    if (now - lastCheckTime < MIN_CHECK_INTERVAL && lastCheckTime > 0) {
-      console.log('Subscription check skipped - too soon since last check');
-      setIsLoading(false);
-      return;
-    }
+    try {
+      setIsLoading(true);
+      
+      // Get subscription data from local database
+      const { data: subscriberData, error } = await supabase
+        .from('subscribers')
+        .select('*')
+        .eq('email', user.email)
+        .maybeSingle();
 
-    if (now - lastCheckTime > RATE_LIMIT_WINDOW) {
-      checkAttempts = 0;
-      lastCheckTime = now;
-    }
-
-    if (checkAttempts >= MAX_ATTEMPTS_PER_WINDOW) {
-      console.log('Rate limit exceeded for subscription check, will retry later');
-      setIsLoading(false);
-      // Schedule a retry in 2 minutes
-      if (checkTimeoutRef.current) {
-        clearTimeout(checkTimeoutRef.current);
+      if (error) {
+        console.error('Error fetching subscription data:', error);
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+        return;
       }
-      checkTimeoutRef.current = setTimeout(() => {
-        checkAttempts = 0;
-        checkSubscription();
-      }, 120000);
-      return;
-    }
 
-    if (isCurrentlyChecking) {
-      console.log('Subscription check already in progress, skipping...');
-      return;
+      if (!subscriberData) {
+        // No subscription record found
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+        return;
+      }
+
+      const now = new Date();
+      const endDate = subscriberData.subscription_end ? new Date(subscriberData.subscription_end) : null;
+      
+      // Check if subscription is still valid based on end date
+      const isSubscriptionActive = subscriberData.subscribed && (!endDate || endDate > now);
+      
+      if (subscriberData.subscription_tier === 'beta') {
+        setSubscriptionTier('beta');
+        setIsBeta(true);
+        setIsPremium(false);
+        setSubscriptionEnd(subscriberData.subscription_end);
+      } else if (isSubscriptionActive && subscriberData.subscription_tier === 'premium') {
+        setSubscriptionTier('premium');
+        setIsPremium(true);
+        setIsBeta(false);
+        setSubscriptionEnd(subscriberData.subscription_end);
+      } else {
+        // Subscription expired or not found
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+        
+        // If subscription appears expired but was previously active, verify with Stripe
+        if (subscriberData.subscribed && endDate && endDate <= now) {
+          console.log('Subscription appears expired, will verify with Stripe on next manual check');
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setSubscriptionTier('free');
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionEnd(null);
+    } finally {
+      setIsLoading(false);
     }
+  }, [user]);
+
+  // This function only hits Stripe when manually called (e.g., after checkout or manual refresh)
+  const checkSubscription = useCallback(async () => {
+    if (!user) return;
 
     try {
       setIsLoading(true);
-      isCurrentlyChecking = true;
-      checkAttempts++;
-      lastCheckTime = now;
-      
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        // Only show error toast if it's been more than 5 minutes since last error
-        const timeSinceLastError = now - lastErrorTime;
-        if (error.message && error.message.includes('rate limit')) {
-          console.warn('Subscription check rate limited, will retry later');
-          // Schedule retry in 5 minutes for rate limit errors
-          if (checkTimeoutRef.current) {
-            clearTimeout(checkTimeoutRef.current);
-          }
-          checkTimeoutRef.current = setTimeout(() => {
-            checkAttempts = 0;
-            checkSubscription();
-          }, 300000);
-          return;
-        }
-        
-        // Only show error notification if more than 5 minutes since last error
-        if (timeSinceLastError > 300000) {
-          setLastErrorTime(now);
-          toast({
-            title: "Subscription Check Failed",
-            description: "Unable to verify subscription status. Retrying in background.",
-            variant: "destructive",
-          });
-        }
-        
-        throw error;
+        console.error('Error checking subscription with Stripe:', error);
+        // Fall back to database check if Stripe fails
+        await checkSubscriptionFromDatabase();
+        return;
       }
       
       const tier = data.subscription_tier || 'free';
@@ -120,24 +123,14 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsBeta(tier === 'beta');
       setSubscriptionEnd(data.subscription_end || null);
       
-      // Reset attempts and error tracking on successful check
-      checkAttempts = 0;
-      setLastErrorTime(0);
-      
     } catch (error) {
       console.error('Error checking subscription:', error);
-      
-      // Fallback to cached data or defaults
-      setSubscriptionTier('free');
-      setIsPremium(false);
-      setIsBeta(false);
-      setSubscriptionEnd(null);
-      
+      // Fall back to database check
+      await checkSubscriptionFromDatabase();
     } finally {
       setIsLoading(false);
-      isCurrentlyChecking = false;
     }
-  }, [user, toast, lastErrorTime]);
+  }, [user, checkSubscriptionFromDatabase]);
 
   const createCheckout = async () => {
     if (!user) {
@@ -189,37 +182,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    // Clear any existing timeout when user changes
-    if (checkTimeoutRef.current) {
-      clearTimeout(checkTimeoutRef.current);
-    }
-
     if (user) {
-      // Debounce the initial check to prevent multiple rapid calls
-      const timeoutId = setTimeout(() => {
-        checkSubscription();
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
+      // Only check database on initial load - much faster and no API calls
+      checkSubscriptionFromDatabase();
     } else {
       setIsLoading(false);
       setIsPremium(false);
       setIsBeta(false);
       setSubscriptionTier('free');
       setSubscriptionEnd(null);
-      checkAttempts = 0;
-      lastCheckTime = 0;
     }
-  }, [user?.id, checkSubscription]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (checkTimeoutRef.current) {
-        clearTimeout(checkTimeoutRef.current);
-      }
-    };
-  }, []);
+  }, [user?.id, checkSubscriptionFromDatabase]);
 
   return (
     <SubscriptionContext.Provider
@@ -229,7 +202,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         isBeta,
         subscriptionTier,
         subscriptionEnd,
-        checkSubscription,
+        checkSubscription, // Now only used for manual refreshes
         createCheckout,
         openCustomerPortal,
       }}
