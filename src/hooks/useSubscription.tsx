@@ -124,15 +124,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       setIsLoading(true);
       
-      // Add timeout for Stripe check
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Add timeout for Stripe check - use Promise.race for timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
 
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
+      const { data, error } = await Promise.race([
+        supabase.functions.invoke('check-subscription'),
+        timeoutPromise
+      ]) as any;
       
       if (error) {
         console.error('Error checking subscription with Stripe:', error);
