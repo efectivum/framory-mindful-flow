@@ -26,17 +26,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   }, [checkSubscriptionFromDatabase]);
 
   useEffect(() => {
-    // Only check subscription when auth is ready, admin status is determined, and user exists
-    if (!authLoading && !adminLoading && user) {
-      console.log('SubscriptionProvider: Checking subscription for user', user.email, 'isAdmin:', isAdmin);
+    // Only trigger check once when auth and admin loading are complete
+    if (!authLoading && !adminLoading) {
+      console.log('SubscriptionProvider: Auth ready, checking subscription for user', user?.email, 'isAdmin:', isAdmin);
       checkSubscriptionFromDatabase();
-    } else if (!authLoading && !adminLoading && !user) {
-      console.log('SubscriptionProvider: No user found, skipping subscription check');
     }
-  }, [user?.id, authLoading, adminLoading, isAdmin, checkSubscriptionFromDatabase]);
+  }, [authLoading, adminLoading, checkSubscriptionFromDatabase]);
 
   // Show loading while authentication or admin check is loading
-  const contextIsLoading = authLoading || adminLoading || (user && isLoading);
+  const contextIsLoading = authLoading || adminLoading || isLoading;
 
   return (
     <SubscriptionContext.Provider

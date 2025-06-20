@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,58 +13,55 @@ export const useSubscriptionState = () => {
   const [isBeta, setIsBeta] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [hasChecked, setHasChecked] = useState(false);
 
   const checkSubscriptionFromDatabase = useCallback(async () => {
-    // Don't check subscription if auth is still loading or user is null
-    if (authLoading || adminLoading || !user?.email) {
+    // Don't check if we're still loading auth/admin or if we already checked
+    if (authLoading || adminLoading || hasChecked) {
+      return;
+    }
+
+    // If no user, set free tier and mark as checked
+    if (!user?.email) {
       setIsLoading(false);
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
       setSubscriptionEnd(null);
+      setHasChecked(true);
       return;
     }
 
     try {
       setIsLoading(true);
       
-      // Add a small delay to ensure auth context is fully established
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // If user is admin, automatically grant premium access
+      // If user is admin, automatically grant premium access without DB check
       if (isAdmin) {
         console.log('Admin user detected, granting premium access');
         setSubscriptionTier('premium');
         setIsPremium(true);
         setIsBeta(false);
-        setSubscriptionEnd(null); // Admin access doesn't expire
+        setSubscriptionEnd(null);
         setIsLoading(false);
+        setHasChecked(true);
         return;
       }
       
-      // Get subscription data from local database with timeout and better error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout
-
+      // Only check database for non-admin users
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
         .select('*')
         .eq('email', user.email)
-        .abortSignal(controller.signal)
         .maybeSingle();
-
-      clearTimeout(timeoutId);
 
       if (error) {
         console.error('Error fetching subscription data:', error);
-        // On RLS or permission errors, default to free but don't block the UI
-        if (error.code === 'PGRST116' || error.message.includes('RLS')) {
-          console.warn('RLS policy blocked subscription check, defaulting to free tier');
-        }
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
         setSubscriptionEnd(null);
+        setIsLoading(false);
+        setHasChecked(true);
         return;
       }
 
@@ -74,6 +71,8 @@ export const useSubscriptionState = () => {
         setIsPremium(false);
         setIsBeta(false);
         setSubscriptionEnd(null);
+        setIsLoading(false);
+        setHasChecked(true);
         return;
       }
 
@@ -103,15 +102,21 @@ export const useSubscriptionState = () => {
       
     } catch (error) {
       console.error('Error checking subscription:', error);
-      // Default to free on any error - don't block the UI
+      // Default to free on any error
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
       setSubscriptionEnd(null);
     } finally {
       setIsLoading(false);
+      setHasChecked(true);
     }
-  }, [user, authLoading, adminLoading, isAdmin]);
+  }, [user?.email, authLoading, adminLoading, isAdmin, hasChecked]);
+
+  // Reset hasChecked when user changes
+  useEffect(() => {
+    setHasChecked(false);
+  }, [user?.id]);
 
   return {
     isLoading,
