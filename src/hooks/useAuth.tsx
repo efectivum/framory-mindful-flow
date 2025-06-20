@@ -2,11 +2,16 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface UserData {
+  name?: string;
+  [key: string]: any;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData?: any) => Promise<any>;
+  signUp: (email: string, password: string, userData?: UserData) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<any>;
@@ -41,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, userData = {}) => {
+  const signUp = async (email: string, password: string, userData: UserData = {}) => {
     // Automatically detect timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const redirectUrl = `${window.location.origin}/`;

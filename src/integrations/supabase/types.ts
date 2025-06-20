@@ -795,36 +795,45 @@ export type Database = {
           created_at: string
           growth_focus: string
           id: string
+          marketing_emails: boolean
           notification_frequency: string
           notification_time: string | null
           push_notifications_enabled: boolean
+          security_alerts_email: boolean
           tone_of_voice: string
           updated_at: string
           user_id: string
+          weekly_insights_email: boolean
           whatsapp_enabled: boolean
         }
         Insert: {
           created_at?: string
           growth_focus?: string
           id?: string
+          marketing_emails?: boolean
           notification_frequency?: string
           notification_time?: string | null
           push_notifications_enabled?: boolean
+          security_alerts_email?: boolean
           tone_of_voice?: string
           updated_at?: string
           user_id: string
+          weekly_insights_email?: boolean
           whatsapp_enabled?: boolean
         }
         Update: {
           created_at?: string
           growth_focus?: string
           id?: string
+          marketing_emails?: boolean
           notification_frequency?: string
           notification_time?: string | null
           push_notifications_enabled?: boolean
+          security_alerts_email?: boolean
           tone_of_voice?: string
           updated_at?: string
           user_id?: string
+          weekly_insights_email?: boolean
           whatsapp_enabled?: boolean
         }
         Relationships: []
