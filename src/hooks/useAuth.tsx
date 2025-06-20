@@ -12,7 +12,14 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isPremium: boolean;
+  isBeta: boolean;
+  subscriptionTier: 'free' | 'premium' | 'beta';
+  subscriptionEnd: string | null;
   checkAdminStatus: () => Promise<boolean>;
+  refreshSubscription: () => Promise<void>;
+  createCheckout: () => Promise<void>;
+  openCustomerPortal: () => Promise<void>;
   signUp: (email: string, password: string, userData?: UserData) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -28,6 +35,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = React.useState<Session | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isAdmin, setIsAdmin] = React.useState(false);
+  
+  // Subscription state
+  const [isPremium, setIsPremium] = React.useState(false);
+  const [isBeta, setIsBeta] = React.useState(false);
+  const [subscriptionTier, setSubscriptionTier] = React.useState<'free' | 'premium' | 'beta'>('free');
+  const [subscriptionEnd, setSubscriptionEnd] = React.useState<string | null>(null);
 
   const checkAdminStatus = React.useCallback(async (): Promise<boolean> => {
     if (!user) {
@@ -51,6 +64,124 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user]);
 
+  const checkSubscriptionStatus = React.useCallback(async () => {
+    if (!user?.email) {
+      setSubscriptionTier('free');
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionEnd(null);
+      return;
+    }
+
+    try {
+      // Check database first for subscription info
+      const { data: subscriberData, error } = await supabase
+        .from('subscribers')
+        .select('*')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching subscription data:', error);
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+        return;
+      }
+
+      if (!subscriberData) {
+        // No subscription record found - user is free tier
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+        return;
+      }
+
+      const now = new Date();
+      const endDate = subscriberData.subscription_end ? new Date(subscriberData.subscription_end) : null;
+      
+      // Check if subscription is still valid based on end date
+      const isSubscriptionActive = subscriberData.subscribed && (!endDate || endDate > now);
+      
+      if (subscriberData.subscription_tier === 'beta') {
+        setSubscriptionTier('beta');
+        setIsBeta(true);
+        setIsPremium(false);
+        setSubscriptionEnd(subscriberData.subscription_end);
+      } else if (isSubscriptionActive && subscriberData.subscription_tier === 'premium') {
+        setSubscriptionTier('premium');
+        setIsPremium(true);
+        setIsBeta(false);
+        setSubscriptionEnd(subscriberData.subscription_end);
+      } else {
+        // Subscription expired or not found
+        setSubscriptionTier('free');
+        setIsPremium(false);
+        setIsBeta(false);
+        setSubscriptionEnd(null);
+      }
+      
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      // Default to free on any error
+      setSubscriptionTier('free');
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionEnd(null);
+    }
+  }, [user?.email]);
+
+  const refreshSubscription = React.useCallback(async () => {
+    if (!user?.email) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      if (error) throw error;
+      
+      // Refresh subscription status from database after Stripe sync
+      await checkSubscriptionStatus();
+    } catch (error) {
+      console.error('Error refreshing subscription:', error);
+    }
+  }, [user?.email, checkSubscriptionStatus]);
+
+  const createCheckout = React.useCallback(async () => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+      
+      if (error) throw error;
+      
+      if (data.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+    }
+  }, [user]);
+
+  const openCustomerPortal = React.useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) throw error;
+      
+      if (data.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+    }
+  }, [user]);
+
   React.useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -59,11 +190,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Check admin status when user signs in
+        // Check admin status and subscription when user signs in
         if (session?.user) {
-          checkAdminStatus();
+          const adminStatus = await checkAdminStatus();
+          
+          // If admin, grant premium access immediately without DB check
+          if (adminStatus) {
+            setSubscriptionTier('premium');
+            setIsPremium(true);
+            setIsBeta(false);
+            setSubscriptionEnd(null);
+          } else {
+            // Check subscription status for non-admin users
+            setTimeout(() => {
+              checkSubscriptionStatus();
+            }, 0);
+          }
         } else {
           setIsAdmin(false);
+          setSubscriptionTier('free');
+          setIsPremium(false);
+          setIsBeta(false);
+          setSubscriptionEnd(null);
         }
         
         // Initialize onboarding for new users
@@ -88,12 +236,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
       
       if (session?.user) {
-        checkAdminStatus();
+        checkAdminStatus().then(adminStatus => {
+          if (adminStatus) {
+            setSubscriptionTier('premium');
+            setIsPremium(true);
+            setIsBeta(false);
+            setSubscriptionEnd(null);
+          } else {
+            checkSubscriptionStatus();
+          }
+        });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [checkAdminStatus]);
+  }, [checkAdminStatus, checkSubscriptionStatus]);
 
   const signUp = async (email: string, password: string, userData: UserData = {}) => {
     // Automatically detect timezone
@@ -200,7 +357,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       session,
       loading,
       isAdmin,
+      isPremium,
+      isBeta,
+      subscriptionTier,
+      subscriptionEnd,
       checkAdminStatus,
+      refreshSubscription,
+      createCheckout,
+      openCustomerPortal,
       signUp,
       signIn,
       signOut,

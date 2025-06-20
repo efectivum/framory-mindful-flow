@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, Sparkles, AlertCircle, RefreshCw, LogIn, Shield } from 'lucide-react';
@@ -24,9 +23,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
   showPreview = false,
   className = ""
 }) => {
-  const { user } = useAuth();
-  const { isAdmin, isLoading: adminLoading } = useAdmin();
-  const { isPremium, isBeta, createCheckout, isLoading, refreshSubscription } = useSubscription();
+  const { user, isPremium, isBeta, isAdmin, refreshSubscription, createCheckout } = useAuth();
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -66,16 +63,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
     );
   }
 
-  // Show loading while checking admin status or subscription
-  if (adminLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Checking access permissions...</div>
-      </div>
-    );
-  }
-
-  // Allow access for admin users, premium users, and beta users
+  // Allow access for admin users, premium users, and beta users - no loading needed
   if (isAdmin || isPremium || isBeta) {
     return <>{children}</>;
   }

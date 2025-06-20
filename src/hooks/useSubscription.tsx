@@ -1,14 +1,27 @@
 
-import { useContext } from 'react';
-import { SubscriptionContext } from '@/contexts/SubscriptionContext';
+import { useAuth } from '@/hooks/useAuth';
 
+// Simplified useSubscription hook that just reads from auth context
 export const useSubscription = () => {
-  const context = useContext(SubscriptionContext);
-  if (context === undefined) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider');
-  }
-  return context;
+  const { 
+    isPremium, 
+    isBeta, 
+    subscriptionTier, 
+    subscriptionEnd, 
+    refreshSubscription, 
+    createCheckout, 
+    openCustomerPortal,
+    loading 
+  } = useAuth();
+  
+  return {
+    isLoading: loading,
+    isPremium,
+    isBeta,
+    subscriptionTier,
+    subscriptionEnd,
+    refreshSubscription,
+    createCheckout,
+    openCustomerPortal,
+  };
 };
-
-// Re-export the provider for convenience
-export { SubscriptionProvider } from '@/components/SubscriptionProvider';
