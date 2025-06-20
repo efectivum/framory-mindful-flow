@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,15 +21,18 @@ interface AuditLogEntry {
   created_at: string;
 }
 
-export const AdminAuditLog: React.FC = () => {
+export const AdminAuditLog: React.FC = React.memo(() => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastFetch, setLastFetch] = useState<number>(0);
 
-  useEffect(() => {
-    loadAuditLogs();
-  }, []);
+  const loadAuditLogs = useCallback(async () => {
+    // Rate limiting - only fetch once per 10 seconds
+    const now = Date.now();
+    if (now - lastFetch < 10000 && lastFetch > 0) {
+      return;
+    }
 
-  const loadAuditLogs = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -40,14 +43,19 @@ export const AdminAuditLog: React.FC = () => {
 
       if (error) throw error;
       setAuditLogs(data || []);
+      setLastFetch(now);
     } catch (error) {
       console.error('Error loading audit logs:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lastFetch]);
 
-  const getActionIcon = (action: string) => {
+  useEffect(() => {
+    loadAuditLogs();
+  }, [loadAuditLogs]);
+
+  const getActionIcon = useCallback((action: string) => {
     switch (action) {
       case 'add_beta_user':
         return <Plus className="w-4 h-4 text-green-400" />;
@@ -56,9 +64,9 @@ export const AdminAuditLog: React.FC = () => {
       default:
         return <User className="w-4 h-4 text-gray-400" />;
     }
-  };
+  }, []);
 
-  const getActionLabel = (action: string) => {
+  const getActionLabel = useCallback((action: string) => {
     switch (action) {
       case 'add_beta_user':
         return 'Added Beta User';
@@ -67,9 +75,9 @@ export const AdminAuditLog: React.FC = () => {
       default:
         return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
-  };
+  }, []);
 
-  const getActionColor = (action: string) => {
+  const getActionColor = useCallback((action: string) => {
     switch (action) {
       case 'add_beta_user':
         return 'border-green-400 text-green-400';
@@ -78,9 +86,9 @@ export const AdminAuditLog: React.FC = () => {
       default:
         return 'border-gray-400 text-gray-400';
     }
-  };
+  }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -88,7 +96,7 @@ export const AdminAuditLog: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">
@@ -160,4 +168,6 @@ export const AdminAuditLog: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
+});
+
+AdminAuditLog.displayName = 'AdminAuditLog';

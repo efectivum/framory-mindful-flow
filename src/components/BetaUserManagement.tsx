@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Plus, Trash2, Users, UserCheck } from 'lucide-react';
+import { Search, Plus, Users, UserCheck } from 'lucide-react';
 import { BetaBadge } from '@/components/BetaBadge';
 import { AddBetaUserDialog } from '@/components/admin/AddBetaUserDialog';
 import { BetaUsersList } from '@/components/admin/BetaUsersList';
@@ -21,23 +20,25 @@ interface BetaUser {
   updated_at: string;
 }
 
-export const BetaUserManagement: React.FC = () => {
+interface Stats {
+  totalBeta: number;
+  activeBeta: number;
+  recentlyAdded: number;
+}
+
+export const BetaUserManagement: React.FC = React.memo(() => {
   const { toast } = useToast();
   const [betaUsers, setBetaUsers] = useState<BetaUser[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalBeta: 0,
     activeBeta: 0,
     recentlyAdded: 0
   });
 
-  useEffect(() => {
-    loadBetaUsers();
-  }, []);
-
-  const loadBetaUsers = async () => {
+  const loadBetaUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -61,7 +62,7 @@ export const BetaUserManagement: React.FC = () => {
 
       setStats({
         totalBeta: total,
-        activeBeta: total, // For now, all beta users are considered active
+        activeBeta: total,
         recentlyAdded: recent
       });
     } catch (error) {
@@ -74,10 +75,16 @@ export const BetaUserManagement: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const filteredUsers = betaUsers.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    loadBetaUsers();
+  }, [loadBetaUsers]);
+
+  const filteredUsers = useMemo(() => 
+    betaUsers.filter(user =>
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [betaUsers, searchTerm]
   );
 
   return (
@@ -170,4 +177,6 @@ export const BetaUserManagement: React.FC = () => {
       />
     </div>
   );
-};
+});
+
+BetaUserManagement.displayName = 'BetaUserManagement';
