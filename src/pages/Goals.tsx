@@ -9,10 +9,10 @@ import { HabitCard } from '@/components/HabitCard';
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { CreateHabitDialog } from '@/components/CreateHabitDialog';
 import { EditHabitDialog } from '@/components/EditHabitDialog';
+import { HabitProgressModal } from '@/components/HabitProgressModal';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Habit } from '@/hooks/useHabits';
-import { AppContainer } from '@/components/layouts/AppContainer';
 import { StatCardRow } from '@/components/StatCardRow';
 
 const Goals = () => {
@@ -21,6 +21,7 @@ const Goals = () => {
   const { activeChallenges, completeDay, isCompletingDay } = useChallenges();
   
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [progressHabit, setProgressHabit] = useState<Habit | null>(null);
 
   const handleCompleteHabit = (habitId: string) => {
     console.log('Attempting to complete habit:', habitId);
@@ -50,6 +51,10 @@ const Goals = () => {
 
   const handleEditHabit = (habit: Habit) => {
     setEditingHabit(habit);
+  };
+
+  const handleViewProgress = (habit: Habit) => {
+    setProgressHabit(habit);
   };
 
   const handleUpdateHabit = (updates: Partial<Habit>) => {
@@ -190,6 +195,7 @@ const Goals = () => {
                         onComplete={handleCompleteHabit}
                         onEdit={handleEditHabit}
                         onDelete={handleDeleteHabit}
+                        onViewProgress={handleViewProgress}
                         isCompleting={isCompleting}
                         isDeleting={isDeleting}
                         isMobile={false}
@@ -230,6 +236,12 @@ const Goals = () => {
             isUpdating={isUpdating}
           />
         )}
+
+        <HabitProgressModal
+          habit={progressHabit}
+          open={!!progressHabit}
+          onOpenChange={(open) => !open && setProgressHabit(null)}
+        />
       </div>
     </ResponsiveLayout>
   );
