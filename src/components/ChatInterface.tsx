@@ -1,18 +1,22 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
+import { useChatSessions } from '@/hooks/useChatSessions';
+import { useChatMessages } from '@/hooks/useChatMessages';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
+import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatContextManager } from './chat/ChatContextManager';
 import { useConversationManager } from './chat/ConversationManager';
 import { useMessageManager } from './chat/MessageManager';
 
 export const ChatInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
+  const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   const [chatContext, setChatContext] = useState<any>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -20,6 +24,10 @@ export const ChatInterface = () => {
   
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
+  
+  // Session management
+  const { currentSession, createSession } = useChatSessions();
+  const { messages, addMessage, clearMessages } = useChatMessages(currentSession?.id || null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,8 +41,15 @@ export const ChatInterface = () => {
     setChatContext(context);
   };
 
-  const handleInitialMessage = (message: Message) => {
-    setMessages([message]);
+  const handleInitialMessage = async (message: Message) => {
+    // Create new session if none exists
+    if (!currentSession) {
+      const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+      const session = await createSession('New Conversation', contextType, chatContext);
+      if (!session) return;
+    }
+
+    await addMessage(message);
     
     // Set up input text for emotion context
     if (chatContext?.emotionFromParams) {
@@ -45,10 +60,6 @@ export const ChatInterface = () => {
         textAreaRef.current?.focus();
       }, 100);
     }
-  };
-
-  const addMessage = (message: Message) => {
-    setMessages(prev => [...prev, message]);
   };
 
   const handleInputFocus = () => {
@@ -70,6 +81,13 @@ export const ChatInterface = () => {
   });
 
   const handleSend = async () => {
+    // Create session if none exists
+    if (!currentSession) {
+      const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+      const session = await createSession('New Conversation', contextType, chatContext);
+      if (!session) return;
+    }
+
     await messageManager.handleSend(addMessage);
   };
 
@@ -80,9 +98,7 @@ export const ChatInterface = () => {
     successMetric: string;
     notes?: string;
   }) => {
-    // Use the conversation manager's feedback function
     if (conversationManager.recordUserFeedback) {
-      // For now, we'll create a dummy interaction ID since we don't have it
       const interactionId = `interaction_${Date.now()}`;
       conversationManager.recordUserFeedback(
         interactionId,
@@ -106,7 +122,7 @@ export const ChatInterface = () => {
       content: "Great! Your journal entry has been saved successfully. How are you feeling about what you've shared?",
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, botResponse]);
+    addMessage(botResponse);
     journalSuggestion.clearSuggestion();
   };
 
@@ -117,7 +133,7 @@ export const ChatInterface = () => {
       content: "No worries! Your thoughts weren't saved. Feel free to continue our conversation or let me know if you'd like to journal about something else.",
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, botResponse]);
+    addMessage(botResponse);
     journalSuggestion.clearSuggestion();
   };
 
@@ -134,7 +150,7 @@ export const ChatInterface = () => {
         onInitialMessage={handleInitialMessage}
       />
       
-      <ChatHeader />
+      <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
       <MessageList
         messages={messages}
         isDetectingIntent={messageManager.isDetectingIntent}
@@ -166,6 +182,11 @@ export const ChatInterface = () => {
         suggestedContent={journalSuggestion.suggestedContent}
         onSave={handleJournalSave}
         onCancel={handleJournalCancel}
+      />
+
+      <ChatSessionSidebar
+        isOpen={showSessionSidebar}
+        onClose={() => setShowSessionSidebar(false)}
       />
     </div>
   );

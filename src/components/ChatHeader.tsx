@@ -2,10 +2,14 @@
 import React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const ChatHeader = () => {
+interface ChatHeaderProps {
+  onShowSessions?: () => void;
+}
+
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ onShowSessions }) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -27,10 +31,20 @@ export const ChatHeader = () => {
           AI
         </AvatarFallback>
       </Avatar>
-      <div>
+      <div className="flex-1">
         <h1 className="text-gray-100 font-semibold text-base">Lumatori Coach</h1>
         <p className="text-green-400 text-xs font-medium">Online</p>
       </div>
+      {onShowSessions && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onShowSessions}
+          className="text-gray-300 hover:text-white hover:bg-gray-700 shrink-0"
+        >
+          <MessageSquare className="w-5 h-5" />
+        </Button>
+      )}
     </div>
   );
 };
