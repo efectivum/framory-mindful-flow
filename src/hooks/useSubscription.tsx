@@ -25,6 +25,20 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [isBeta, setIsBeta] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium' | 'beta'>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Subscription check timed out, assuming free tier');
+        setIsLoading(false);
+        setHasTimedOut(true);
+      }
+    }, 8000); // 8 second timeout
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const checkSubscriptionFromDatabase = useCallback(async () => {
     if (!user) {
@@ -35,15 +49,22 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       setIsLoading(true);
       
-      // Get subscription data from local database
+      // Get subscription data from local database with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
         .select('*')
         .eq('email', user.email)
+        .abortSignal(controller.signal)
         .maybeSingle();
+
+      clearTimeout(timeoutId);
 
       if (error) {
         console.error('Error fetching subscription data:', error);
+        // Don't throw error, just default to free
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -82,15 +103,11 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         setIsPremium(false);
         setIsBeta(false);
         setSubscriptionEnd(null);
-        
-        // If subscription appears expired but was previously active, verify with Stripe
-        if (subscriberData.subscribed && endDate && endDate <= now) {
-          console.log('Subscription appears expired, will verify with Stripe on next manual check');
-        }
       }
       
     } catch (error) {
       console.error('Error checking subscription:', error);
+      // Default to free on error - don't block the UI
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
@@ -106,7 +123,16 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      // Add timeout for Stripe check
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (error) {
         console.error('Error checking subscription with Stripe:', error);
@@ -197,7 +223,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   return (
     <SubscriptionContext.Provider
       value={{
-        isLoading,
+        isLoading: isLoading && !hasTimedOut, // Don't show loading if timed out
         isPremium,
         isBeta,
         subscriptionTier,
