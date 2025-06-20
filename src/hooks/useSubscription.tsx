@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 interface SubscriptionContextType {
   isLoading: boolean;
   isPremium: boolean;
-  subscriptionTier: 'free' | 'premium';
+  isBeta: boolean;
+  subscriptionTier: 'free' | 'premium' | 'beta';
   subscriptionEnd: string | null;
   checkSubscription: () => Promise<void>;
   createCheckout: () => Promise<void>;
@@ -21,7 +22,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium'>('free');
+  const [isBeta, setIsBeta] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium' | 'beta'>('free');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const checkSubscription = async () => {
@@ -36,8 +38,12 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       
       if (error) throw error;
       
-      setIsPremium(data.subscribed || false);
-      setSubscriptionTier(data.subscription_tier || 'free');
+      const tier = data.subscription_tier || 'free';
+      const isSubscribed = data.subscribed || false;
+      
+      setSubscriptionTier(tier);
+      setIsPremium(isSubscribed || tier === 'premium');
+      setIsBeta(tier === 'beta');
       setSubscriptionEnd(data.subscription_end || null);
     } catch (error) {
       console.error('Error checking subscription:', error);
@@ -109,6 +115,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       value={{
         isLoading,
         isPremium,
+        isBeta,
         subscriptionTier,
         subscriptionEnd,
         checkSubscription,

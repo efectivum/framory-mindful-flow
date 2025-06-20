@@ -13,7 +13,7 @@ interface FeatureUsageContext {
 
 export const useFeatureTracking = () => {
   const { user } = useAuth();
-  const { isPremium, subscriptionTier } = useSubscription();
+  const { isPremium, isBeta, subscriptionTier } = useSubscription();
 
   const trackFeatureUsage = useCallback(async (
     featureName: string,
@@ -31,8 +31,8 @@ export const useFeatureTracking = () => {
         session_id: context.sessionId || crypto.randomUUID()
       });
 
-      // Track subscription analytics
-      if (isPremium) {
+      // Track subscription analytics for both premium and beta users
+      if (isPremium || isBeta) {
         await supabase.from('subscription_analytics').insert({
           user_id: user.id,
           metric_type: 'feature_usage',
@@ -40,14 +40,14 @@ export const useFeatureTracking = () => {
           metric_data: {
             feature_name: featureName,
             feature_category: featureCategory,
-            subscription_tier: subscriptionTier || 'premium'
+            subscription_tier: subscriptionTier || 'free'
           }
         });
       }
     } catch (error) {
       console.error('Failed to track feature usage:', error);
     }
-  }, [user, isPremium, subscriptionTier]);
+  }, [user, isPremium, isBeta, subscriptionTier]);
 
   const checkFeatureLimit = useCallback(async (featureName: string): Promise<{ 
     allowed: boolean; 
@@ -70,7 +70,7 @@ export const useFeatureTracking = () => {
 
       if (!limitData) return { allowed: true, usage: 0, limit: -1 };
 
-      // If unlimited (-1), always allow
+      // If unlimited (-1), always allow (applies to both premium and beta)
       if (limitData.limit_value === -1) {
         return { allowed: true, usage: 0, limit: -1 };
       }

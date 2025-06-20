@@ -62,6 +62,25 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user has beta tier in subscribers table
+    const { data: subscriberData } = await supabaseClient
+      .from("subscribers")
+      .select("*")
+      .eq("email", user.email)
+      .single();
+
+    if (subscriberData?.subscription_tier === 'beta') {
+      logStep("Beta user found", { email: user.email });
+      return new Response(JSON.stringify({
+        subscribed: false, // Not a paid subscription
+        subscription_tier: "beta",
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     

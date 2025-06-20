@@ -21,9 +21,10 @@ export const PremiumGate: React.FC<PremiumGateProps> = ({
   showPreview = false,
   className = ""
 }) => {
-  const { isPremium, createCheckout } = useSubscription();
+  const { isPremium, isBeta, createCheckout } = useSubscription();
 
-  if (isPremium) {
+  // Allow access for both premium and beta users
+  if (isPremium || isBeta) {
     return <>{children}</>;
   }
 
