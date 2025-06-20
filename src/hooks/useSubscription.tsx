@@ -17,6 +17,13 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
+// Rate limiting state
+let lastCheckTime = 0;
+let checkAttempts = 0;
+let isCurrentlyChecking = false;
+const RATE_LIMIT_WINDOW = 30000; // 30 seconds
+const MAX_ATTEMPTS_PER_WINDOW = 3;
+
 export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -32,11 +39,40 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       return;
     }
 
+    // Rate limiting logic
+    const now = Date.now();
+    if (now - lastCheckTime > RATE_LIMIT_WINDOW) {
+      // Reset attempts after window expires
+      checkAttempts = 0;
+      lastCheckTime = now;
+    }
+
+    if (checkAttempts >= MAX_ATTEMPTS_PER_WINDOW) {
+      console.log('Rate limit exceeded for subscription check, skipping...');
+      setIsLoading(false);
+      return;
+    }
+
+    if (isCurrentlyChecking) {
+      console.log('Subscription check already in progress, skipping...');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      isCurrentlyChecking = true;
+      checkAttempts++;
+      
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
-      if (error) throw error;
+      if (error) {
+        // Don't show toast for rate limit errors to prevent spam
+        if (error.message && error.message.includes('rate limit')) {
+          console.warn('Subscription check rate limited, will retry later');
+          return;
+        }
+        throw error;
+      }
       
       const tier = data.subscription_tier || 'free';
       const isSubscribed = data.subscribed || false;
@@ -45,15 +81,24 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsPremium(isSubscribed || tier === 'premium');
       setIsBeta(tier === 'beta');
       setSubscriptionEnd(data.subscription_end || null);
+      
+      // Reset attempts on successful check
+      checkAttempts = 0;
     } catch (error) {
       console.error('Error checking subscription:', error);
-      toast({
-        title: "Error",
-        description: "Failed to check subscription status",
-        variant: "destructive",
-      });
+      
+      // Only show toast for non-rate-limit errors and not too frequently
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('rate limit') && checkAttempts <= 1) {
+        toast({
+          title: "Subscription Check Failed",
+          description: "Unable to verify subscription status. Please try refreshing the page.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
+      isCurrentlyChecking = false;
     }
   };
 
@@ -107,8 +152,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    checkSubscription();
-  }, [user]);
+    // Only check subscription once when user changes or on mount
+    if (user) {
+      checkSubscription();
+    } else {
+      setIsLoading(false);
+      setIsPremium(false);
+      setIsBeta(false);
+      setSubscriptionTier('free');
+      setSubscriptionEnd(null);
+    }
+  }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
 
   return (
     <SubscriptionContext.Provider
