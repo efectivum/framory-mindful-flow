@@ -21,12 +21,12 @@ export const ChatInterface = () => {
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   const [chatContext, setChatContext] = useState<any>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isContextReady, setIsContextReady] = useState(false);
   const [initializationError, setInitializationError] = useState<string | null>(null);
-  const [hasAddedInitialMessage, setHasAddedInitialMessage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const initialMessageProcessed = useRef(false);
   
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
@@ -59,7 +59,7 @@ export const ChatInterface = () => {
     try {
       console.log('ChatInterface: Context ready', context);
       setChatContext(context);
-      setIsInitialized(true);
+      setIsContextReady(true);
       setInitializationError(null);
     } catch (error) {
       console.error('ChatInterface: Error setting context', error);
@@ -68,19 +68,19 @@ export const ChatInterface = () => {
   }, []);
 
   const handleInitialMessage = useCallback(async (message: Message) => {
-    // Prevent adding the same initial message multiple times
-    if (hasAddedInitialMessage) {
-      console.log('ChatInterface: Initial message already added, skipping');
+    // Prevent processing the same initial message multiple times
+    if (initialMessageProcessed.current) {
+      console.log('ChatInterface: Initial message already processed, skipping');
       return;
     }
 
     try {
-      console.log('ChatInterface: Adding initial message', message);
-      setHasAddedInitialMessage(true);
+      console.log('ChatInterface: Processing initial message', message);
+      initialMessageProcessed.current = true;
       
       // Create new session if none exists
-      if (!currentSession) {
-        const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+      if (!currentSession && chatContext) {
+        const contextType = chatContext.isCoachingMode ? 'coaching' : 'general';
         const session = await createSession('New Conversation', contextType, chatContext);
         if (!session) {
           console.warn('Failed to create session, continuing without persistence');
@@ -100,9 +100,9 @@ export const ChatInterface = () => {
       }
     } catch (error) {
       console.error('ChatInterface: Error handling initial message:', error);
-      setHasAddedInitialMessage(false); // Reset on error so it can be retried
+      initialMessageProcessed.current = false; // Reset on error so it can be retried
     }
-  }, [hasAddedInitialMessage, currentSession, chatContext, createSession, addMessage]);
+  }, [currentSession, chatContext, createSession, addMessage]);
 
   const handleInputFocus = useCallback(() => {
     textAreaRef.current?.focus();
@@ -128,8 +128,8 @@ export const ChatInterface = () => {
 
     try {
       // Create session if none exists (but don't fail if it doesn't work)
-      if (!currentSession) {
-        const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
+      if (!currentSession && chatContext) {
+        const contextType = chatContext.isCoachingMode ? 'coaching' : 'general';
         await createSession('New Conversation', contextType, chatContext);
       }
 
@@ -205,8 +205,8 @@ export const ChatInterface = () => {
   const handleRetry = useCallback(async () => {
     try {
       setInitializationError(null);
-      setIsInitialized(false);
-      setHasAddedInitialMessage(false);
+      setIsContextReady(false);
+      initialMessageProcessed.current = false;
       // Simple retry - just reload
       window.location.reload();
     } catch (error) {
@@ -216,10 +216,10 @@ export const ChatInterface = () => {
 
   // Reset initial message flag when session changes
   useEffect(() => {
-    setHasAddedInitialMessage(false);
+    initialMessageProcessed.current = false;
   }, [currentSession?.id]);
 
-  // Show loading state only while sessions are loading (simplified condition)
+  // Show loading state only while sessions are loading
   if (sessionsLoading) {
     return (
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
@@ -249,10 +249,12 @@ export const ChatInterface = () => {
   return (
     <ChatErrorBoundary>
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatContextManager 
-          onContextReady={handleContextReady}
-          onInitialMessage={handleInitialMessage}
-        />
+        {!isContextReady && (
+          <ChatContextManager 
+            onContextReady={handleContextReady}
+            onInitialMessage={handleInitialMessage}
+          />
+        )}
         
         <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
         <MessageList
