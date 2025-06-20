@@ -11,19 +11,19 @@ import { Crown, Calendar, CreditCard, TrendingUp, Settings, ExternalLink } from 
 import { format } from 'date-fns';
 
 export const SubscriptionDashboard = () => {
-  const { subscription, isPremium, createCheckout, createPortalSession } = useSubscription();
+  const { subscriptionTier, isPremium, subscriptionEnd, createCheckout, openCustomerPortal } = useSubscription();
   const { usageData } = useUsageAnalytics();
 
   const handleManageBilling = async () => {
     try {
-      await createPortalSession();
+      await openCustomerPortal();
     } catch (error) {
       console.error('Failed to open billing portal:', error);
     }
   };
 
-  const subscriptionEndDate = subscription?.subscription_end 
-    ? new Date(subscription.subscription_end)
+  const subscriptionEndDate = subscriptionEnd 
+    ? new Date(subscriptionEnd)
     : null;
 
   const daysUntilRenewal = subscriptionEndDate 
@@ -50,9 +50,9 @@ export const SubscriptionDashboard = () => {
                 >
                   {isPremium ? 'Premium' : 'Free'}
                 </Badge>
-                {isPremium && subscription?.subscription_tier && (
+                {isPremium && subscriptionTier && (
                   <Badge variant="outline" className="border-yellow-400 text-yellow-300">
-                    {subscription.subscription_tier.charAt(0).toUpperCase() + subscription.subscription_tier.slice(1)}
+                    {subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)}
                   </Badge>
                 )}
               </div>
