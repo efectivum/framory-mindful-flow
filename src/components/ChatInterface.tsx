@@ -22,6 +22,7 @@ export const ChatInterface = () => {
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   const [chatContext, setChatContext] = useState<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -54,23 +55,34 @@ export const ChatInterface = () => {
   }, [messages]);
 
   const handleContextReady = (context: any) => {
-    setChatContext(context);
-    setIsInitialized(true);
+    try {
+      console.log('ChatInterface: Context ready', context);
+      setChatContext(context);
+      setIsInitialized(true);
+      setInitializationError(null);
+    } catch (error) {
+      console.error('ChatInterface: Error setting context', error);
+      setInitializationError('Failed to initialize chat context');
+    }
   };
 
   const handleInitialMessage = async (message: Message) => {
     try {
+      console.log('ChatInterface: Adding initial message', message);
+      
       // Create new session if none exists
       if (!currentSession) {
         const contextType = chatContext?.isCoachingMode ? 'coaching' : 'general';
         const session = await createSession('New Conversation', contextType, chatContext);
-        if (!session) return;
+        if (!session) {
+          throw new Error('Failed to create chat session');
+        }
       }
 
       await addMessage(message);
       
       // Set up input text for emotion context
-      if (chatContext?.emotionFromParams) {
+      if (chatContext?.emotionFromParams && messageManager) {
         const emotionPrompt = `I'd like to explore my ${chatContext.emotionFromParams} entries. What patterns do you see with my ${chatContext.emotionFromParams} experiences? Can you help me understand when and why I feel ${chatContext.emotionFromParams}?`;
         messageManager.setInputText(emotionPrompt);
         
@@ -79,7 +91,8 @@ export const ChatInterface = () => {
         }, 100);
       }
     } catch (error) {
-      console.error('Error handling initial message:', error);
+      console.error('ChatInterface: Error handling initial message:', error);
+      setInitializationError('Failed to initialize chat');
     }
   };
 
@@ -88,20 +101,25 @@ export const ChatInterface = () => {
   };
 
   // Initialize conversation manager with error handling
-  const conversationManager = useConversationManager({
+  const conversationManager = chatContext ? useConversationManager({
     isCoachingMode: chatContext?.isCoachingMode || false,
     onMessageAdd: addMessage,
     onInputFocus: handleInputFocus
-  });
+  }) : null;
 
   // Initialize message manager with error handling
-  const messageManager = useMessageManager({
+  const messageManager = (chatContext && conversationManager) ? useMessageManager({
     isCoachingMode: chatContext?.isCoachingMode || false,
     onConversation: conversationManager.handleConversation,
     textAreaRef
-  });
+  }) : null;
 
   const handleSend = async () => {
+    if (!messageManager || !conversationManager) {
+      console.error('ChatInterface: Managers not initialized');
+      return;
+    }
+
     try {
       // Create session if none exists
       if (!currentSession) {
@@ -112,7 +130,7 @@ export const ChatInterface = () => {
 
       await messageManager.handleSend(addMessage);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('ChatInterface: Error sending message:', error);
     }
   };
 
@@ -123,7 +141,7 @@ export const ChatInterface = () => {
     successMetric: string;
     notes?: string;
   }) => {
-    if (conversationManager.recordUserFeedback) {
+    if (conversationManager?.recordUserFeedback) {
       const interactionId = `interaction_${Date.now()}`;
       conversationManager.recordUserFeedback(
         interactionId,
@@ -138,7 +156,7 @@ export const ChatInterface = () => {
   const handleJournalSave = (content: string) => {
     createEntry({
       content: content,
-      title: messageManager.selectedActivity ? `${messageManager.selectedActivity} entry` : undefined,
+      title: messageManager?.selectedActivity ? `${messageManager.selectedActivity} entry` : undefined,
     });
 
     const botResponse: Message = {
@@ -163,25 +181,38 @@ export const ChatInterface = () => {
   };
 
   const handleActivitySelect = (activity: string) => {
-    messageManager.setSelectedActivity(activity);
+    if (messageManager) {
+      messageManager.setSelectedActivity(activity);
+    }
     setShowActivitySelector(false);
     textAreaRef.current?.focus();
   };
 
   const handleRetry = async () => {
     try {
-      // Attempt to reconnect and reload sessions
+      setInitializationError(null);
+      setIsInitialized(false);
+      // Attempt to reload sessions
       window.location.reload();
     } catch (error) {
-      console.error('Retry failed:', error);
+      console.error('ChatInterface: Retry failed:', error);
     }
   };
 
-  // Show loading state while initializing
-  if (!isInitialized || sessionsLoading) {
+  // Show loading state while initializing or if managers aren't ready
+  if (!isInitialized || sessionsLoading || !messageManager || !conversationManager) {
     return (
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
         <ChatLoadingState />
+      </div>
+    );
+  }
+
+  // Show error state for initialization failures
+  if (initializationError) {
+    return (
+      <div className="flex flex-col h-screen w-full bg-[#171c26]">
+        <ChatOfflineState onRetry={handleRetry} />
       </div>
     );
   }
