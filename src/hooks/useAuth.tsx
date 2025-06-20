@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +58,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
+    // Send welcome email with better template
+    if (data.user && !error) {
+      try {
+        await supabase.functions.invoke('send-auth-email', {
+          body: {
+            type: 'welcome',
+            email: email,
+            name: userData.name || 'there',
+            confirmationUrl: redirectUrl,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail the signup process if email fails
+      }
+    }
+    
     return { data, error };
   };
 
@@ -81,6 +97,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl
     });
+    
+    // Send password reset email with better template
+    if (!error) {
+      try {
+        await supabase.functions.invoke('send-auth-email', {
+          body: {
+            type: 'password_reset',
+            email: email,
+            resetUrl: redirectUrl,
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        // Don't fail the process if email fails
+      }
+    }
     
     return { data, error };
   };

@@ -5,6 +5,7 @@ import { AccountInformation } from '@/components/AccountInformation';
 import { AdditionalSettings } from '@/components/AdditionalSettings';
 import { PrivacySettings } from '@/components/PrivacySettings';
 import { SessionManagement } from '@/components/SessionManagement';
+import { EmailPreferences } from '@/components/EmailPreferences';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 const Profile = () => {
@@ -19,6 +20,7 @@ const Profile = () => {
       <div className="lg:col-span-2 space-y-6">
         <AccountInformation />
         <SessionManagement />
+        <EmailPreferences />
         <UserPreferencesForm />
         <AdditionalSettings />
         <PrivacySettings />

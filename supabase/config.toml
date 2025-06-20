@@ -15,3 +15,9 @@ verify_jwt = true
 
 [functions.delete-account]
 verify_jwt = true
+
+[functions.send-auth-email]
+verify_jwt = false
+
+[functions.send-weekly-insights]
+verify_jwt = true
