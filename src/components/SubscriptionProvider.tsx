@@ -1,12 +1,14 @@
 
 import React, { useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useSubscriptionState } from '@/hooks/subscription/useSubscriptionState';
 import { useSubscriptionActions } from '@/hooks/subscription/useSubscriptionActions';
 import { SubscriptionContext } from '@/contexts/SubscriptionContext';
 
 export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
   const {
     isLoading,
     isPremium,
@@ -24,17 +26,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   }, [checkSubscriptionFromDatabase]);
 
   useEffect(() => {
-    // Only check subscription when auth is ready and user exists
-    if (!authLoading && user) {
-      console.log('SubscriptionProvider: Checking subscription for user', user.email);
+    // Only check subscription when auth is ready, admin status is determined, and user exists
+    if (!authLoading && !adminLoading && user) {
+      console.log('SubscriptionProvider: Checking subscription for user', user.email, 'isAdmin:', isAdmin);
       checkSubscriptionFromDatabase();
-    } else if (!authLoading && !user) {
+    } else if (!authLoading && !adminLoading && !user) {
       console.log('SubscriptionProvider: No user found, skipping subscription check');
     }
-  }, [user?.id, authLoading, checkSubscriptionFromDatabase]);
+  }, [user?.id, authLoading, adminLoading, isAdmin, checkSubscriptionFromDatabase]);
 
-  // Show loading while authentication is loading
-  const contextIsLoading = authLoading || (user && isLoading);
+  // Show loading while authentication or admin check is loading
+  const contextIsLoading = authLoading || adminLoading || (user && isLoading);
 
   return (
     <SubscriptionContext.Provider

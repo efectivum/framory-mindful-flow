@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
-import { Crown, Sparkles, AlertCircle, RefreshCw, LogIn } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
+import { Crown, Sparkles, AlertCircle, RefreshCw, LogIn, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PremiumGateWithFallbackProps {
@@ -24,6 +25,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
   className = ""
 }) => {
   const { user } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
   const { isPremium, isBeta, createCheckout, isLoading, refreshSubscription } = useSubscription();
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -64,18 +66,18 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
     );
   }
 
-  // Allow access for both premium and beta users
-  if (isPremium || isBeta) {
-    return <>{children}</>;
-  }
-
-  // Show loading for a reasonable time while checking subscription
-  if (isLoading) {
+  // Show loading while checking admin status or subscription
+  if (adminLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Checking subscription status...</div>
+        <div className="text-gray-400">Checking access permissions...</div>
       </div>
     );
+  }
+
+  // Allow access for admin users, premium users, and beta users
+  if (isAdmin || isPremium || isBeta) {
+    return <>{children}</>;
   }
 
   // Default to premium gate for free users
@@ -88,6 +90,12 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
             {feature}
           </CardTitle>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Badge variant="outline" className="border-green-400 text-green-300">
+                <Shield className="w-3 h-3 mr-1" />
+                Admin
+              </Badge>
+            )}
             <Badge variant="outline" className="border-purple-400 text-purple-300">
               Premium
             </Badge>

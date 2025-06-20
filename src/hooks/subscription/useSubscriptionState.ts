@@ -1,11 +1,13 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import type { SubscriptionTier } from '@/types/subscription';
 
 export const useSubscriptionState = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
   const [isLoading, setIsLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [isBeta, setIsBeta] = useState(false);
@@ -14,7 +16,7 @@ export const useSubscriptionState = () => {
 
   const checkSubscriptionFromDatabase = useCallback(async () => {
     // Don't check subscription if auth is still loading or user is null
-    if (authLoading || !user?.email) {
+    if (authLoading || adminLoading || !user?.email) {
       setIsLoading(false);
       setSubscriptionTier('free');
       setIsPremium(false);
@@ -28,6 +30,17 @@ export const useSubscriptionState = () => {
       
       // Add a small delay to ensure auth context is fully established
       await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // If user is admin, automatically grant premium access
+      if (isAdmin) {
+        console.log('Admin user detected, granting premium access');
+        setSubscriptionTier('premium');
+        setIsPremium(true);
+        setIsBeta(false);
+        setSubscriptionEnd(null); // Admin access doesn't expire
+        setIsLoading(false);
+        return;
+      }
       
       // Get subscription data from local database with timeout and better error handling
       const controller = new AbortController();
@@ -98,7 +111,7 @@ export const useSubscriptionState = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, adminLoading, isAdmin]);
 
   return {
     isLoading,
