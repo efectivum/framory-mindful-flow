@@ -1,35 +1,16 @@
+
 import { Library, BookOpen, Play, Star, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { useChallenges } from '@/hooks/useChallenges';
+import { useNavigate } from 'react-router-dom';
+import { LoadingCard } from '@/components/ui/loading-card';
 
 const Resources = () => {
-  const challenges = [
-    {
-      id: 1,
-      title: '7-Day Gratitude Challenge',
-      description: 'Practice daily gratitude for one week',
-      duration: '7 days',
-      difficulty: 'Beginner',
-      participants: 1247,
-    },
-    {
-      id: 2,
-      title: 'Mindful Morning Routine',
-      description: 'Start each day with intentional practices',
-      duration: '14 days',
-      difficulty: 'Intermediate',
-      participants: 892,
-    },
-    {
-      id: 3,
-      title: 'Digital Detox Weekend',
-      description: 'Disconnect to reconnect with yourself',
-      duration: '2 days',
-      difficulty: 'Advanced',
-      participants: 534,
-    },
-  ];
+  const navigate = useNavigate();
+  const { challenges, isLoadingChallenges, isEnrolledInChallenge } = useChallenges();
 
   const readings = [
     {
@@ -76,6 +57,15 @@ const Resources = () => {
     },
   ];
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return 'bg-green-500/20 text-green-300';
+      case 'Intermediate': return 'bg-yellow-500/20 text-yellow-300';
+      case 'Advanced': return 'bg-red-500/20 text-red-300';
+      default: return 'bg-gray-500/20 text-gray-300';
+    }
+  };
+
   const content = (
     <>
       {/* Daily Challenges */}
@@ -84,35 +74,66 @@ const Resources = () => {
           <Star className="w-6 h-6 text-yellow-400" />
           Daily Challenges
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {challenges.map((challenge) => (
-            <Card key={challenge.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white text-lg">{challenge.title}</CardTitle>
-                <p className="text-gray-400 text-sm">{challenge.description}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Duration:</span>
-                    <span className="text-white">{challenge.duration}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Difficulty:</span>
-                    <span className="text-white">{challenge.difficulty}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Participants:</span>
-                    <span className="text-white">{challenge.participants.toLocaleString()}</span>
-                  </div>
-                  <Button className="w-full mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-                    Join Challenge
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        
+        {isLoadingChallenges ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <LoadingCard key={i} className="h-64" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {challenges.map((challenge) => {
+              const isEnrolled = isEnrolledInChallenge(challenge.id);
+              
+              return (
+                <Card key={challenge.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <CardTitle className="text-white text-lg">{challenge.title}</CardTitle>
+                      <Badge className={getDifficultyColor(challenge.difficulty)} variant="outline">
+                        {challenge.difficulty}
+                      </Badge>
+                    </div>
+                    <p className="text-gray-400 text-sm">{challenge.description}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Duration:</span>
+                        <span className="text-white">{challenge.duration_days} days</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Category:</span>
+                        <span className="text-white capitalize">{challenge.category}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Participants:</span>
+                        <span className="text-white">{challenge.participant_count.toLocaleString()}</span>
+                      </div>
+                      
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/challenge/${challenge.id}`)}
+                          className="flex-1"
+                        >
+                          View Details
+                        </Button>
+                        {isEnrolled && (
+                          <Badge className="bg-green-500/20 text-green-300 px-3 py-1">
+                            Enrolled
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Reading Recommendations */}
@@ -182,7 +203,6 @@ const Resources = () => {
     </>
   );
 
-  // Always use ResponsiveLayout
   return (
     <ResponsiveLayout title="Resources" subtitle="Curated content to support your growth journey">
       {content}

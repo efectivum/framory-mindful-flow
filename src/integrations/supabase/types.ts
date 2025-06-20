@@ -45,6 +45,120 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string
+          completion_method: string
+          day_number: number
+          id: string
+          mood_rating: number | null
+          notes: string | null
+          source_id: string | null
+          user_challenge_id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string
+          completion_method?: string
+          day_number: number
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          source_id?: string | null
+          user_challenge_id: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string
+          completion_method?: string
+          day_number?: number
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          source_id?: string | null
+          user_challenge_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_completions_user_challenge_id_fkey"
+            columns: ["user_challenge_id"]
+            isOneToOne: false
+            referencedRelation: "user_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          benefits: string[]
+          category: string
+          challenge_type: string
+          completion_criteria: Json | null
+          created_at: string
+          daily_prompts: string[] | null
+          description: string
+          difficulty: string
+          duration_days: number
+          id: string
+          is_active: boolean
+          participant_count: number
+          success_rate: number | null
+          tips: string[] | null
+          title: string
+          updated_at: string
+          what_included: string[]
+        }
+        Insert: {
+          benefits?: string[]
+          category?: string
+          challenge_type?: string
+          completion_criteria?: Json | null
+          created_at?: string
+          daily_prompts?: string[] | null
+          description: string
+          difficulty: string
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          participant_count?: number
+          success_rate?: number | null
+          tips?: string[] | null
+          title: string
+          updated_at?: string
+          what_included?: string[]
+        }
+        Update: {
+          benefits?: string[]
+          category?: string
+          challenge_type?: string
+          completion_criteria?: Json | null
+          created_at?: string
+          daily_prompts?: string[] | null
+          description?: string
+          difficulty?: string
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          participant_count?: number
+          success_rate?: number | null
+          tips?: string[] | null
+          title?: string
+          updated_at?: string
+          what_included?: string[]
+        }
+        Relationships: []
+      }
       coaching_interactions: {
         Row: {
           confidence_score: number | null
@@ -544,6 +658,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_challenges: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          current_day: number
+          daily_completions: Json | null
+          enrolled_at: string
+          id: string
+          notes: string | null
+          status: string
+          total_completions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          daily_completions?: Json | null
+          enrolled_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_completions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          daily_completions?: Json | null
+          enrolled_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_completions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_patterns: {
         Row: {
