@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      adaptive_coaching_rules: {
+        Row: {
+          coaching_adjustments: Json
+          condition_criteria: Json
+          created_at: string
+          id: string
+          is_active: boolean | null
+          priority_level: number | null
+          rule_name: string
+          success_threshold: number | null
+        }
+        Insert: {
+          coaching_adjustments: Json
+          condition_criteria: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          rule_name: string
+          success_threshold?: number | null
+        }
+        Update: {
+          coaching_adjustments?: Json
+          condition_criteria?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          priority_level?: number | null
+          rule_name?: string
+          success_threshold?: number | null
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           confidence_score: number | null
@@ -195,6 +228,59 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_effectiveness: {
+        Row: {
+          baseline_value: number | null
+          created_at: string
+          follow_up_value: number | null
+          id: string
+          improvement_percentage: number | null
+          interaction_id: string | null
+          intervention_type: string
+          measured_at: string | null
+          success_metric: string
+          time_to_improvement: unknown | null
+          user_id: string
+          user_satisfaction_rating: number | null
+        }
+        Insert: {
+          baseline_value?: number | null
+          created_at?: string
+          follow_up_value?: number | null
+          id?: string
+          improvement_percentage?: number | null
+          interaction_id?: string | null
+          intervention_type: string
+          measured_at?: string | null
+          success_metric: string
+          time_to_improvement?: unknown | null
+          user_id: string
+          user_satisfaction_rating?: number | null
+        }
+        Update: {
+          baseline_value?: number | null
+          created_at?: string
+          follow_up_value?: number | null
+          id?: string
+          improvement_percentage?: number | null
+          interaction_id?: string | null
+          intervention_type?: string
+          measured_at?: string | null
+          success_metric?: string
+          time_to_improvement?: unknown | null
+          user_id?: string
+          user_satisfaction_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_effectiveness_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_interactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_interactions: {
         Row: {
           confidence_score: number | null
@@ -238,6 +324,102 @@ export type Database = {
             columns: ["entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_learning_profiles: {
+        Row: {
+          effective_intervention_types: Json | null
+          id: string
+          last_updated: string
+          learning_confidence: number | null
+          optimal_timing_preferences: Json | null
+          preferred_communication_styles: Json | null
+          protocol_success_rates: Json | null
+          response_patterns: Json | null
+          successful_interventions: number | null
+          total_interactions: number | null
+          user_id: string
+        }
+        Insert: {
+          effective_intervention_types?: Json | null
+          id?: string
+          last_updated?: string
+          learning_confidence?: number | null
+          optimal_timing_preferences?: Json | null
+          preferred_communication_styles?: Json | null
+          protocol_success_rates?: Json | null
+          response_patterns?: Json | null
+          successful_interventions?: number | null
+          total_interactions?: number | null
+          user_id: string
+        }
+        Update: {
+          effective_intervention_types?: Json | null
+          id?: string
+          last_updated?: string
+          learning_confidence?: number | null
+          optimal_timing_preferences?: Json | null
+          preferred_communication_styles?: Json | null
+          protocol_success_rates?: Json | null
+          response_patterns?: Json | null
+          successful_interventions?: number | null
+          total_interactions?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coaching_protocol_applications: {
+        Row: {
+          adherence_percentage: number | null
+          applied_at: string
+          id: string
+          interaction_id: string | null
+          notes: string | null
+          outcome_measured: boolean | null
+          outcome_value: number | null
+          protocol_id: string
+          user_feedback_rating: number | null
+          user_id: string
+        }
+        Insert: {
+          adherence_percentage?: number | null
+          applied_at?: string
+          id?: string
+          interaction_id?: string | null
+          notes?: string | null
+          outcome_measured?: boolean | null
+          outcome_value?: number | null
+          protocol_id: string
+          user_feedback_rating?: number | null
+          user_id: string
+        }
+        Update: {
+          adherence_percentage?: number | null
+          applied_at?: string
+          id?: string
+          interaction_id?: string | null
+          notes?: string | null
+          outcome_measured?: boolean | null
+          outcome_value?: number | null
+          protocol_id?: string
+          user_feedback_rating?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_protocol_applications_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_interactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coaching_protocol_applications_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "scientific_protocols"
             referencedColumns: ["id"]
           },
         ]
@@ -764,6 +946,54 @@ export type Database = {
           sort_order?: number | null
           title?: string
           type?: string
+        }
+        Relationships: []
+      }
+      scientific_protocols: {
+        Row: {
+          category: string
+          contraindications: Json | null
+          created_at: string
+          description: string
+          evidence_level: string | null
+          expected_timeline: string | null
+          id: string
+          implementation_steps: Json
+          is_active: boolean | null
+          protocol_name: string
+          source: string
+          success_metrics: Json
+          target_conditions: Json
+        }
+        Insert: {
+          category: string
+          contraindications?: Json | null
+          created_at?: string
+          description: string
+          evidence_level?: string | null
+          expected_timeline?: string | null
+          id?: string
+          implementation_steps: Json
+          is_active?: boolean | null
+          protocol_name: string
+          source: string
+          success_metrics: Json
+          target_conditions: Json
+        }
+        Update: {
+          category?: string
+          contraindications?: Json | null
+          created_at?: string
+          description?: string
+          evidence_level?: string | null
+          expected_timeline?: string | null
+          id?: string
+          implementation_steps?: Json
+          is_active?: boolean | null
+          protocol_name?: string
+          source?: string
+          success_metrics?: Json
+          target_conditions?: Json
         }
         Relationships: []
       }

@@ -1,14 +1,33 @@
 
-import { HabitSuggestion } from '@/hooks/useCoachHabitSuggestion';
-
 export interface Message {
   id: string;
   type: 'user' | 'bot';
   content: string;
-  activityType?: string;
   timestamp: Date;
-  isJournalEntry?: boolean;
-  attachmentUrl?: string;
-  attachmentType?: string;
-  habitSuggestion?: HabitSuggestion;
+  isLoading?: boolean;
+  habitSuggestion?: {
+    title: string;
+    description: string;
+    frequency_type: 'daily' | 'weekly';
+    target_days: number;
+    conversationContext?: string;
+  };
+  coachingMetadata?: {
+    interventionType: string;
+    hasProtocolReference: boolean;
+    canRequestFeedback: boolean;
+    interactionId?: string;
+  };
+}
+
+export interface VoiceRecording {
+  blob: Blob;
+  duration: number;
+  transcript?: string;
+}
+
+export interface FileAttachment {
+  file: File;
+  type: 'image' | 'document';
+  preview?: string;
 }

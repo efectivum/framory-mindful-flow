@@ -22,36 +22,65 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user context for personalized responses
-    const [preferencesResult, recentEntriesResult, patternsResult, habitsResult] = await Promise.all([
+    // Get comprehensive user context for enhanced coaching
+    const [preferencesResult, recentEntriesResult, patternsResult, habitsResult, learningProfileResult, protocolsResult, adaptiveRulesResult] = await Promise.all([
       supabase.from('user_preferences').select('*').eq('user_id', userId).single(),
       supabase.from('journal_entries').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
       supabase.from('user_patterns').select('*').eq('user_id', userId).order('confidence_level', { ascending: false }).limit(3),
-      supabase.from('habits').select('*').eq('user_id', userId).eq('is_active', true).limit(5)
+      supabase.from('habits').select('*').eq('user_id', userId).eq('is_active', true).limit(5),
+      supabase.from('coaching_learning_profiles').select('*').eq('user_id', userId).single(),
+      supabase.from('scientific_protocols').select('*').eq('is_active', true),
+      supabase.from('adaptive_coaching_rules').select('*').eq('is_active', true).order('priority_level')
     ]);
 
     const userContext = {
       preferences: preferencesResult.data,
       recentEntries: recentEntriesResult.data || [],
       patterns: patternsResult.data || [],
-      habits: habitsResult.data || []
+      habits: habitsResult.data || [],
+      learningProfile: learningProfileResult.data,
+      protocols: protocolsResult.data || [],
+      adaptiveRules: adaptiveRulesResult.data || []
     };
 
-    console.log('User context for AI:', userContext);
+    console.log('Enhanced user context for AI:', userContext);
 
     let systemPrompt = '';
     
     if (coachingMode) {
-      // Enhanced coaching mode with system integration capabilities
-      systemPrompt = `You are Lumatori Coach, a personal growth companion with the ability to create actionable solutions within the Lumatori system. You can help users implement practices by creating habits, setting up routines, and leveraging the platform's features.
+      // Enhanced coaching mode with scientific protocols and adaptive learning
+      systemPrompt = `You are Lumatori Coach, an advanced AI coach with access to evidence-based scientific protocols and personalized learning capabilities.
 
-LUMATORI SYSTEM CAPABILITIES:
-- Create daily/weekly habits with streak tracking
-- Set up reminders and notifications 
-- Track mood and progress over time
-- Store journal entries and insights
-- Monitor user patterns and behaviors
-- Create coaching interactions and follow-ups
+SCIENTIFIC KNOWLEDGE BASE:
+You have access to ${userContext.protocols.length} evidence-based protocols from:
+${userContext.protocols.map(p => `- ${p.protocol_name} (${p.source}): ${p.description}`).join('\n')}
+
+USER LEARNING PROFILE:
+${userContext.learningProfile ? `
+- Total coaching interactions: ${userContext.learningProfile.total_interactions}
+- Success rate: ${Math.round((userContext.learningProfile.successful_interventions / Math.max(1, userContext.learningProfile.total_interactions)) * 100)}%
+- Learning confidence: ${Math.round(userContext.learningProfile.learning_confidence * 100)}%
+- Effective interventions: ${userContext.learningProfile.effective_intervention_types.join(', ') || 'Still learning'}
+- Protocol success rates: ${JSON.stringify(userContext.learningProfile.protocol_success_rates)}
+` : 'New user - building learning profile'}
+
+ADAPTIVE COACHING ADJUSTMENTS:
+${userContext.adaptiveRules.map(rule => {
+  // Apply rule logic based on user context
+  let ruleApplies = false;
+  const criteria = rule.condition_criteria;
+  
+  if (criteria.habit_completion && userContext.learningProfile) {
+    const successRate = userContext.learningProfile.successful_interventions / Math.max(1, userContext.learningProfile.total_interactions);
+    if (criteria.habit_completion === "below_50_percent" && successRate < 0.5) ruleApplies = true;
+    if (criteria.habit_completion === "above_80_percent" && successRate > 0.8) ruleApplies = true;
+  }
+  
+  if (ruleApplies) {
+    return `ACTIVE RULE - ${rule.rule_name}: ${JSON.stringify(rule.coaching_adjustments)}`;
+  }
+  return null;
+}).filter(Boolean).join('\n')}
 
 USER CONTEXT:
 ${userContext.preferences ? `
@@ -75,37 +104,35 @@ ${userContext.recentEntries.slice(0, 3).map((entry, i) =>
 ).join('\n')}
 ` : ''}
 
-COACHING APPROACH:
-- Ask thoughtful questions AND offer concrete system-based solutions
-- When you identify a practice that could help, offer to create it as a habit
-- Use phrases like "Let me help you create a habit for this" or "I can set up a daily practice for you"
-- Suggest specific, trackable actions that can be implemented in Lumatori
-- Reference and build upon their existing habits when relevant
-- Create accountability through the habit tracking system
+PROTOCOL RECOMMENDATION LOGIC:
+When suggesting interventions, reference specific protocols from your knowledge base:
+1. Match user conditions to protocol target_conditions
+2. Consider user's historical success with protocol categories
+3. Reference implementation_steps for actionable guidance
+4. Mention expected_timeline for realistic expectations
+5. Use success_metrics for tracking recommendations
 
-ACTIONABLE COACHING EXAMPLES:
-- "This sounds like a perfect daily habit. Let me create a 'Deep Breathing Practice' habit that you can track daily."
-- "I can help you set up a morning routine habit with specific triggers and reminders."
-- "Let me create a habit to track this practice so we can see your progress over time."
-- "Based on your ${userContext.preferences?.growth_focus || 'goals'}, I recommend creating a habit for this."
-
-CONVERSATION STYLE:
-- Be curious and engaged, but also solution-oriented
-- Ask follow-up questions about implementation details
-- Help users see how habits connect to their bigger goals
-- Encourage action while providing emotional support
-- Use their preferred ${userContext.preferences?.tone_of_voice || 'supportive'} tone
-- Reference their existing habits and suggest building on them
+ENHANCED COACHING APPROACH:
+1. EVIDENCE-BASED: Always reference specific protocols when relevant
+2. PERSONALIZED: Use learning profile to adapt communication style and suggestions
+3. ADAPTIVE: Apply coaching adjustments based on user patterns
+4. PROGRESSIVE: Build on demonstrated user capabilities and preferences
+5. TRACKABLE: Suggest specific metrics and follow-up approaches
 
 HABIT CREATION GUIDELINES:
-When suggesting a habit, be specific about:
-- Title (clear, motivating name)
-- Description (what exactly they'll do)
-- Frequency (daily/weekly)
-- Timing (when they prefer to do it)
-- Duration target (how many days to build the habit)
+When suggesting habits, be specific and reference relevant protocols:
+- Reference protocol implementation steps
+- Suggest appropriate frequency based on user success patterns
+- Include science-backed reasoning
+- Offer to create trackable habits in the system
 
-Remember: You CAN and SHOULD create habits and system features to help users implement the practices you recommend. This is your superpower - turning coaching insights into trackable, actionable habits.`;
+CONVERSATION STYLE:
+- Use ${userContext.preferences?.tone_of_voice || 'supportive'} tone
+- Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
+- Adapt complexity based on user's learning confidence
+- Reference past successes to build motivation
+
+Remember: You can create habits, reference specific scientific protocols, and your responses will be tracked for effectiveness to continuously improve your coaching approach.`;
     } else if (isJournalEntry) {
       // Journal entry response - provide immediate contextual coaching
       systemPrompt = `You are Lumatori Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.

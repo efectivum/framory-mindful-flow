@@ -1,88 +1,93 @@
 
-import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { User } from 'lucide-react';
+import React, { useState } from 'react';
 import { Message } from '@/types/chat';
-import { CoachHabitSuggestion } from '@/components/CoachHabitSuggestion';
+import { CoachHabitSuggestion } from './CoachHabitSuggestion';
+import { CoachingFeedbackDialog } from './CoachingFeedbackDialog';
+import { Button } from './ui/button';
+import { ThumbsUp, MessageSquare } from 'lucide-react';
 
 interface ChatMessageProps {
   message: Message;
+  onFeedback?: (data: {
+    satisfaction: number;
+    interventionType: string;
+    successMetric: string;
+    notes?: string;
+  }) => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const [refreshKey, setRefreshKey] = React.useState(0);
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback }) => {
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
-  const handleHabitCreated = () => {
-    // Force a refresh to update the display
-    setRefreshKey(prev => prev + 1);
+  const isBot = message.type === 'bot';
+  const hasCoachingMetadata = message.coachingMetadata?.canRequestFeedback;
+
+  const handleFeedbackSubmit = (feedbackData: {
+    satisfaction: number;
+    interventionType: string;
+    successMetric: string;
+    notes?: string;
+  }) => {
+    if (onFeedback) {
+      onFeedback({
+        ...feedbackData,
+        interventionType: message.coachingMetadata?.interventionType || feedbackData.interventionType,
+      });
+    }
+    setShowFeedbackDialog(false);
   };
 
-  if (message.type === 'user') {
-    return (
-      <div className="flex items-start gap-3 self-end max-w-[85%] sm:max-w-[70%]">
-        <div className="bg-blue-600 text-white px-4 py-2.5 rounded-xl rounded-br-md shadow-sm order-2">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {message.content}
-          </p>
-          {message.activityType && (
-            <Badge variant="secondary" className="mt-2 text-xs bg-blue-700 text-blue-100">
-              {message.activityType}
-            </Badge>
-          )}
-          {message.attachmentUrl && (
-            <div className="mt-2">
-              {message.attachmentType?.startsWith('image/') ? (
-                <img
-                  src={message.attachmentUrl}
-                  alt="attachment"
-                  className="max-w-full h-auto rounded border border-gray-700"
-                />
-              ) : (
-                <div className="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-gray-200 text-xs">
-                  File attachment
-                </div>
-              )}
-            </div>
-          )}
-          <div className="text-xs text-blue-200 mt-1.5 opacity-75">
-            {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-          </div>
-        </div>
-        <Avatar className="w-8 h-8 order-1">
-          <AvatarFallback className="bg-gray-600 text-white text-xs">
-            <User className="w-4 h-4" />
-          </AvatarFallback>
-        </Avatar>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-start gap-3 self-start max-w-[85%] sm:max-w-[70%]">
-      <Avatar className="w-8 h-8">
-        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">AI</AvatarFallback>
-      </Avatar>
-      <div className="space-y-2 flex-1">
-        <div className="bg-[#161c26] text-gray-200 px-4 py-2.5 rounded-xl rounded-bl-md border border-gray-700 shadow-sm">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {message.content}
-          </p>
-          <div className="text-xs text-gray-500 mt-1.5">
-            {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-          </div>
-        </div>
+    <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
+      <div
+        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+          isBot
+            ? 'bg-gray-100 text-gray-800'
+            : 'bg-blue-600 text-white'
+        }`}
+      >
+        <div className="whitespace-pre-wrap">{message.content}</div>
         
-        {/* Show habit suggestion if present */}
+        {/* Habit Suggestion */}
         {message.habitSuggestion && (
-          <CoachHabitSuggestion 
-            key={refreshKey}
-            suggestion={message.habitSuggestion}
-            onHabitCreated={handleHabitCreated}
-          />
+          <div className="mt-3">
+            <CoachHabitSuggestion suggestion={message.habitSuggestion} />
+          </div>
         )}
+
+        {/* Coaching Feedback Button */}
+        {isBot && hasCoachingMetadata && onFeedback && (
+          <div className="mt-3 flex justify-start">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFeedbackDialog(true)}
+              className="text-xs text-gray-600 hover:text-gray-800 p-1 h-auto"
+            >
+              <ThumbsUp className="h-3 w-3 mr-1" />
+              Rate this coaching
+            </Button>
+          </div>
+        )}
+
+        <div className="text-xs opacity-70 mt-1">
+          {message.timestamp.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}
+        </div>
       </div>
+
+      {/* Feedback Dialog */}
+      {showFeedbackDialog && message.coachingMetadata && (
+        <CoachingFeedbackDialog
+          isOpen={showFeedbackDialog}
+          onClose={() => setShowFeedbackDialog(false)}
+          onSubmitFeedback={handleFeedbackSubmit}
+          interventionType={message.coachingMetadata.interventionType}
+          coachingContent={message.content}
+        />
+      )}
     </div>
   );
 };

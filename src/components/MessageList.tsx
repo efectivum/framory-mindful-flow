@@ -1,15 +1,20 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Message } from '@/types/chat';
+import { LoadingSpinner } from './ui/loading-spinner';
 
 interface MessageListProps {
   messages: Message[];
   isDetectingIntent: boolean;
   isGeneratingResponse: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  onFeedback?: (data: {
+    satisfaction: number;
+    interventionType: string;
+    successMetric: string;
+    notes?: string;
+  }) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -17,25 +22,25 @@ export const MessageList: React.FC<MessageListProps> = ({
   isDetectingIntent,
   isGeneratingResponse,
   messagesEndRef,
+  onFeedback,
 }) => {
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#202734]">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
+        <ChatMessage 
+          key={message.id} 
+          message={message} 
+          onFeedback={onFeedback}
+        />
       ))}
       
       {(isDetectingIntent || isGeneratingResponse) && (
-         <div className="flex items-center gap-3 self-start py-2">
-          <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">AI</AvatarFallback>
-          </Avatar>
-          <div className="bg-[#161c26] text-gray-200 px-4 py-2.5 rounded-xl rounded-bl-md border border-gray-700 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-              <span className="text-sm text-gray-400">
-                {isDetectingIntent ? 'Understanding...' : (isGeneratingResponse ? 'Thinking...' : 'Processing...')}
-              </span>
-            </div>
+        <div className="flex justify-start mb-4">
+          <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-2 flex items-center space-x-2">
+            <LoadingSpinner size="sm" />
+            <span className="text-sm">
+              {isDetectingIntent ? 'Understanding...' : 'Thinking...'}
+            </span>
           </div>
         </div>
       )}

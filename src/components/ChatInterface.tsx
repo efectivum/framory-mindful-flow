@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
@@ -74,6 +73,27 @@ export const ChatInterface = () => {
     await messageManager.handleSend(addMessage);
   };
 
+  // Handle coaching feedback
+  const handleCoachingFeedback = (feedbackData: {
+    satisfaction: number;
+    interventionType: string;
+    successMetric: string;
+    notes?: string;
+  }) => {
+    // Use the conversation manager's feedback function
+    if (conversationManager.recordUserFeedback) {
+      // For now, we'll create a dummy interaction ID since we don't have it
+      const interactionId = `interaction_${Date.now()}`;
+      conversationManager.recordUserFeedback(
+        interactionId,
+        feedbackData.satisfaction,
+        feedbackData.interventionType,
+        feedbackData.successMetric,
+        feedbackData.notes
+      );
+    }
+  };
+
   const handleJournalSave = (content: string) => {
     createEntry({
       content: content,
@@ -120,6 +140,7 @@ export const ChatInterface = () => {
         isDetectingIntent={messageManager.isDetectingIntent}
         isGeneratingResponse={conversationManager.isGeneratingResponse}
         messagesEndRef={messagesEndRef}
+        onFeedback={handleCoachingFeedback}
       />
       <ChatInput
         inputText={messageManager.inputText}

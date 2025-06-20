@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useCoachHabitSuggestion } from '@/hooks/useCoachHabitSuggestion';
+import { useEnhancedCoaching } from '@/hooks/useEnhancedCoaching';
 import { Message } from '@/types/chat';
 
 interface ConversationState {
@@ -25,6 +26,7 @@ export const useConversationManager = ({
   const { generateResponse, isGeneratingResponse } = useConversationalAI();
   const journalSuggestion = useJournalSuggestion();
   const { parseHabitFromCoachResponse } = useCoachHabitSuggestion();
+  const { generateEnhancedPrompt, recordUserFeedback } = useEnhancedCoaching();
 
   const isJournalConfirmation = (message: string): boolean => {
     const confirmationPatterns = [
@@ -57,9 +59,14 @@ export const useConversationManager = ({
 
     // For coaching mode, use enhanced logic
     if (isCoachingMode) {
-      console.log('ConversationManager: Using coaching mode');
+      console.log('ConversationManager: Using enhanced coaching mode');
       const updatedHistory = [...conversationHistory, { role: 'user' as const, content: inputText }];
-      const aiResponse = await generateResponse(inputText, updatedHistory, false, 'coaching');
+      
+      // Generate enhanced prompt with scientific protocols and personalization
+      const enhancedPrompt = generateEnhancedPrompt(inputText, updatedHistory);
+      
+      // Use enhanced prompt for AI response
+      const aiResponse = await generateResponse(enhancedPrompt, updatedHistory, false, 'coaching');
       
       if (aiResponse) {
         // Only check for habit suggestions if the response explicitly offers to create one
@@ -87,6 +94,12 @@ export const useConversationManager = ({
           content: aiResponse,
           timestamp: new Date(),
           habitSuggestion: habitSuggestion || undefined,
+          // Add coaching metadata for feedback tracking
+          coachingMetadata: {
+            interventionType: detectInterventionType(aiResponse),
+            hasProtocolReference: hasProtocolReference(aiResponse),
+            canRequestFeedback: true,
+          },
         };
         onMessageAdd(botResponse);
         setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
@@ -135,9 +148,48 @@ export const useConversationManager = ({
     onInputFocus();
   };
 
+  // Helper function to detect intervention type from AI response
+  const detectInterventionType = (response: string): string => {
+    const lowerResponse = response.toLowerCase();
+    
+    if (lowerResponse.includes('breathing') || lowerResponse.includes('breathe')) {
+      return 'breathing_technique';
+    }
+    if (lowerResponse.includes('habit') || lowerResponse.includes('routine')) {
+      return 'habit_coaching';
+    }
+    if (lowerResponse.includes('sleep') || lowerResponse.includes('rest')) {
+      return 'sleep_optimization';
+    }
+    if (lowerResponse.includes('focus') || lowerResponse.includes('concentration')) {
+      return 'focus_enhancement';
+    }
+    if (lowerResponse.includes('stress') || lowerResponse.includes('anxiety')) {
+      return 'stress_management';
+    }
+    if (lowerResponse.includes('thought') || lowerResponse.includes('thinking')) {
+      return 'cognitive_restructuring';
+    }
+    
+    return 'general_coaching';
+  };
+
+  // Helper function to check if response references scientific protocols
+  const hasProtocolReference = (response: string): boolean => {
+    const protocolKeywords = [
+      'huberman', 'protocol', 'research', 'study', 'evidence',
+      'atomic habits', 'cognitive behavioral', 'scientific'
+    ];
+    
+    return protocolKeywords.some(keyword => 
+      response.toLowerCase().includes(keyword)
+    );
+  };
+
   return {
     handleConversation,
     isGeneratingResponse,
-    conversationHistory
+    conversationHistory,
+    recordUserFeedback,
   };
 };
