@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import {
   Calendar,
   BarChart3
 } from 'lucide-react';
-import type { Habit } from '@/hooks/useHabits';
+import type { Habit } from '@/types/habits';
 
 interface HabitCardProps {
   habit: Habit;

@@ -12,7 +12,7 @@ import { EditHabitDialog } from '@/components/EditHabitDialog';
 import { HabitProgressModal } from '@/components/HabitProgressModal';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Habit } from '@/hooks/useHabits';
+import type { Habit } from '@/types/habits';
 import { StatCardRow } from '@/components/StatCardRow';
 
 const Goals = () => {
