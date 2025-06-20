@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useChatSessions } from '@/hooks/useChatSessions';
@@ -23,6 +23,7 @@ export const ChatInterface = () => {
   const [chatContext, setChatContext] = useState<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [hasAddedInitialMessage, setHasAddedInitialMessage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -46,15 +47,15 @@ export const ChatInterface = () => {
     error: messagesError 
   } = useChatMessages(currentSession?.id || null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  const handleContextReady = (context: any) => {
+  const handleContextReady = useCallback((context: any) => {
     try {
       console.log('ChatInterface: Context ready', context);
       setChatContext(context);
@@ -64,11 +65,18 @@ export const ChatInterface = () => {
       console.error('ChatInterface: Error setting context', error);
       setInitializationError('Failed to initialize chat context');
     }
-  };
+  }, []);
 
-  const handleInitialMessage = async (message: Message) => {
+  const handleInitialMessage = useCallback(async (message: Message) => {
+    // Prevent adding the same initial message multiple times
+    if (hasAddedInitialMessage) {
+      console.log('ChatInterface: Initial message already added, skipping');
+      return;
+    }
+
     try {
       console.log('ChatInterface: Adding initial message', message);
+      setHasAddedInitialMessage(true);
       
       // Create new session if none exists
       if (!currentSession) {
@@ -92,13 +100,13 @@ export const ChatInterface = () => {
       }
     } catch (error) {
       console.error('ChatInterface: Error handling initial message:', error);
-      // Don't set initialization error - continue with basic functionality
+      setHasAddedInitialMessage(false); // Reset on error so it can be retried
     }
-  };
+  }, [hasAddedInitialMessage, currentSession, chatContext, createSession, addMessage]);
 
-  const handleInputFocus = () => {
+  const handleInputFocus = useCallback(() => {
     textAreaRef.current?.focus();
-  };
+  }, []);
 
   // Initialize conversation manager
   const conversationManager = useSimpleConversationManager({
@@ -112,7 +120,7 @@ export const ChatInterface = () => {
     textAreaRef
   });
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!messageManager || !conversationManager) {
       console.error('ChatInterface: Managers not initialized');
       return;
@@ -138,10 +146,10 @@ export const ChatInterface = () => {
     } catch (error) {
       console.error('ChatInterface: Error sending message:', error);
     }
-  };
+  }, [messageManager, conversationManager, currentSession, chatContext, createSession]);
 
   // Handle coaching feedback
-  const handleCoachingFeedback = (feedbackData: {
+  const handleCoachingFeedback = useCallback((feedbackData: {
     satisfaction: number;
     interventionType: string;
     successMetric: string;
@@ -157,9 +165,9 @@ export const ChatInterface = () => {
         feedbackData.notes
       );
     }
-  };
+  }, [conversationManager]);
 
-  const handleJournalSave = (content: string) => {
+  const handleJournalSave = useCallback((content: string) => {
     createEntry({
       content: content,
       title: messageManager?.selectedActivity ? `${messageManager.selectedActivity} entry` : undefined,
@@ -173,9 +181,9 @@ export const ChatInterface = () => {
     };
     addMessage(botResponse);
     journalSuggestion.clearSuggestion();
-  };
+  }, [createEntry, messageManager, addMessage, journalSuggestion]);
 
-  const handleJournalCancel = () => {
+  const handleJournalCancel = useCallback(() => {
     const botResponse: Message = {
       id: Date.now().toString(),
       type: 'bot',
@@ -184,26 +192,32 @@ export const ChatInterface = () => {
     };
     addMessage(botResponse);
     journalSuggestion.clearSuggestion();
-  };
+  }, [addMessage, journalSuggestion]);
 
-  const handleActivitySelect = (activity: string) => {
+  const handleActivitySelect = useCallback((activity: string) => {
     if (messageManager) {
       messageManager.setSelectedActivity(activity);
     }
     setShowActivitySelector(false);
     textAreaRef.current?.focus();
-  };
+  }, [messageManager]);
 
-  const handleRetry = async () => {
+  const handleRetry = useCallback(async () => {
     try {
       setInitializationError(null);
       setIsInitialized(false);
+      setHasAddedInitialMessage(false);
       // Simple retry - just reload
       window.location.reload();
     } catch (error) {
       console.error('ChatInterface: Retry failed:', error);
     }
-  };
+  }, []);
+
+  // Reset initial message flag when session changes
+  useEffect(() => {
+    setHasAddedInitialMessage(false);
+  }, [currentSession?.id]);
 
   // Show loading state only while sessions are loading (simplified condition)
   if (sessionsLoading) {
