@@ -13,6 +13,14 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorId?: string;
+}
+
+// Global error tracking function
+declare global {
+  interface Window {
+    logError?: (error: Error | string, severity?: string, context?: any) => void;
+  }
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -27,11 +35,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error Boundary caught an error:', error, errorInfo);
+    
+    // Generate error ID for tracking
+    const errorId = `boundary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.setState({ errorId });
+
+    // Log to our error tracking system if available
+    if (window.logError) {
+      window.logError(error, 'critical', {
+        errorInfo,
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+        errorId,
+      });
+    }
+
     this.props.onError?.(error, errorInfo);
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, error: undefined, errorId: undefined });
   };
 
   handleReload = () => {
@@ -57,6 +80,11 @@ export class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-300 text-center text-sm">
                 We encountered an unexpected error. Don't worry, your data is safe.
               </p>
+              {this.state.errorId && (
+                <p className="text-gray-400 text-center text-xs">
+                  Error ID: {this.state.errorId}
+                </p>
+              )}
               <div className="flex gap-2">
                 <Button 
                   onClick={this.handleReset}

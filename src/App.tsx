@@ -10,6 +10,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { AppRoutes } from "@/components/AppRoutes";
+import { useErrorTracking } from "@/hooks/useErrorTracking";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,26 +32,57 @@ const queryClient = new QueryClient({
   },
 });
 
+// Error tracking integration component
+const ErrorTrackingProvider = ({ children }: { children: React.ReactNode }) => {
+  const { logError } = useErrorTracking();
+
+  useEffect(() => {
+    // Make error logging available globally
+    window.logError = logError;
+
+    // Set up query client error handling
+    queryClient.setMutationDefaults(['*'], {
+      onError: (error) => {
+        logError(error as Error, 'medium', { source: 'mutation' });
+      },
+    });
+
+    queryClient.setQueryDefaults(['*'], {
+      onError: (error) => {
+        logError(error as Error, 'medium', { source: 'query' });
+      },
+    });
+
+    return () => {
+      delete window.logError;
+    };
+  }, [logError]);
+
+  return <>{children}</>;
+};
+
 const App = () => {
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {
         console.error('Global error caught:', error, errorInfo);
-        // Here you could send to an error reporting service
+        // Error tracking is handled in the ErrorBoundary component itself
       }}
     >
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SubscriptionProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <NetworkStatusIndicator />
-              <PWAInstallBanner />
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </TooltipProvider>
+            <ErrorTrackingProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <NetworkStatusIndicator />
+                <PWAInstallBanner />
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </TooltipProvider>
+            </ErrorTrackingProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </QueryClientProvider>
