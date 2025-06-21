@@ -42,33 +42,61 @@ export const useLocalChatState = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
-
-  // Initialize with welcome message
-  useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: 'welcome-' + Date.now(),
-        type: 'bot',
-        content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
-        timestamp: new Date(),
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, [messages.length]);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Load sessions on mount
   useEffect(() => {
-    if (user) {
-      loadSessions();
+    if (user && !hasInitialized) {
+      initializeChatState();
+      setHasInitialized(true);
+    }
+  }, [user, hasInitialized]);
+
+  const initializeChatState = async () => {
+    await loadSessions();
+    
+    // Try to restore or create a session
+    const savedSessionId = localStorage.getItem('current-chat-session');
+    
+    if (savedSessionId) {
+      // Check if saved session still exists
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('id', savedSessionId)
+        .eq('user_id', user!.id)
+        .maybeSingle();
       
-      // Try to restore session from localStorage
-      const savedSessionId = localStorage.getItem('current-chat-session');
-      if (savedSessionId) {
+      if (!error && data) {
         setCurrentSessionId(savedSessionId);
-        loadMessagesForSession(savedSessionId);
+        await loadMessagesForSession(savedSessionId);
+        return;
+      } else {
+        // Remove invalid session from localStorage
+        localStorage.removeItem('current-chat-session');
       }
     }
-  }, [user]);
+    
+    // Look for an existing active session
+    const { data: activeSessions } = await supabase
+      .from('chat_sessions')
+      .select('id, title, created_at, updated_at')
+      .eq('user_id', user!.id)
+      .eq('context_type', 'coaching')
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    
+    if (activeSessions && activeSessions.length > 0) {
+      const activeSession = activeSessions[0];
+      setCurrentSessionId(activeSession.id);
+      localStorage.setItem('current-chat-session', activeSession.id);
+      await loadMessagesForSession(activeSession.id);
+    } else {
+      // Only create a new session if none exists
+      await createNewSession();
+    }
+  };
 
   const loadSessions = async () => {
     if (!user) return;
@@ -120,15 +148,27 @@ export const useLocalChatState = () => {
         };
       });
 
-      setMessages(convertedMessages);
+      // Only add welcome message if no messages exist
+      if (convertedMessages.length === 0) {
+        const welcomeMessage: Message = {
+          id: 'welcome-' + Date.now(),
+          type: 'bot',
+          content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+          timestamp: new Date(),
+        };
+        setMessages([welcomeMessage]);
+      } else {
+        setMessages(convertedMessages);
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
     }
   };
 
   const createNewSession = async (title: string = 'New Conversation') => {
-    if (!user) return null;
+    if (!user || isCreatingSession) return null;
 
+    setIsCreatingSession(true);
     try {
       const { data, error } = await supabase
         .from('chat_sessions')
@@ -151,26 +191,10 @@ export const useLocalChatState = () => {
       };
 
       setSessions(prev => [newSession, ...prev]);
-      return newSession;
-    } catch (error) {
-      console.error('Error creating session:', error);
-      return null;
-    }
-  };
-
-  const switchToSession = async (sessionId: string) => {
-    setCurrentSessionId(sessionId);
-    localStorage.setItem('current-chat-session', sessionId);
-    await loadMessagesForSession(sessionId);
-  };
-
-  const startNewChat = async () => {
-    const session = await createNewSession();
-    if (session) {
-      setCurrentSessionId(session.id);
-      localStorage.setItem('current-chat-session', session.id);
+      setCurrentSessionId(newSession.id);
+      localStorage.setItem('current-chat-session', newSession.id);
       
-      // Reset to welcome message
+      // Set welcome message for new session
       const welcomeMessage: Message = {
         id: 'welcome-' + Date.now(),
         type: 'bot',
@@ -178,6 +202,28 @@ export const useLocalChatState = () => {
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
+      
+      return newSession;
+    } catch (error) {
+      console.error('Error creating session:', error);
+      return null;
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  const switchToSession = async (sessionId: string) => {
+    if (sessionId === currentSessionId) return;
+    
+    setCurrentSessionId(sessionId);
+    localStorage.setItem('current-chat-session', sessionId);
+    await loadMessagesForSession(sessionId);
+  };
+
+  const startNewChat = async () => {
+    const session = await createNewSession();
+    if (!session) {
+      console.error('Failed to create new session');
     }
   };
 
@@ -221,40 +267,12 @@ export const useLocalChatState = () => {
         console.error('Background sync failed:', error);
         // Don't show error to user - message is already in UI
       }
-    } else if (user && !currentSessionId) {
-      // Create session lazily on first message
-      const session = await createNewSession();
-      if (session) {
-        setCurrentSessionId(session.id);
-        localStorage.setItem('current-chat-session', session.id);
-        
-        // Retry saving the message
-        try {
-          const metadata: MessageMetadata = {
-            activityType: message.activityType,
-            isJournalEntry: message.isJournalEntry,
-            attachmentUrl: message.attachmentUrl,
-            attachmentType: message.attachmentType,
-            habitSuggestion: message.habitSuggestion,
-            coachingMetadata: message.coachingMetadata
-          };
-
-          await supabase
-            .from('chat_messages')
-            .insert({
-              id: message.id,
-              session_id: session.id,
-              user_id: user.id,
-              type: message.type,
-              content: message.content,
-              metadata: metadata as any
-            });
-        } catch (error) {
-          console.error('Failed to save message after session creation:', error);
-        }
-      }
+    } else if (user && !currentSessionId && !isCreatingSession) {
+      // Create session if none exists (should rarely happen due to initialization)
+      console.warn('No current session, creating one...');
+      await createNewSession();
     }
-  }, [user, currentSessionId]);
+  }, [user, currentSessionId, isCreatingSession]);
 
   return {
     messages,
