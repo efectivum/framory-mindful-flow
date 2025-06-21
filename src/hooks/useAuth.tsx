@@ -255,7 +255,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, userData: UserData = {}) => {
     // Automatically detect timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth/confirm`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -329,7 +329,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resendEmailConfirmation = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth/confirm`;
     
     const { data, error } = await supabase.auth.resend({
       type: 'signup',

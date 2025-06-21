@@ -15,6 +15,7 @@ import Profile from '@/pages/Profile';
 import Resources from '@/pages/Resources';
 import NotFound from '@/pages/NotFound';
 import PremiumSuccess from '@/pages/PremiumSuccess';
+import EmailConfirmation from '@/pages/EmailConfirmation';
 import { ChallengeDetail } from '@/components/ChallengeDetail';
 
 export const AppRoutes = () => {
@@ -22,6 +23,7 @@ export const AppRoutes = () => {
     <Routes>
       {/* Public routes */}
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/confirm" element={<EmailConfirmation />} />
       <Route path="/complete-signup" element={<CompleteSignup />} />
       <Route path="/premium-success" element={<PremiumSuccess />} />
       
