@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, Sparkles, AlertCircle, RefreshCw, LogIn, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface PremiumGateWithFallbackProps {
   feature: string;
@@ -23,7 +23,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
   showPreview = false,
   className = ""
 }) => {
-  const { user, isPremium, isBeta, isAdmin, refreshSubscription, createCheckout } = useAuth();
+  const { user, isPremium, isBeta, isAdmin, refreshSubscription, createCheckout, loading } = useAuth();
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -35,6 +35,23 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
       setIsRefreshing(false);
     }
   };
+
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className={`flex items-center justify-center h-screen ${className}`}>
+        <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
+            <h3 className="text-white font-medium mb-2">Loading {feature}</h3>
+            <p className="text-gray-400 text-sm">
+              Checking your access permissions...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // If user is not authenticated, show login prompt
   if (!user) {
@@ -63,7 +80,7 @@ export const PremiumGateWithFallback: React.FC<PremiumGateWithFallbackProps> = (
     );
   }
 
-  // Allow access for admin users, premium users, and beta users - no loading needed
+  // Allow access for admin users, premium users, and beta users
   if (isAdmin || isPremium || isBeta) {
     return <>{children}</>;
   }

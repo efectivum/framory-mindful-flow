@@ -4,6 +4,7 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
+import { useAuth } from '@/hooks/useAuth';
 import { Message } from '@/types/chat';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
@@ -12,12 +13,13 @@ import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { ChatLoadingState } from './chat/ChatLoadingState';
-import { ChatOfflineState } from './chat/ChatOfflineState';
+import { LoadingSpinner } from './ui/loading-spinner';
 
 export const ChatInterface = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { loading: authLoading } = useAuth();
   
   // Simple state management
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,6 +30,7 @@ export const ChatInterface = () => {
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,9 +59,21 @@ export const ChatInterface = () => {
     setMessages(prev => [...prev, message]);
   }, []);
 
-  // Initialize with welcome message
+  // Wait for auth to be stable before initializing
   useEffect(() => {
-    if (isInitialized) return;
+    if (authLoading) return;
+    
+    // Small delay to prevent flickering
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [authLoading]);
+
+  // Initialize with welcome message only after loading is complete
+  useEffect(() => {
+    if (isLoading || isInitialized) return;
 
     let initialMessage: Message;
 
@@ -103,9 +118,9 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
       setInputText(emotionPrompt);
       setTimeout(() => {
         textAreaRef.current?.focus();
-      }, 100);
+      }, 200);
     }
-  }, [isInitialized, isCoachingMode, journalContext, emotionFromParams]);
+  }, [isLoading, isInitialized, isCoachingMode, journalContext, emotionFromParams]);
 
   // Handle sending messages
   const handleSend = useCallback(async () => {
@@ -273,6 +288,21 @@ What aspect of this would you like to explore more? What feelings or thoughts ca
   }) => {
     console.log('Coaching feedback received:', feedbackData);
   }, []);
+
+  // Show loading state while initializing
+  if (isLoading || authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#171c26]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <h3 className="text-white font-medium mb-2">Loading Coach</h3>
+          <p className="text-gray-400 text-sm">
+            Setting up your coaching session...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ChatErrorBoundary>
