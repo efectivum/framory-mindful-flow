@@ -1,8 +1,6 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import Index from '@/pages/Index';
-import MobileIndex from '@/pages/MobileIndex';
 import Auth from '@/pages/Auth';
 import CompleteSignup from '@/pages/CompleteSignup';
 import ConversationalOnboarding from '@/pages/ConversationalOnboarding';
@@ -32,12 +30,7 @@ export const AppRoutes = () => {
         path="/"
         element={
           <ProtectedRoute>
-            <div className="block md:hidden">
-              <MobileIndex />
-            </div>
-            <div className="hidden md:block">
-              <Index />
-            </div>
+            <Index />
           </ProtectedRoute>
         }
       />
