@@ -11,7 +11,7 @@ export const QuickAI: React.FC = () => {
       <h3 className="text-lg font-semibold text-white">Have something on your mind?</h3>
       <p className="text-gray-400 text-sm mb-4">Your AI assistant is here to help you unpack your thoughts.</p>
       <Button asChild className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <Link to="/chat">Talk to Lumatori Assistant</Link>
+        <Link to="/coach">Talk to Coach</Link>
       </Button>
     </div>
   );
