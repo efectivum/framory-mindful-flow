@@ -52,28 +52,36 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const adjustTextareaHeight = useCallback(() => {
     if (textAreaRef.current) {
       const textarea = textAreaRef.current;
-      // Reset height to auto to get the correct scrollHeight
+      // Reset height to calculate scrollHeight properly
       textarea.style.height = 'auto';
-      // Calculate the new height
-      const newHeight = Math.min(Math.max(textarea.scrollHeight, 44), 120);
+      // Calculate new height with smooth constraints
+      const scrollHeight = textarea.scrollHeight;
+      const minHeight = 44; // Minimum height for mobile touch
+      const maxHeight = 120; // Maximum before scrolling
+      const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
       textarea.style.height = `${newHeight}px`;
     }
   }, [textAreaRef]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
-    // Defer height adjustment to next frame for smooth animation
-    requestAnimationFrame(adjustTextareaHeight);
+    // Use requestAnimationFrame for smooth height transitions
+    requestAnimationFrame(() => {
+      adjustTextareaHeight();
+    });
   };
 
-  // Auto-focus on mount and when not disabled
+  // Auto-focus management
   useEffect(() => {
     if (!isDetectingIntent && !isGeneratingResponse && textAreaRef.current) {
-      textAreaRef.current.focus();
+      // Small delay to ensure proper focus on mobile
+      setTimeout(() => {
+        textAreaRef.current?.focus();
+      }, 100);
     }
   }, [isDetectingIntent, isGeneratingResponse, textAreaRef]);
 
-  // Adjust height when inputText changes externally (like voice input)
+  // Adjust height when content changes externally
   useEffect(() => {
     adjustTextareaHeight();
   }, [inputText, adjustTextareaHeight]);
@@ -174,22 +182,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               onChange={handleInputChange}
               onKeyDown={handleKeyPress}
               placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Type your message..."}
-              className="w-full min-h-[44px] max-h-[120px] resize-none rounded-xl border border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none py-3 px-4 text-gray-100 placeholder:text-gray-400 touch-manipulation transition-all duration-200 ease-out"
+              className="w-full min-h-[44px] max-h-[120px] resize-none rounded-xl border border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none py-3 px-4 text-gray-100 placeholder:text-gray-400 touch-manipulation transition-all duration-200 ease-out overflow-y-auto"
               rows={1}
               disabled={isDisabled}
               style={{ 
                 fontSize: '16px',
                 height: '44px',
-                lineHeight: '1.4',
+                lineHeight: '1.5',
                 scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
+                msOverflowStyle: 'none',
+                WebkitScrollbar: 'none'
               }}
             />
-            <style jsx>{`
-              textarea::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
           </div>
 
           <VoiceButton
@@ -203,10 +207,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             disabled={!canSend}
             size="icon"
             className={cn(
-              "h-11 w-11 rounded-full shrink-0 shadow-sm min-h-[44px] min-w-[44px] touch-manipulation haptic-light transition-all duration-200",
+              "h-11 w-11 rounded-full shrink-0 shadow-sm min-h-[44px] min-w-[44px] touch-manipulation transition-all duration-200",
               canSend 
-                ? "bg-blue-600 hover:bg-blue-700 text-white" 
-                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                ? "bg-blue-600 hover:bg-blue-700 text-white scale-100" 
+                : "bg-gray-700 text-gray-400 cursor-not-allowed scale-95"
             )}
           >
             <Send className="w-5 h-5" />
