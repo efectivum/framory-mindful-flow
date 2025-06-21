@@ -24,7 +24,7 @@ export const MoodInsightCard: React.FC<MoodInsightCardProps> = ({
   const trendText = trend === 'up' ? 'Improving' : trend === 'down' ? 'Declining' : 'Stable';
 
   const frontContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="text-4xl font-light text-white">{averageMood.toFixed(1)}</div>
@@ -35,9 +35,9 @@ export const MoodInsightCard: React.FC<MoodInsightCardProps> = ({
         </div>
       </div>
       
-      <div className="flex-1">
+      <div className="flex-1 px-2">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={moodData}>
+          <LineChart data={moodData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <XAxis 
               dataKey="date" 
               axisLine={false}
@@ -59,7 +59,7 @@ export const MoodInsightCard: React.FC<MoodInsightCardProps> = ({
   );
 
   const backContent = (
-    <div className="space-y-4">
+    <div className="space-y-4 p-6">
       <h3 className="text-xl font-medium text-white mb-4">Mood Analysis</h3>
       
       <div className="space-y-4">

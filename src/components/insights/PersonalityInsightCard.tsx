@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FlippableCard } from '@/components/ui/FlippableCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,11 +48,11 @@ export const PersonalityInsightCard: React.FC<PersonalityInsightCardProps> = ({ 
           <div className="ml-auto text-xs text-gray-400">Hover to explore</div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1">
+      <CardContent className="flex-1 px-6 pb-6">
         <div className="space-y-4">
           <div className="text-center">
             <div className="text-3xl font-light text-white mb-2">
-              {topTraits[0]?.[1]}/100
+              {Math.round(topTraits[0]?.[1] || 0)}/100
             </div>
             <div className="text-gray-400 text-sm capitalize">
               {topTraits[0]?.[0].replace(/([A-Z])/g, ' $1').trim()}
@@ -68,10 +69,10 @@ export const PersonalityInsightCard: React.FC<PersonalityInsightCardProps> = ({ 
                   <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
-                      style={{ width: `${score}%` }}
+                      style={{ width: `${Math.round(score)}%` }}
                     />
                   </div>
-                  <span className="text-white font-medium text-sm w-8 text-right">{score}</span>
+                  <span className="text-white font-medium text-sm w-8 text-right">{Math.round(score)}</span>
                 </div>
               </div>
             ))}
@@ -89,7 +90,7 @@ export const PersonalityInsightCard: React.FC<PersonalityInsightCardProps> = ({ 
           Personality Analysis
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto">
+      <CardContent className="flex-1 overflow-y-auto px-6 pb-6">
         <div className="space-y-4">
           <div className="bg-gray-700/30 rounded-lg p-4">
             <h4 className="text-white font-medium mb-2">Your Strongest Trait</h4>
@@ -114,7 +115,7 @@ export const PersonalityInsightCard: React.FC<PersonalityInsightCardProps> = ({ 
                 <span className="text-gray-400 text-xs capitalize">
                   {trait.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
-                <span className="text-white font-medium text-xs">{score}/100</span>
+                <span className="text-white font-medium text-xs">{Math.round(score)}/100</span>
               </div>
             ))}
           </div>
