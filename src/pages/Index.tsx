@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -17,7 +16,7 @@ import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const { habits, completeHabit, isCompleting } = useHabits();
+  const { habits, completeHabit, isCompleting, todayCompletions } = useHabits();
   const { entries, stats } = useJournalEntries();
   const { greeting } = useTimeOfDay();
   const todayContent = useTodayContent();
@@ -25,9 +24,10 @@ const Index = () => {
   const [intentionInput, setIntentionInput] = React.useState('');
   const [isSettingIntention, setIsSettingIntention] = React.useState(false);
 
-  // Calculate habit stats
+  // Calculate habit stats and filter out completed habits
   const activeHabits = habits.filter(habit => habit.is_active);
-  const todaysHabits = activeHabits.slice(0, 3);
+  const uncompletedHabits = activeHabits.filter(habit => !todayCompletions.includes(habit.id));
+  const todaysHabits = uncompletedHabits.slice(0, 3);
 
   const handleSetIntention = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,40 +261,49 @@ const Index = () => {
         {/* Dynamic Homepage Features - Time-aware content */}
         <DynamicHomepageFeatures />
 
-        {/* Today's Habits with enhanced design */}
-        {todaysHabits.length > 0 && (
+        {/* Today's Habits with enhanced design and proper filtering */}
+        {activeHabits.length > 0 && (
           <ButtonErrorBoundary fallbackMessage="Habit tracking is not available">
             <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
               <CardContent className="p-6">
                 <h3 className="text-white font-medium mb-4 text-lg">Today's Focus</h3>
-                <div className="space-y-3">
-                  {todaysHabits.map(habit => (
-                    <div
-                      key={habit.id}
-                      className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-all duration-200 hover:bg-gray-700/40"
-                    >
-                      <span className="text-gray-200 font-medium">{habit.title}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-400">🔥 {habit.current_streak}d</span>
-                        <Button 
-                          size="sm" 
-                          className="bg-green-600 hover:bg-green-700 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg"
-                          onClick={() => handleHabitComplete(habit.id)}
-                          disabled={isCompleting}
-                        >
-                          {isCompleting ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                              Completing...
-                            </>
-                          ) : (
-                            'Complete'
-                          )}
-                        </Button>
+                
+                {todaysHabits.length > 0 ? (
+                  <div className="space-y-3">
+                    {todaysHabits.map(habit => (
+                      <div
+                        key={habit.id}
+                        className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-all duration-200 hover:bg-gray-700/40"
+                      >
+                        <span className="text-gray-200 font-medium">{habit.title}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-gray-400">🔥 {habit.current_streak}d</span>
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg"
+                            onClick={() => handleHabitComplete(habit.id)}
+                            disabled={isCompleting}
+                          >
+                            {isCompleting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                Completing...
+                              </>
+                            ) : (
+                              'Complete'
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">🎉</div>
+                    <p className="text-gray-300 font-medium mb-2">All habits completed!</p>
+                    <p className="text-gray-400 text-sm">Great job staying consistent today!</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </ButtonErrorBoundary>
