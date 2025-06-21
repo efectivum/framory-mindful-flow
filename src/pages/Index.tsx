@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FlippableCard } from '@/components/ui/FlippableCard';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
+import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -256,6 +257,9 @@ const Index = () => {
             />
           </div>
         </ButtonErrorBoundary>
+
+        {/* Dynamic Homepage Features - Time-aware content */}
+        <DynamicHomepageFeatures />
 
         {/* Today's Habits with enhanced design */}
         {todaysHabits.length > 0 && (
