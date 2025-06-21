@@ -205,7 +205,7 @@ export const useLocalChatState = () => {
             user_id: user.id,
             type: message.type,
             content: message.content,
-            metadata
+            metadata: metadata as any
           });
 
         // Update session's last_message_at
@@ -247,7 +247,7 @@ export const useLocalChatState = () => {
               user_id: user.id,
               type: message.type,
               content: message.content,
-              metadata
+              metadata: metadata as any
             });
         } catch (error) {
           console.error('Failed to save message after session creation:', error);
