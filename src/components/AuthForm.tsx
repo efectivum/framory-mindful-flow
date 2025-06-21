@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -19,6 +20,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
   const [loading, setLoading] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signUp, signIn, resetPassword, resendEmailConfirmation } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
         if (error) throw error;
         setEmailSent(true);
         toast({
-          title: "Account created!",
+          title: "Account created! ✨",
           description: "Please check your email to verify your account before signing in.",
         });
       } else {
@@ -50,7 +52,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           throw error;
         }
         toast({
-          title: "Welcome back!",
+          title: "Welcome back! 🎉",
           description: "You have been signed in successfully.",
         });
         navigate('/');
@@ -83,7 +85,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       if (error) throw error;
       
       toast({
-        title: "Password reset email sent",
+        title: "Password reset email sent ✉️",
         description: "Check your email for instructions to reset your password.",
       });
       setShowPasswordReset(false);
@@ -114,7 +116,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       if (error) throw error;
       
       toast({
-        title: "Confirmation email sent",
+        title: "Confirmation email sent ✉️",
         description: "Check your email for the verification link.",
       });
     } catch (error: any) {
@@ -130,16 +132,21 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
   if (emailSent && mode === 'signup') {
     return (
-      <div className="w-full max-w-md mx-auto text-center space-y-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Check your email</h1>
-          <p className="text-gray-600 mt-2">
-            We've sent a verification link to {email}
+      <div className="text-center space-y-6">
+        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-8 h-8 text-green-400" />
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-white">Check your email</h2>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            We've sent a verification link to<br />
+            <span className="text-blue-400 font-medium">{email}</span>
           </p>
         </div>
         
-        <div className="space-y-4">
-          <p className="text-sm text-gray-500">
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500 leading-relaxed">
             Click the link in your email to verify your account, then return here to sign in.
           </p>
           
@@ -147,9 +154,16 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             onClick={handleResendConfirmation}
             variant="outline"
             disabled={loading}
-            className="w-full"
+            className="w-full bg-gray-700/50 border-gray-600/50 text-gray-200 hover:bg-gray-600/50 rounded-xl"
           >
-            {loading ? 'Sending...' : 'Resend verification email'}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              'Resend verification email'
+            )}
           </Button>
           
           <Button
@@ -158,7 +172,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               onToggleMode();
             }}
             variant="ghost"
-            className="w-full"
+            className="w-full text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-xl"
           >
             Back to sign in
           </Button>
@@ -169,96 +183,138 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
   if (showPasswordReset) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <form onSubmit={handlePasswordReset} className="space-y-4">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">Reset your password</h1>
-            <p className="text-gray-600 mt-2">
-              Enter your email address and we'll send you a reset link
+      <div className="space-y-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPasswordReset(false)}
+            className="text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-xl p-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-semibold text-white">Reset password</h2>
+            <p className="text-gray-400 text-sm">
+              Enter your email to receive a reset link
             </p>
           </div>
+        </div>
 
+        <form onSubmit={handlePasswordReset} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="reset-email">Email</Label>
-            <Input
-              id="reset-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="your@email.com"
-            />
+            <Label htmlFor="reset-email" className="text-gray-300 text-sm font-medium">
+              Email address
+            </Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="your@email.com"
+                className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending...' : 'Send reset link'}
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" 
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending reset link...
+              </>
+            ) : (
+              'Send reset link'
+            )}
           </Button>
-
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setShowPasswordReset(false)}
-              className="text-blue-600 hover:underline text-sm"
-            >
-              Back to sign in
-            </button>
-          </div>
         </form>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">
-            {mode === 'signin' ? 'Welcome back' : 'Create your account'}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {mode === 'signin' 
-              ? 'Sign in to continue your journey' 
-              : 'Start your personal growth journey'}
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-semibold text-white">
+          {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+        </h2>
+        <p className="text-gray-400 text-sm">
+          {mode === 'signin' 
+            ? 'Sign in to continue your journey' 
+            : 'Start your personal growth journey'}
+        </p>
+      </div>
 
+      <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Your full name"
-            />
+            <Label htmlFor="name" className="text-gray-300 text-sm font-medium">
+              Full name
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Your full name"
+                className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="your@email.com"
-          />
+          <Label htmlFor="email" className="text-gray-300 text-sm font-medium">
+            Email address
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="your@email.com"
+              className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            placeholder="••••••••"
-            minLength={6}
-          />
+          <Label htmlFor="password" className="text-gray-300 text-sm font-medium">
+            Password
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              minLength={6}
+              className="pl-10 pr-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {mode === 'signin' && (
@@ -266,22 +322,33 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             <button
               type="button"
               onClick={() => setShowPasswordReset(true)}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
             >
               Forgot your password?
             </button>
           </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+        <Button 
+          type="submit" 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" 
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
+            </>
+          ) : (
+            mode === 'signin' ? 'Sign In' : 'Create Account'
+          )}
         </Button>
 
         <div className="text-center">
           <button
             type="button"
             onClick={onToggleMode}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-gray-400 hover:text-white text-sm transition-colors"
           >
             {mode === 'signin' 
               ? "Don't have an account? Sign up" 
