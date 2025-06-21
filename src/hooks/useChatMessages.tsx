@@ -30,6 +30,15 @@ export const useChatMessages = () => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
 
+  const createWelcomeMessage = useCallback((): Message => {
+    return {
+      id: 'welcome-' + Date.now(),
+      type: 'bot',
+      content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+      timestamp: new Date(),
+    };
+  }, []);
+
   const loadMessagesForSession = useCallback(async (sessionId: string) => {
     if (!user) {
       console.log('Messages: No user, cannot load messages');
@@ -68,7 +77,15 @@ export const useChatMessages = () => {
       });
 
       console.log('Messages: Loaded messages:', convertedMessages.length);
-      setMessages(convertedMessages);
+      
+      // If no messages exist for this session, add welcome message
+      if (convertedMessages.length === 0) {
+        console.log('Messages: Session is empty, adding welcome message');
+        const welcomeMessage = createWelcomeMessage();
+        setMessages([welcomeMessage]);
+      } else {
+        setMessages(convertedMessages);
+      }
     } catch (error) {
       console.error('Messages: Failed to load messages:', error);
       toast({
@@ -77,7 +94,7 @@ export const useChatMessages = () => {
         variant: "destructive"
       });
     }
-  }, [user, toast]);
+  }, [user, toast, createWelcomeMessage]);
 
   const addMessage = useCallback(async (message: Message, currentSessionId: string | null) => {
     if (!currentSessionId) {
@@ -143,20 +160,27 @@ export const useChatMessages = () => {
 
   const setWelcomeMessage = useCallback(() => {
     console.log('Messages: Setting welcome message');
-    const welcomeMessage: Message = {
-      id: 'welcome-' + Date.now(),
-      type: 'bot',
-      content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
-      timestamp: new Date(),
-    };
+    const welcomeMessage = createWelcomeMessage();
     setMessages([welcomeMessage]);
-  }, []);
+  }, [createWelcomeMessage]);
+
+  const ensureWelcomeMessage = useCallback(() => {
+    console.log('Messages: Ensuring welcome message exists');
+    setMessages(prev => {
+      if (prev.length === 0) {
+        const welcomeMessage = createWelcomeMessage();
+        return [welcomeMessage];
+      }
+      return prev;
+    });
+  }, [createWelcomeMessage]);
 
   return {
     messages,
     setMessages,
     loadMessagesForSession,
     addMessage,
-    setWelcomeMessage
+    setWelcomeMessage,
+    ensureWelcomeMessage
   };
 };

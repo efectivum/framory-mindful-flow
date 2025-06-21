@@ -30,7 +30,8 @@ export const useChatInitialization = () => {
     setMessages,
     loadMessagesForSession,
     addMessage: addMessageToState,
-    setWelcomeMessage
+    setWelcomeMessage,
+    ensureWelcomeMessage
   } = useChatMessages();
 
   const initializeChatState = useCallback(async () => {
@@ -107,10 +108,7 @@ export const useChatInitialization = () => {
       const newSession = await createNewSession();
       if (newSession) {
         console.log('Chat initialization: New session created successfully');
-        // Wait a bit to ensure session is fully created before setting welcome message
-        setTimeout(() => {
-          setWelcomeMessage();
-        }, 100);
+        // Welcome message will be automatically added by loadMessagesForSession for empty sessions
       } else {
         throw new Error('Failed to create new session');
       }
@@ -123,7 +121,7 @@ export const useChatInitialization = () => {
         variant: "destructive"
       });
     }
-  }, [user, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, setWelcomeMessage, toast]);
+  }, [user, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, toast]);
 
   // Initialize on mount
   useEffect(() => {
@@ -164,11 +162,9 @@ export const useChatInitialization = () => {
       const session = await createNewSession();
       if (session) {
         console.log('Chat: New chat session created');
-        // Clear messages and set welcome message
+        // Clear messages and ensure welcome message is shown
         setMessages([]);
-        setTimeout(() => {
-          setWelcomeMessage();
-        }, 100);
+        setWelcomeMessage();
       } else {
         throw new Error('Failed to create new session');
       }
@@ -196,6 +192,14 @@ export const useChatInitialization = () => {
       });
     }
   }, [switchToSession, loadMessagesForSession, toast]);
+
+  // Ensure welcome message is present when component mounts and session is ready
+  useEffect(() => {
+    if (currentSessionId && hasInitialized && messages.length === 0) {
+      console.log('Chat: Ensuring welcome message for empty session');
+      ensureWelcomeMessage();
+    }
+  }, [currentSessionId, hasInitialized, messages.length, ensureWelcomeMessage]);
 
   return {
     messages,
