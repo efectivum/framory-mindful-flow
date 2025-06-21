@@ -1,156 +1,127 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types/chat';
 
-export interface SessionMessage {
-  id: string;
-  session_id: string;
-  user_id: string;
-  type: 'user' | 'bot';
-  content: string;
-  metadata: any;
-  created_at: string;
-  updated_at: string;
+interface MessageMetadata {
+  activityType?: string;
+  isJournalEntry?: boolean;
+  attachmentUrl?: string;
+  attachmentType?: string;
+  habitSuggestion?: {
+    title: string;
+    description: string;
+    frequency_type: 'daily' | 'weekly';
+    target_days: number;
+    conversationContext?: string;
+  };
+  coachingMetadata?: {
+    interventionType: string;
+    hasProtocolReference: boolean;
+    canRequestFeedback: boolean;
+    interactionId?: string;
+  };
 }
 
-export const useChatMessages = (sessionId: string | null) => {
+export const useChatMessages = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Convert database message to Message type
-  const convertToMessage = useCallback((dbMessage: SessionMessage): Message => {
-    return {
-      id: dbMessage.id,
-      type: dbMessage.type,
-      content: dbMessage.content,
-      timestamp: new Date(dbMessage.created_at),
-      activityType: dbMessage.metadata?.activityType,
-      isJournalEntry: dbMessage.metadata?.isJournalEntry,
-      attachmentUrl: dbMessage.metadata?.attachmentUrl,
-      attachmentType: dbMessage.metadata?.attachmentType,
-      habitSuggestion: dbMessage.metadata?.habitSuggestion,
-      coachingMetadata: dbMessage.metadata?.coachingMetadata
-    };
-  }, []);
+  const loadMessagesForSession = useCallback(async (sessionId: string) => {
+    if (!user) return;
 
-  // Load messages for current session
-  const loadMessages = useCallback(async () => {
-    if (!user || !sessionId) {
-      setMessages([]);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (queryError) {
-        console.error('Database query error:', queryError);
-        throw new Error(`Failed to load messages: ${queryError.message}`);
-      }
+      if (error) throw error;
 
-      const convertedMessages = (data || []).map(convertToMessage);
+      const convertedMessages = (data || []).map(msg => {
+        const metadata = (msg.metadata as MessageMetadata) || {};
+        
+        return {
+          id: msg.id,
+          type: msg.type as 'user' | 'bot',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+          activityType: metadata.activityType,
+          isJournalEntry: metadata.isJournalEntry,
+          attachmentUrl: metadata.attachmentUrl,
+          attachmentType: metadata.attachmentType,
+          habitSuggestion: metadata.habitSuggestion,
+          coachingMetadata: metadata.coachingMetadata
+        };
+      });
+
       setMessages(convertedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setError(errorMessage);
-      
-      // Only show toast for unexpected errors, not connection issues
-      if (!errorMessage.includes('Failed to fetch')) {
-        toast({
-          title: "Error",
-          description: "Failed to load chat messages",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setIsLoading(false);
     }
-  }, [user, sessionId, convertToMessage, toast]);
+  }, [user]);
 
-  // Save message to database
-  const saveMessage = useCallback(async (message: Message): Promise<void> => {
-    if (!user || !sessionId) return;
-
-    try {
-      const metadata = {
-        activityType: message.activityType,
-        isJournalEntry: message.isJournalEntry,
-        attachmentUrl: message.attachmentUrl,
-        attachmentType: message.attachmentType,
-        habitSuggestion: message.habitSuggestion,
-        coachingMetadata: message.coachingMetadata
-      };
-
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          type: message.type,
-          content: message.content,
-          metadata
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save message';
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [user, sessionId, toast]);
-
-  // Add message to local state and save to database
-  const addMessage = useCallback(async (message: Message) => {
+  const addMessage = useCallback(async (message: Message, currentSessionId: string | null) => {
+    // Add to local state immediately for instant UI update
     setMessages(prev => [...prev, message]);
-    
-    try {
-      await saveMessage(message);
-    } catch (error) {
-      // Revert local state if save failed
-      setMessages(prev => prev.filter(m => m.id !== message.id));
-      throw error;
+
+    // Background sync to database
+    if (user && currentSessionId) {
+      try {
+        const metadata: MessageMetadata = {
+          activityType: message.activityType,
+          isJournalEntry: message.isJournalEntry,
+          attachmentUrl: message.attachmentUrl,
+          attachmentType: message.attachmentType,
+          habitSuggestion: message.habitSuggestion,
+          coachingMetadata: message.coachingMetadata
+        };
+
+        await supabase
+          .from('chat_messages')
+          .insert({
+            id: message.id,
+            session_id: currentSessionId,
+            user_id: user.id,
+            type: message.type,
+            content: message.content,
+            metadata: metadata as any
+          });
+
+        // Update session's last_message_at
+        await supabase
+          .from('chat_sessions')
+          .update({ 
+            updated_at: new Date().toISOString(),
+            last_message_at: new Date().toISOString()
+          })
+          .eq('id', currentSessionId);
+
+      } catch (error) {
+        console.error('Background sync failed:', error);
+        // Don't show error to user - message is already in UI
+      }
     }
-  }, [saveMessage]);
+  }, [user]);
 
-  // Clear messages (for new session)
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-    setError(null);
+  const setWelcomeMessage = useCallback(() => {
+    const welcomeMessage: Message = {
+      id: 'welcome-' + Date.now(),
+      type: 'bot',
+      content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
   }, []);
-
-  // Load messages when session changes
-  useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
 
   return {
     messages,
-    isLoading,
-    error,
+    setMessages,
+    loadMessagesForSession,
     addMessage,
-    clearMessages,
-    loadMessages
+    setWelcomeMessage
   };
 };
