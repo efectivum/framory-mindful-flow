@@ -12,6 +12,26 @@ interface ChatSession {
   updated_at: string;
 }
 
+interface MessageMetadata {
+  activityType?: string;
+  isJournalEntry?: boolean;
+  attachmentUrl?: string;
+  attachmentType?: string;
+  habitSuggestion?: {
+    title: string;
+    description: string;
+    frequency_type: 'daily' | 'weekly';
+    target_days: number;
+    conversationContext?: string;
+  };
+  coachingMetadata?: {
+    interventionType: string;
+    hasProtocolReference: boolean;
+    canRequestFeedback: boolean;
+    interactionId?: string;
+  };
+}
+
 export const useLocalChatState = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -83,18 +103,22 @@ export const useLocalChatState = () => {
 
       if (error) throw error;
 
-      const convertedMessages = (data || []).map(msg => ({
-        id: msg.id,
-        type: msg.type as 'user' | 'bot',
-        content: msg.content,
-        timestamp: new Date(msg.created_at),
-        activityType: msg.metadata?.activityType,
-        isJournalEntry: msg.metadata?.isJournalEntry,
-        attachmentUrl: msg.metadata?.attachmentUrl,
-        attachmentType: msg.metadata?.attachmentType,
-        habitSuggestion: msg.metadata?.habitSuggestion,
-        coachingMetadata: msg.metadata?.coachingMetadata
-      }));
+      const convertedMessages = (data || []).map(msg => {
+        const metadata = (msg.metadata as MessageMetadata) || {};
+        
+        return {
+          id: msg.id,
+          type: msg.type as 'user' | 'bot',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+          activityType: metadata.activityType,
+          isJournalEntry: metadata.isJournalEntry,
+          attachmentUrl: metadata.attachmentUrl,
+          attachmentType: metadata.attachmentType,
+          habitSuggestion: metadata.habitSuggestion,
+          coachingMetadata: metadata.coachingMetadata
+        };
+      });
 
       setMessages(convertedMessages);
     } catch (error) {
@@ -164,7 +188,7 @@ export const useLocalChatState = () => {
     // Background sync to database
     if (user && currentSessionId) {
       try {
-        const metadata = {
+        const metadata: MessageMetadata = {
           activityType: message.activityType,
           isJournalEntry: message.isJournalEntry,
           attachmentUrl: message.attachmentUrl,
@@ -206,7 +230,7 @@ export const useLocalChatState = () => {
         
         // Retry saving the message
         try {
-          const metadata = {
+          const metadata: MessageMetadata = {
             activityType: message.activityType,
             isJournalEntry: message.isJournalEntry,
             attachmentUrl: message.attachmentUrl,
