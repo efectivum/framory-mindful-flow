@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,8 @@ import {
   Edit3, 
   TrendingUp, 
   Calendar,
-  BarChart3
+  BarChart3,
+  Loader2
 } from 'lucide-react';
 import type { Habit } from '@/types/habits';
 
@@ -49,6 +51,30 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     if (streak >= 7) return 'text-green-400';
     if (streak >= 3) return 'text-blue-400';
     return 'text-gray-400';
+  };
+
+  const handleComplete = () => {
+    if (!isCompleting && !isCompleted) {
+      onComplete(habit.id);
+    }
+  };
+
+  const handleEdit = () => {
+    if (!isDeleting) {
+      onEdit(habit);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!isDeleting && !isCompleting) {
+      onDelete(habit.id);
+    }
+  };
+
+  const handleViewProgress = () => {
+    if (onViewProgress && !isDeleting && !isCompleting) {
+      onViewProgress(habit);
+    }
   };
 
   return (
@@ -95,8 +121,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => onComplete(habit.id)}
-            disabled={isCompleting || isCompleted}
+            onClick={handleComplete}
+            disabled={isCompleting || isCompleted || isDeleting}
             className={`flex-1 ${
               isCompleted 
                 ? 'bg-green-600 hover:bg-green-700' 
@@ -104,7 +130,10 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             }`}
           >
             {isCompleting ? (
-              'Completing...'
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Completing...
+              </>
             ) : isCompleted ? (
               <>
                 <CheckCircle className="w-4 h-4 mr-2" />
@@ -118,19 +147,23 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             )}
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewProgress?.(habit)}
-            className="text-gray-400 border-gray-600 hover:bg-gray-700"
-          >
-            <BarChart3 className="w-4 h-4" />
-          </Button>
+          {onViewProgress && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewProgress}
+              disabled={isDeleting || isCompleting}
+              className="text-gray-400 border-gray-600 hover:bg-gray-700"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </Button>
+          )}
 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onEdit(habit)}
+            onClick={handleEdit}
+            disabled={isDeleting || isCompleting}
             className="text-gray-400 border-gray-600 hover:bg-gray-700"
           >
             <Edit3 className="w-4 h-4" />
@@ -139,11 +172,15 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onDelete(habit.id)}
-            disabled={isDeleting}
+            onClick={handleDelete}
+            disabled={isDeleting || isCompleting}
             className="text-red-400 border-gray-600 hover:bg-red-900/20"
           >
-            <Trash2 className="w-4 h-4" />
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </CardContent>

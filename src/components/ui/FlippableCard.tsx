@@ -21,7 +21,7 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
   height = "h-[290px]",
   isFlipped: controlledFlipped,
   onFlip,
-  flipOnHover = true,
+  flipOnHover = false, // Changed default to false for better mobile experience
   flipOnClick = true
 }) => {
   const [internalFlipped, setInternalFlipped] = useState(false);
@@ -39,24 +39,47 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
   };
 
   const handleMouseEnter = () => {
-    if (flipOnHover && controlledFlipped === undefined) {
+    // Only enable hover on non-touch devices
+    if (flipOnHover && controlledFlipped === undefined && !('ontouchstart' in window)) {
       setInternalFlipped(true);
     }
   };
 
   const handleMouseLeave = () => {
-    if (flipOnHover && controlledFlipped === undefined) {
+    // Only enable hover on non-touch devices
+    if (flipOnHover && controlledFlipped === undefined && !('ontouchstart' in window)) {
       setInternalFlipped(false);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent default to avoid unwanted behaviors
+    if (flipOnClick) {
+      e.preventDefault();
     }
   };
 
   return (
     <div 
-      className={cn("relative w-full", height, className)}
-      style={{ perspective: '1000px' }}
+      className={cn("relative w-full cursor-pointer", height, className)}
+      style={{ 
+        perspective: '1000px',
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation'
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleFlip}
+      onTouchStart={handleTouchStart}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleFlip();
+        }
+      }}
+      aria-label="Flip card to see more information"
     >
       <motion.div
         className="relative w-full h-full"
@@ -69,7 +92,8 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
           className="absolute inset-0 w-full h-full"
           style={{ 
             backfaceVisibility: 'hidden',
-            transform: 'rotateY(0deg)'
+            transform: 'rotateY(0deg)',
+            WebkitBackfaceVisibility: 'hidden'
           }}
         >
           {frontContent}
@@ -80,7 +104,8 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
           className="absolute inset-0 w-full h-full"
           style={{ 
             backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)'
+            transform: 'rotateY(180deg)',
+            WebkitBackfaceVisibility: 'hidden'
           }}
         >
           {backContent}

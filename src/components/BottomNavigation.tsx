@@ -27,7 +27,19 @@ export const BottomNavigation: React.FC = () => {
 
   const handleNavigation = React.useCallback((path: string, label: string) => {
     console.log(`Bottom nav clicked: ${label} (${path})`);
-    navigate(path);
+    
+    // Add haptic feedback for mobile devices
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+    
+    try {
+      navigate(path);
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      // Fallback to window.location if navigate fails
+      window.location.href = path;
+    }
   }, [navigate]);
 
   return (
@@ -56,6 +68,9 @@ export const BottomNavigation: React.FC = () => {
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation'
                 }}
+                aria-label={`Navigate to ${item.label}`}
+                role="tab"
+                aria-selected={isActive}
               >
                 {/* Active indicator glow */}
                 {isActive && (
