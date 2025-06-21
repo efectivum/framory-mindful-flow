@@ -1,12 +1,10 @@
 
-import React, { useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
-import { useChatState } from '@/hooks/useChatState';
-import { useChatMessageHandler } from '@/components/chat/ChatMessageHandler';
-import { ChatInitializer } from './chat/ChatInitializer';
+import { useLocalChatState } from '@/hooks/useLocalChatState';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -14,52 +12,115 @@ import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { LoadingSpinner } from './ui/loading-spinner';
+import { Message } from '@/types/chat';
 
 export const ChatInterface = () => {
   const { loading: authLoading } = useAuth();
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
-  const { isDetectingIntent } = useConversationalAI();
+  const { isDetectingIntent, generateResponse, detectIntent } = useConversationalAI();
   
-  const chatState = useChatState();
   const {
     messages,
-    setMessages,
-    inputText,
-    setInputText,
-    selectedActivity,
-    setSelectedActivity,
-    fileAttachment,
-    setFileAttachment,
-    showActivitySelector,
-    setShowActivitySelector,
-    showSessionSidebar,
-    setShowSessionSidebar,
+    sessions,
+    currentSessionId,
     isGeneratingResponse,
     setIsGeneratingResponse,
-    isInitialized,
-    setIsInitialized,
-    isLoading,
-    setIsLoading,
-    messagesEndRef,
-    textAreaRef,
     addMessage,
-    scrollToBottom
-  } = chatState;
+    switchToSession,
+    startNewChat
+  } = useLocalChatState();
 
-  const { handleSend } = useChatMessageHandler({
-    messages,
-    inputText,
-    setInputText,
-    selectedActivity,
-    setSelectedActivity,
-    fileAttachment,
-    setFileAttachment,
-    textAreaRef,
-    addMessage,
-    isGeneratingResponse,
-    setIsGeneratingResponse
-  });
+  // Local UI state
+  const [inputText, setInputText] = useState('');
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+  const [fileAttachment, setFileAttachment] = useState<File | null>(null);
+  const [showActivitySelector, setShowActivitySelector] = useState(false);
+  const [showSessionSidebar, setShowSessionSidebar] = useState(false);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Handle sending messages
+  const handleSend = useCallback(async () => {
+    if (!inputText.trim() && !fileAttachment) return;
+    
+    let attachmentUrl: string | undefined = undefined;
+    let attachmentType: string | undefined = undefined;
+    if (fileAttachment) {
+      attachmentUrl = URL.createObjectURL(fileAttachment);
+      attachmentType = fileAttachment.type;
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputText,
+      activityType: selectedActivity || undefined,
+      timestamp: new Date(),
+      ...(attachmentUrl ? { attachmentUrl, attachmentType } : {}),
+    };
+
+    await addMessage(userMessage);
+    const currentInput = inputText;
+    setInputText('');
+    setFileAttachment(null);
+    setSelectedActivity(null);
+    textAreaRef.current?.focus();
+
+    if (attachmentUrl && !currentInput.trim()) return;
+
+    setIsGeneratingResponse(true);
+    try {
+      const conversationHistory = messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+        content: msg.content
+      }));
+      
+      const aiResponse = await generateResponse(currentInput, conversationHistory, false, 'coaching');
+
+      if (aiResponse) {
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: aiResponse,
+          timestamp: new Date(),
+        };
+        await addMessage(botResponse);
+
+        if (aiResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
+            aiResponse.toLowerCase().includes('capture these insights in your journal')) {
+          const conversationSummary = messages.map(msg => 
+            `${msg.type === 'user' ? 'You' : 'Coach'}: ${msg.content}`
+          ).join('\n\n');
+          journalSuggestion.setSuggestion(conversationSummary);
+        }
+      } else {
+        const errorResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          content: "I'm sorry, I'm having trouble responding right now. Please try again.",
+          timestamp: new Date(),
+        };
+        await addMessage(errorResponse);
+      }
+    } catch (error) {
+      console.error('Error generating response:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "I'm sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      };
+      await addMessage(errorResponse);
+    } finally {
+      setIsGeneratingResponse(false);
+    }
+  }, [inputText, fileAttachment, selectedActivity, messages, addMessage, generateResponse, journalSuggestion, setIsGeneratingResponse]);
 
   // File handling
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,8 +185,8 @@ export const ChatInterface = () => {
     console.log('Coaching feedback received:', feedbackData);
   }, []);
 
-  // Show loading state while initializing
-  if (isLoading || authLoading) {
+  // Show loading only while auth is loading
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#171c26]">
         <div className="text-center">
@@ -142,17 +203,6 @@ export const ChatInterface = () => {
   return (
     <ChatErrorBoundary>
       <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatInitializer
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          isInitialized={isInitialized}
-          setIsInitialized={setIsInitialized}
-          setMessages={setMessages}
-          setInputText={setInputText}
-          textAreaRef={textAreaRef}
-          scrollToBottom={scrollToBottom}
-        />
-        
         <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
         
         <MessageList
@@ -192,6 +242,10 @@ export const ChatInterface = () => {
         <ChatSessionSidebar
           isOpen={showSessionSidebar}
           onClose={() => setShowSessionSidebar(false)}
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSwitchSession={switchToSession}
+          onNewChat={startNewChat}
         />
       </div>
     </ChatErrorBoundary>
