@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types/chat';
+import { useToast } from '@/hooks/use-toast';
 
 interface MessageMetadata {
   activityType?: string;
@@ -26,12 +27,17 @@ interface MessageMetadata {
 
 export const useChatMessages = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
 
   const loadMessagesForSession = useCallback(async (sessionId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.log('Messages: No user, cannot load messages');
+      return;
+    }
 
     try {
+      console.log('Messages: Loading messages for session:', sessionId);
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
@@ -39,7 +45,10 @@ export const useChatMessages = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Messages: Error loading messages:', error);
+        throw error;
+      }
 
       const convertedMessages = (data || []).map(msg => {
         const metadata = (msg.metadata as MessageMetadata) || {};
@@ -58,18 +67,31 @@ export const useChatMessages = () => {
         };
       });
 
+      console.log('Messages: Loaded messages:', convertedMessages.length);
       setMessages(convertedMessages);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('Messages: Failed to load messages:', error);
+      toast({
+        title: "Message Load Error",
+        description: "Failed to load conversation history.",
+        variant: "destructive"
+      });
     }
-  }, [user]);
+  }, [user, toast]);
 
   const addMessage = useCallback(async (message: Message, currentSessionId: string | null) => {
+    if (!currentSessionId) {
+      console.error('Messages: Cannot add message - no session ID');
+      return;
+    }
+
+    console.log('Messages: Adding message to session:', currentSessionId);
+    
     // Add to local state immediately for instant UI update
     setMessages(prev => [...prev, message]);
 
     // Background sync to database
-    if (user && currentSessionId) {
+    if (user) {
       try {
         const metadata: MessageMetadata = {
           activityType: message.activityType,
@@ -80,7 +102,8 @@ export const useChatMessages = () => {
           coachingMetadata: message.coachingMetadata
         };
 
-        await supabase
+        console.log('Messages: Saving message to database');
+        const { error: insertError } = await supabase
           .from('chat_messages')
           .insert({
             id: message.id,
@@ -91,8 +114,13 @@ export const useChatMessages = () => {
             metadata: metadata as any
           });
 
+        if (insertError) {
+          console.error('Messages: Error saving message:', insertError);
+          throw insertError;
+        }
+
         // Update session's last_message_at
-        await supabase
+        const { error: updateError } = await supabase
           .from('chat_sessions')
           .update({ 
             updated_at: new Date().toISOString(),
@@ -100,14 +128,21 @@ export const useChatMessages = () => {
           })
           .eq('id', currentSessionId);
 
+        if (updateError) {
+          console.error('Messages: Error updating session timestamp:', updateError);
+        }
+
+        console.log('Messages: Message saved successfully');
       } catch (error) {
-        console.error('Background sync failed:', error);
+        console.error('Messages: Background sync failed:', error);
         // Don't show error to user - message is already in UI
+        // But we could implement retry logic here in the future
       }
     }
   }, [user]);
 
   const setWelcomeMessage = useCallback(() => {
+    console.log('Messages: Setting welcome message');
     const welcomeMessage: Message = {
       id: 'welcome-' + Date.now(),
       type: 'bot',

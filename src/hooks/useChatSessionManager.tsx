@@ -20,30 +20,54 @@ export const useChatSessionManager = () => {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   const loadSessions = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Session manager: No user, clearing sessions');
+      setSessions([]);
+      return;
+    }
 
     setIsLoadingSessions(true);
     try {
+      console.log('Session manager: Loading sessions for user:', user.id);
       const { data, error } = await supabase
         .from('chat_sessions')
         .select('id, title, created_at, updated_at')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Session manager: Error loading sessions:', error);
+        throw error;
+      }
+      
+      console.log('Session manager: Loaded sessions:', data?.length || 0);
       setSessions(data || []);
     } catch (error) {
-      console.error('Error loading sessions:', error);
+      console.error('Session manager: Failed to load sessions:', error);
+      toast({
+        title: "Session Load Error",
+        description: "Failed to load chat sessions.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingSessions(false);
     }
-  }, [user]);
+  }, [user, toast]);
 
   const createNewSession = useCallback(async (title: string = 'New Conversation') => {
-    if (!user || isCreatingSession) return null;
+    if (!user) {
+      console.error('Session manager: Cannot create session - no user');
+      return null;
+    }
+    
+    if (isCreatingSession) {
+      console.log('Session manager: Already creating session, skipping');
+      return null;
+    }
 
     setIsCreatingSession(true);
     try {
+      console.log('Session manager: Creating new session');
       const { data, error } = await supabase
         .from('chat_sessions')
         .insert({
@@ -55,7 +79,10 @@ export const useChatSessionManager = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Session manager: Error creating session:', error);
+        throw error;
+      }
 
       const newSession: ChatSession = {
         id: data.id,
@@ -64,22 +91,32 @@ export const useChatSessionManager = () => {
         updated_at: data.updated_at
       };
 
+      console.log('Session manager: Session created successfully:', newSession.id);
       setSessions(prev => [newSession, ...prev]);
       setCurrentSessionId(newSession.id);
       localStorage.setItem('current-chat-session', newSession.id);
       
       return newSession;
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error('Session manager: Failed to create session:', error);
+      toast({
+        title: "Session Creation Error",
+        description: "Failed to create new conversation. Please try again.",
+        variant: "destructive"
+      });
       return null;
     } finally {
       setIsCreatingSession(false);
     }
-  }, [user, isCreatingSession]);
+  }, [user, isCreatingSession, toast]);
 
   const switchToSession = useCallback(async (sessionId: string) => {
-    if (sessionId === currentSessionId) return;
+    if (sessionId === currentSessionId) {
+      console.log('Session manager: Already on session:', sessionId);
+      return;
+    }
     
+    console.log('Session manager: Switching to session:', sessionId);
     setCurrentSessionId(sessionId);
     localStorage.setItem('current-chat-session', sessionId);
   }, [currentSessionId]);
