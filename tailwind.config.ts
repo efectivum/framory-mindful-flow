@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,28 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'sans': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				'inter': ['Inter', 'system-ui', 'sans-serif'],
+			},
+			fontSize: {
+				// Mobile-optimized text sizes
+				'xs': ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.025em' }],
+				'sm': ['0.875rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+				'base': ['1rem', { lineHeight: '1.6', letterSpacing: '0.025em' }],
+				'lg': ['1.125rem', { lineHeight: '1.6', letterSpacing: '0.025em' }],
+				'xl': ['1.25rem', { lineHeight: '1.6', letterSpacing: '0.025em' }],
+				'2xl': ['1.5rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+				'3xl': ['1.875rem', { lineHeight: '1.4', letterSpacing: '0.025em' }],
+				'4xl': ['2.25rem', { lineHeight: '1.3', letterSpacing: '0.025em' }],
+				'5xl': ['3rem', { lineHeight: '1.2', letterSpacing: '0.025em' }],
+				// Mobile-specific sizes
+				'mobile-xs': ['0.8125rem', { lineHeight: '1.4', letterSpacing: '0.025em' }],
+				'mobile-sm': ['0.9375rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+				'mobile-base': ['1.0625rem', { lineHeight: '1.6', letterSpacing: '0.025em' }],
+				'mobile-lg': ['1.1875rem', { lineHeight: '1.6', letterSpacing: '0.025em' }],
+				'mobile-xl': ['1.375rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

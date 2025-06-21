@@ -24,7 +24,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
 }) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-x-hidden">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-x-hidden font-inter">
         {/* Desktop Sidebar */}
         <div className="hidden md:block">
           <AppSidebar />
@@ -37,8 +37,8 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
             <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50 md:hidden">
               <div className="flex items-center justify-center p-4">
                 <div className="text-center">
-                  {title && <h1 className="text-lg font-semibold text-white">{title}</h1>}
-                  {subtitle && <p className="text-gray-400 text-xs">{subtitle}</p>}
+                  {title && <h1 className="text-mobile-lg font-semibold text-white text-premium-bold">{title}</h1>}
+                  {subtitle && <p className="text-gray-400 text-mobile-xs text-premium mt-1">{subtitle}</p>}
                 </div>
               </div>
             </header>
@@ -49,8 +49,8 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
             <header className="hidden md:block bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50">
               <div className="flex items-center justify-between p-6">
                 <div>
-                  {title && <h1 className="text-2xl font-semibold text-white">{title}</h1>}
-                  {subtitle && <p className="text-gray-400 text-sm mt-1">{subtitle}</p>}
+                  {title && <h1 className="text-2xl font-semibold text-white text-premium-bold">{title}</h1>}
+                  {subtitle && <p className="text-gray-400 text-sm mt-1 text-premium">{subtitle}</p>}
                 </div>
               </div>
             </header>

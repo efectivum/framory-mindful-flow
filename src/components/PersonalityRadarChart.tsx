@@ -15,14 +15,14 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
     return (
       <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-white text-lg flex items-center gap-2">
+          <CardTitle className="text-white text-mobile-lg md:text-lg flex items-center gap-2 text-premium-bold">
             <Brain className="w-5 h-5" />
             Personality Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-48 text-gray-400">
-            <p>Write more entries to unlock personality insights</p>
+            <p className="text-premium text-mobile-sm md:text-sm text-center">Write more entries to unlock personality insights</p>
           </div>
         </CardContent>
       </Card>
@@ -48,7 +48,7 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
   return (
     <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
       <CardHeader className="px-6 pt-6 pb-4">
-        <CardTitle className="text-white text-lg flex items-center gap-2">
+        <CardTitle className="text-white text-mobile-lg md:text-lg flex items-center gap-2 text-premium-bold">
           <Brain className="w-5 h-5" />
           Personality Profile
         </CardTitle>
@@ -61,13 +61,13 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
                 <PolarGrid stroke="#374151" />
                 <PolarAngleAxis 
                   dataKey="trait" 
-                  tick={{ fill: '#9ca3af', fontSize: 12 }}
-                  className="text-xs"
+                  tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 500 }}
+                  className="text-xs font-medium"
                 />
                 <PolarRadiusAxis 
                   angle={90} 
                   domain={[0, 100]} 
-                  tick={{ fill: '#6b7280', fontSize: 10 }}
+                  tick={{ fill: '#6b7280', fontSize: 10, fontWeight: 500 }}
                   tickCount={5}
                 />
                 <Radar
@@ -83,11 +83,11 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
           </ChartContainer>
         </div>
         
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs px-2">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-mobile-xs md:text-xs px-2">
           {data.map((item) => (
             <div key={item.trait} className="flex justify-between">
-              <span className="text-gray-400">{item.trait.replace('\n', ' ')}</span>
-              <span className="text-white font-medium">{item.value}/100</span>
+              <span className="text-gray-400 text-premium">{item.trait.replace('\n', ' ')}</span>
+              <span className="text-white font-medium text-premium-bold">{item.value}/100</span>
             </div>
           ))}
         </div>

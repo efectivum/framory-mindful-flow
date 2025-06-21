@@ -104,8 +104,56 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-variant-ligatures: common-ligatures;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Enhanced typography for better mobile readability */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  p {
+    line-height: 1.6;
+    letter-spacing: 0.025em;
+  }
+
+  /* Mobile-specific typography improvements */
+  @media (max-width: 768px) {
+    body {
+      font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    h1 {
+      @apply text-mobile-xl font-semibold;
+    }
+    
+    h2 {
+      @apply text-mobile-lg font-semibold;
+    }
+    
+    h3 {
+      @apply text-mobile-base font-medium;
+    }
+    
+    p {
+      @apply text-mobile-sm;
+      line-height: 1.6;
+    }
+    
+    .text-sm {
+      @apply text-mobile-xs;
+    }
+    
+    .text-lg {
+      @apply text-mobile-base;
+    }
   }
 
   /* Smooth scrolling */
@@ -143,6 +191,23 @@
 
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Enhanced typography utilities */
+  .text-premium {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    line-height: 1.5;
+  }
+  
+  .text-premium-bold {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.3;
+  }
+  
+  .text-mobile-optimized {
+    @apply text-mobile-base leading-relaxed tracking-wide;
   }
 
   @keyframes fadeIn {
