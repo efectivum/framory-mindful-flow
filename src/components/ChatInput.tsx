@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Send, Plus, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,6 +48,38 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       handleSend();
     }
   };
+
+  const adjustTextareaHeight = useCallback(() => {
+    if (textAreaRef.current) {
+      const textarea = textAreaRef.current;
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      // Calculate the new height
+      const newHeight = Math.min(Math.max(textarea.scrollHeight, 44), 120);
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [textAreaRef]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+    // Defer height adjustment to next frame for smooth animation
+    requestAnimationFrame(adjustTextareaHeight);
+  };
+
+  // Auto-focus on mount and when not disabled
+  useEffect(() => {
+    if (!isDetectingIntent && !isGeneratingResponse && textAreaRef.current) {
+      textAreaRef.current.focus();
+    }
+  }, [isDetectingIntent, isGeneratingResponse, textAreaRef]);
+
+  // Adjust height when inputText changes externally (like voice input)
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputText, adjustTextareaHeight]);
+
+  const canSend = !isDetectingIntent && !isGeneratingResponse && (inputText.trim() || fileAttachment);
+  const isDisabled = isDetectingIntent || isGeneratingResponse;
 
   return (
     <div className="bg-[#161c26] border-t border-gray-800 safe-area-pb">
@@ -101,7 +133,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               accept="image/*,application/pdf"
               className="hidden"
               onChange={handleFileChange}
-              disabled={isDetectingIntent || isGeneratingResponse}
+              disabled={isDisabled}
             />
             <Button
               variant="ghost"
@@ -109,6 +141,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-11 w-11 rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
               type="button"
               tabIndex={-1}
+              disabled={isDisabled}
             >
               <Paperclip className="w-5 h-5" />
             </Button>
@@ -123,6 +156,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 "text-gray-400 hover:text-blue-300 hover:bg-blue-900 h-11 w-11 shrink-0 rounded-full min-h-[44px] min-w-[44px] touch-manipulation",
                 showActivitySelector && "text-blue-400 bg-blue-950"
               )}
+              disabled={isDisabled}
             >
               <Plus className="w-5 h-5" />
             </Button>
@@ -133,34 +167,47 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             />
           </div>
 
-          <Textarea
-            ref={textAreaRef}
-            value={inputText}
-            onChange={(e) => {
-              setInputText(e.target.value);
-              e.target.rows = 1;
-              const newRows = Math.min(Math.ceil(e.target.scrollHeight / 24), 4);
-              e.target.rows = newRows;
-            }}
-            onKeyPress={handleKeyPress}
-            placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Type your message..."}
-            className="flex-1 min-h-[44px] max-h-[120px] resize-none rounded-xl border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-gray-100 placeholder:text-gray-400 touch-manipulation"
-            rows={1}
-            disabled={isDetectingIntent || isGeneratingResponse}
-            style={{ fontSize: '16px' }}
-          />
+          <div className="flex-1 relative">
+            <textarea
+              ref={textAreaRef}
+              value={inputText}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
+              placeholder={selectedActivity ? `Log your ${selectedActivity} experience...` : "Type your message..."}
+              className="w-full min-h-[44px] max-h-[120px] resize-none rounded-xl border border-gray-700 bg-[#232b3a] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none py-3 px-4 text-gray-100 placeholder:text-gray-400 touch-manipulation transition-all duration-200 ease-out"
+              rows={1}
+              disabled={isDisabled}
+              style={{ 
+                fontSize: '16px',
+                height: '44px',
+                lineHeight: '1.4',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            />
+            <style jsx>{`
+              textarea::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+          </div>
 
           <VoiceButton
             onTranscription={handleVoiceTranscription}
-            disabled={isDetectingIntent || isGeneratingResponse}
+            disabled={isDisabled}
             className="min-h-[44px] min-w-[44px] h-11 w-11 rounded-full touch-manipulation"
           />
 
           <Button
             onClick={handleSend}
-            disabled={isDetectingIntent || isGeneratingResponse || (!inputText.trim() && !fileAttachment)}
+            disabled={!canSend}
             size="icon"
-            className="bg-blue-600 hover:bg-blue-700 text-white h-11 w-11 rounded-full shrink-0 shadow-sm disabled:opacity-60 min-h-[44px] min-w-[44px] touch-manipulation haptic-light"
+            className={cn(
+              "h-11 w-11 rounded-full shrink-0 shadow-sm min-h-[44px] min-w-[44px] touch-manipulation haptic-light transition-all duration-200",
+              canSend 
+                ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+            )}
           >
             <Send className="w-5 h-5" />
           </Button>
