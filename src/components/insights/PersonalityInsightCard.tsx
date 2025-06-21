@@ -1,154 +1,135 @@
-
 import React from 'react';
-import { InsightCard } from '@/components/ui/InsightCard';
-import { User, HelpCircle } from 'lucide-react';
-import { PersonalityInsights } from '@/hooks/useAnalytics';
+import { FlippableCard } from '@/components/ui/FlippableCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Brain } from 'lucide-react';
 
 interface PersonalityInsightCardProps {
-  insights: PersonalityInsights | null;
+  insights: {
+    emotionalStability: number;
+    openness: number;
+    conscientiousness: number;
+    extraversion: number;
+    agreeableness: number;
+    writingComplexity: number;
+    selfReflectionLevel: number;
+  } | null;
 }
 
 export const PersonalityInsightCard: React.FC<PersonalityInsightCardProps> = ({ insights }) => {
   if (!insights) {
     return (
-      <InsightCard
-        title="Personality"
-        timeframe="This week"
-        helpIcon={<HelpCircle className="w-3 h-3" />}
-        frontContent={
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-400">
-              <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Write more entries to unlock personality insights</p>
-            </div>
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white text-lg flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            Personality Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-48 text-gray-400">
+            <p>Write more entries to unlock personality insights</p>
           </div>
-        }
-        backContent={
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-center">
-              Continue journaling to discover patterns in your personality traits based on the Big Five model.
-            </p>
-          </div>
-        }
-      />
+        </CardContent>
+      </Card>
     );
   }
 
-  // Get top traits for front display
   const topTraits = Object.entries(insights)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 3);
 
-  const personalityType = getPersonalityType(insights);
-
   const frontContent = (
-    <div className="flex flex-col h-full">
-      <h2 className="text-3xl font-light text-white mb-6">{personalityType}</h2>
-      <div className="space-y-3">
-        {topTraits.map(([trait, score]) => (
-          <div key={trait} className="flex justify-between items-center">
-            <span className="text-gray-300 capitalize">
-              {trait.replace(/([A-Z])/g, ' $1').trim()}
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="w-16 bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${score}%` }}
-                />
-              </div>
-              <span className="text-white font-medium text-sm">{score}</span>
+    <Card className="relative flex w-full h-full flex-col rounded-3xl bg-gray-800/50 border-gray-700/50 backdrop-blur-sm cursor-pointer transition-all duration-200 hover:border-gray-600/50">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white text-lg flex items-center gap-2">
+          <Brain className="w-5 h-5" />
+          Personality Profile
+          <div className="ml-auto text-xs text-gray-400">Hover to explore</div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="text-3xl font-light text-white mb-2">
+              {topTraits[0]?.[1]}/100
+            </div>
+            <div className="text-gray-400 text-sm capitalize">
+              {topTraits[0]?.[0].replace(/([A-Z])/g, ' $1').trim()}
             </div>
           </div>
-        ))}
-      </div>
-    </div>
+          
+          <div className="space-y-3">
+            {topTraits.map(([trait, score]) => (
+              <div key={trait} className="flex items-center justify-between">
+                <span className="text-gray-300 capitalize text-sm">
+                  {trait.replace(/([A-Z])/g, ' $1').trim()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
+                      style={{ width: `${score}%` }}
+                    />
+                  </div>
+                  <span className="text-white font-medium text-sm w-8 text-right">{score}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 
   const backContent = (
-    <div className="space-y-4">
-      <h3 className="text-xl font-medium text-white mb-4">Detailed Analysis</h3>
-      <div className="space-y-4">
-        {Object.entries(insights).map(([trait, score]) => (
-          <div key={trait} className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-300 capitalize font-medium">
-                {trait.replace(/([A-Z])/g, ' $1').trim()}
-              </span>
-              <span className="text-white">{score}/100</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${score}%` }}
-              />
-            </div>
-            <p className="text-gray-400 text-sm">
-              {getTraitDescription(trait, score)}
+    <Card className="relative flex w-full h-full flex-col rounded-3xl bg-gray-800/60 border-gray-600/50 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white text-lg flex items-center gap-2">
+          <Brain className="w-5 h-5" />
+          Personality Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto">
+        <div className="space-y-4">
+          <div className="bg-gray-700/30 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-2">Your Strongest Trait</h4>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="capitalize font-medium">
+                {topTraits[0]?.[0].replace(/([A-Z])/g, ' $1').trim()}
+              </span> is your most prominent characteristic, suggesting you have a natural tendency toward thoughtful reflection and emotional awareness.
             </p>
           </div>
-        ))}
-      </div>
-    </div>
+          
+          <div className="bg-gray-700/30 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-2">Growth Insights</h4>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Your writing patterns reveal a balanced approach to personal development, with strong self-reflection capabilities and openness to new experiences.
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="text-white font-medium text-sm">All Traits</h4>
+            {Object.entries(insights).map(([trait, score]) => (
+              <div key={trait} className="flex justify-between items-center py-1">
+                <span className="text-gray-400 text-xs capitalize">
+                  {trait.replace(/([A-Z])/g, ' $1').trim()}
+                </span>
+                <span className="text-white font-medium text-xs">{score}/100</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 
   return (
-    <InsightCard
-      title="Personality"
-      timeframe="This week"
-      helpIcon={<HelpCircle className="w-3 h-3" />}
+    <FlippableCard
       frontContent={frontContent}
       backContent={backContent}
+      height="h-[320px]"
+      flipOnHover={true}
+      flipOnClick={false}
     />
   );
 };
-
-function getPersonalityType(insights: PersonalityInsights): string {
-  const { openness, conscientiousness, extraversion, agreeableness, emotionalStability } = insights;
-  
-  if (openness > 70 && conscientiousness > 70) return "The Visionary Achiever";
-  if (extraversion > 70 && agreeableness > 70) return "The Inspiring Connector";
-  if (emotionalStability > 70 && conscientiousness > 70) return "The Steady Performer";
-  if (openness > 70 && extraversion > 70) return "The Creative Explorer";
-  if (agreeableness > 70 && emotionalStability > 70) return "The Harmonious Guide";
-  if (conscientiousness > 70) return "The Methodical Planner";
-  if (openness > 70) return "The Curious Innovator";
-  if (extraversion > 70) return "The Social Energizer";
-  if (agreeableness > 70) return "The Compassionate Helper";
-  if (emotionalStability > 70) return "The Resilient Optimist";
-  
-  return "The Balanced Individual";
-}
-
-function getTraitDescription(trait: string, score: number): string {
-  const descriptions: Record<string, Record<string, string>> = {
-    openness: {
-      high: "You embrace new experiences and enjoy creative thinking.",
-      medium: "You balance traditional approaches with new ideas.",
-      low: "You prefer familiar approaches and practical solutions."
-    },
-    conscientiousness: {
-      high: "You're organized, disciplined, and goal-oriented.",
-      medium: "You balance structure with flexibility in your approach.",
-      low: "You prefer spontaneity and adaptability over rigid planning."
-    },
-    extraversion: {
-      high: "You gain energy from social interactions and external stimulation.",
-      medium: "You enjoy both social time and solitude in balance.",
-      low: "You prefer quiet reflection and smaller social circles."
-    },
-    agreeableness: {
-      high: "You're cooperative, trusting, and value harmony in relationships.",
-      medium: "You balance being helpful with asserting your own needs.",
-      low: "You're direct, competitive, and skeptical of others' motives."
-    },
-    emotionalStability: {
-      high: "You remain calm and resilient under pressure.",
-      medium: "You handle stress reasonably well with occasional challenges.",
-      low: "You're sensitive to stress and experience emotions intensely."
-    }
-  };
-
-  const level = score > 70 ? 'high' : score > 40 ? 'medium' : 'low';
-  return descriptions[trait]?.[level] || "Analysis in progress...";
-}

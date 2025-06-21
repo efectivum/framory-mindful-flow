@@ -4,6 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { PersonalityInsightCard } from '@/components/insights/PersonalityInsightCard';
 import { MoodInsightCard } from '@/components/insights/MoodInsightCard';
+import { EmotionBubbleCard } from '@/components/insights/EmotionBubbleCard';
+import { RecurringTopicsCard } from '@/components/insights/RecurringTopicsCard';
+import { SuggestionCard } from '@/components/insights/SuggestionCard';
+import { TalkToJournalCard } from '@/components/insights/TalkToJournalCard';
+import { MoodTrendChart } from '@/components/MoodTrendChart';
+import { PersonalityRadarChart } from '@/components/PersonalityRadarChart';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useFeatureTracking } from '@/hooks/useFeatureTracking';
@@ -20,6 +26,7 @@ const Insights = () => {
   
   const {
     moodTrends,
+    emotionAnalysis,
     personalityInsights,
     totalEntries,
     currentStreak
@@ -65,12 +72,50 @@ const Insights = () => {
     navigate(`/chat?emotion=${encodeURIComponent(emotion)}`);
   };
 
+  // Convert emotion analysis to emotions object
+  const emotionsData = emotionAnalysis.reduce((acc, item) => {
+    acc[item.emotion] = item.frequency;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Sample suggestions - in real app, these would come from AI analysis
+  const suggestions = [
+    {
+      title: "Morning Reflection Practice",
+      description: "Start your day with 5 minutes of mindful reflection",
+      detailedContent: "Based on your entries, morning reflection could help you set intentions and improve your daily emotional awareness. Try spending 5 minutes each morning writing about your current state of mind, what you're grateful for, and your intentions for the day.",
+      category: "Habit",
+      actionText: "Start Morning Practice"
+    },
+    {
+      title: "Stress Management Techniques",
+      description: "Your entries show elevated stress levels on certain days",
+      detailedContent: "I notice patterns of stress in your recent entries, particularly around work deadlines. Consider implementing breathing exercises, short walks, or the 5-4-3-2-1 grounding technique when you feel overwhelmed. These can help regulate your nervous system in real-time.",
+      category: "Wellness",
+      actionText: "Learn Techniques"
+    },
+    {
+      title: "Gratitude Integration",
+      description: "Enhance your entries with structured gratitude practice",
+      detailedContent: "Your writing shows appreciation for relationships and experiences. Formalizing a gratitude practice by ending each entry with 3 things you're grateful for can boost your overall well-being and help you maintain perspective during challenging times.",
+      category: "Growth",
+      actionText: "Try Gratitude Practice"
+    },
+    {
+      title: "Sleep-Mood Connection",
+      description: "Track how sleep quality affects your emotional state",
+      detailedContent: "Your mood patterns suggest a correlation with sleep quality. Consider adding a brief note about your sleep to each entry. This awareness can help you identify how rest impacts your emotional regulation and make more informed decisions about your evening routine.",
+      category: "Health",
+      actionText: "Track Sleep Impact"
+    }
+  ];
+
   return (
     <ResponsiveLayout 
       title="Insights" 
       subtitle="Discover patterns in your personal growth journey"
     >
-      <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="space-y-8 max-w-7xl mx-auto">
         {/* Header with Time Range Selector */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -143,10 +188,16 @@ const Insights = () => {
           </div>
         </div>
 
+        {/* Emotional Landscape */}
+        <EmotionBubbleCard 
+          emotions={emotionsData}
+          onViewEntries={handleViewEntries}
+          onAskQuestions={handleAskQuestions}
+        />
+
         {/* Main Insight Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <PersonalityInsightCard insights={personalityInsights} />
-          
           <MoodInsightCard 
             moodData={moodData}
             averageMood={averageMood}
@@ -154,12 +205,59 @@ const Insights = () => {
           />
         </div>
 
-        {/* Additional insights for premium users */}
+        {/* Advanced Charts for Premium Users */}
+        {isPremium && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <MoodTrendChart data={moodTrends} timeRange={timeRange} />
+            <PersonalityRadarChart insights={personalityInsights} />
+          </div>
+        )}
+
+        {/* Recurring Topics */}
+        <RecurringTopicsCard />
+
+        {/* AI Suggestions Grid */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-light text-white tracking-tight mb-2">Personalized Suggestions</h2>
+            <p className="text-gray-400 font-light">AI-powered recommendations based on your journal patterns</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {suggestions.map((suggestion, index) => (
+              <SuggestionCard
+                key={index}
+                title={suggestion.title}
+                description={suggestion.description}
+                detailedContent={suggestion.detailedContent}
+                category={suggestion.category}
+                actionText={suggestion.actionText}
+                onAction={() => {
+                  trackFeatureUsage('suggestion_action', 'interaction', {
+                    metadata: { suggestion: suggestion.title }
+                  });
+                  // Handle action based on suggestion type
+                  navigate('/coach', { 
+                    state: { 
+                      initialMessage: `I'd like to explore: ${suggestion.title}`,
+                      contextType: 'suggestion' 
+                    } 
+                  });
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Talk to Journal Section */}
+        <TalkToJournalCard />
+
+        {/* Premium upgrade section for non-premium users */}
         {!isPremium && (
           <div className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 border border-blue-500/20 rounded-2xl p-8 text-center backdrop-blur-sm">
             <h3 className="text-xl font-medium text-white mb-4">Unlock Advanced Insights</h3>
             <p className="text-gray-400 mb-6">
-              Get deeper personality analysis, emotion patterns, and personalized recommendations with Premium.
+              Get deeper personality analysis, advanced mood charts, emotion correlations, and personalized coaching recommendations with Premium.
             </p>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8">
               Upgrade to Premium
