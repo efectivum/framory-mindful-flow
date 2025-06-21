@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { Message } from '@/types/chat';
 import { CoachHabitSuggestion } from './CoachHabitSuggestion';
 import { CoachingFeedbackDialog } from './CoachingFeedbackDialog';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { Button } from './ui/button';
-import { ThumbsUp, MessageSquare } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 
 interface ChatMessageProps {
   message: Message;
@@ -42,15 +43,22 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback })
   };
 
   return (
-    <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
+    <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4 px-2`}>
       <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+        className={`max-w-[85%] md:max-w-[80%] rounded-lg px-4 py-3 ${
           isBot
             ? 'bg-gray-100 text-gray-800'
             : 'bg-blue-600 text-white'
         }`}
       >
-        <div className="whitespace-pre-wrap">{message.content}</div>
+        {/* Message Content */}
+        <div className="break-words">
+          {isBot ? (
+            <MarkdownRenderer content={message.content} />
+          ) : (
+            <div className="whitespace-pre-wrap">{message.content}</div>
+          )}
+        </div>
         
         {/* Habit Suggestion */}
         {message.habitSuggestion && (
@@ -69,7 +77,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback })
               variant="ghost"
               size="sm"
               onClick={() => setShowFeedbackDialog(true)}
-              className="text-xs text-gray-600 hover:text-gray-800 p-1 h-auto"
+              className="text-xs text-gray-600 hover:text-gray-800 p-1 h-auto min-h-[32px]"
             >
               <ThumbsUp className="h-3 w-3 mr-1" />
               Rate this coaching
@@ -77,7 +85,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onFeedback })
           </div>
         )}
 
-        <div className="text-xs opacity-70 mt-1">
+        {/* Timestamp */}
+        <div className="text-xs opacity-70 mt-2">
           {message.timestamp.toLocaleTimeString([], { 
             hour: '2-digit', 
             minute: '2-digit' 

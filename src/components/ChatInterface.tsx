@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalSuggestion } from '@/hooks/useJournalSuggestion';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useLocalChatState } from '@/hooks/useLocalChatState';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -18,7 +18,7 @@ export const ChatInterface = () => {
   const { loading: authLoading } = useAuth();
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
-  const { isDetectingIntent, generateResponse, detectIntent } = useConversationalAI();
+  const { isDetectingIntent, generateResponse } = useConversationalAI();
   
   const {
     messages,
@@ -188,66 +188,70 @@ export const ChatInterface = () => {
   // Show loading only while auth is loading
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#171c26]">
-        <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <h3 className="text-white font-medium mb-2">Loading Coach</h3>
-          <p className="text-gray-400 text-sm">
-            Setting up your coaching session...
-          </p>
+      <ResponsiveLayout showHeader={false} hideBottomNav={true}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
+            <h3 className="text-white font-medium mb-2">Loading Coach</h3>
+            <p className="text-gray-400 text-sm">
+              Setting up your coaching session...
+            </p>
+          </div>
         </div>
-      </div>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <ChatErrorBoundary>
-      <div className="flex flex-col h-screen w-full bg-[#171c26]">
-        <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
-        
-        <MessageList
-          messages={messages}
-          isDetectingIntent={isDetectingIntent}
-          isGeneratingResponse={isGeneratingResponse}
-          messagesEndRef={messagesEndRef}
-          onFeedback={handleCoachingFeedback}
-        />
-        
-        <ChatInput
-          inputText={inputText}
-          setInputText={setInputText}
-          handleSend={handleSend}
-          handleFileChange={handleFileChange}
-          handleVoiceTranscription={handleVoiceTranscription}
-          handleActivitySelect={handleActivitySelect}
-          fileAttachment={fileAttachment}
-          setFileAttachment={setFileAttachment}
-          selectedActivity={selectedActivity}
-          setSelectedActivity={setSelectedActivity}
-          showActivitySelector={showActivitySelector}
-          setShowActivitySelector={setShowActivitySelector}
-          isDetectingIntent={isDetectingIntent}
-          isGeneratingResponse={isGeneratingResponse}
-          textAreaRef={textAreaRef}
-        />
-        
-        <JournalPreviewModal
-          isOpen={journalSuggestion.showPreview}
-          onClose={journalSuggestion.clearSuggestion}
-          suggestedContent={journalSuggestion.suggestedContent}
-          onSave={handleJournalSave}
-          onCancel={handleJournalCancel}
-        />
+    <ResponsiveLayout showHeader={false} hideBottomNav={true}>
+      <ChatErrorBoundary>
+        <div className="flex flex-col h-full bg-[#171c26] -m-4 md:-m-6">
+          <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
+          
+          <MessageList
+            messages={messages}
+            isDetectingIntent={isDetectingIntent}
+            isGeneratingResponse={isGeneratingResponse}
+            messagesEndRef={messagesEndRef}
+            onFeedback={handleCoachingFeedback}
+          />
+          
+          <ChatInput
+            inputText={inputText}
+            setInputText={setInputText}
+            handleSend={handleSend}
+            handleFileChange={handleFileChange}
+            handleVoiceTranscription={handleVoiceTranscription}
+            handleActivitySelect={handleActivitySelect}
+            fileAttachment={fileAttachment}
+            setFileAttachment={setFileAttachment}
+            selectedActivity={selectedActivity}
+            setSelectedActivity={setSelectedActivity}
+            showActivitySelector={showActivitySelector}
+            setShowActivitySelector={setShowActivitySelector}
+            isDetectingIntent={isDetectingIntent}
+            isGeneratingResponse={isGeneratingResponse}
+            textAreaRef={textAreaRef}
+          />
+          
+          <JournalPreviewModal
+            isOpen={journalSuggestion.showPreview}
+            onClose={journalSuggestion.clearSuggestion}
+            suggestedContent={journalSuggestion.suggestedContent}
+            onSave={handleJournalSave}
+            onCancel={handleJournalCancel}
+          />
 
-        <ChatSessionSidebar
-          isOpen={showSessionSidebar}
-          onClose={() => setShowSessionSidebar(false)}
-          sessions={sessions}
-          currentSessionId={currentSessionId}
-          onSwitchSession={switchToSession}
-          onNewChat={startNewChat}
-        />
-      </div>
-    </ChatErrorBoundary>
+          <ChatSessionSidebar
+            isOpen={showSessionSidebar}
+            onClose={() => setShowSessionSidebar(false)}
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            onSwitchSession={switchToSession}
+            onNewChat={startNewChat}
+          />
+        </div>
+      </ChatErrorBoundary>
+    </ResponsiveLayout>
   );
 };
