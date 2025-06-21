@@ -13,7 +13,7 @@ interface PersonalityRadarChartProps {
 export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ insights }) => {
   if (!insights) {
     return (
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
         <CardHeader>
           <CardTitle className="text-white text-lg flex items-center gap-2">
             <Brain className="w-5 h-5" />
@@ -46,7 +46,7 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
   };
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+    <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
       <CardHeader className="px-6 pt-6 pb-4">
         <CardTitle className="text-white text-lg flex items-center gap-2">
           <Brain className="w-5 h-5" />

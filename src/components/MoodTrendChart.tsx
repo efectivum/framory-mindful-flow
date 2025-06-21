@@ -16,7 +16,7 @@ export const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data, timeRange 
   
   if (validData.length === 0) {
     return (
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
         <CardHeader>
           <CardTitle className="text-white text-lg">Mood Trends</CardTitle>
         </CardHeader>
@@ -46,7 +46,7 @@ export const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data, timeRange 
   };
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+    <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
       <CardHeader className="px-6 pt-6 pb-4">
         <CardTitle className="text-white text-lg flex items-center justify-between">
           Mood Trends ({timeRange} days)

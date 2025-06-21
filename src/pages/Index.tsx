@@ -34,9 +34,9 @@ const Index = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
         <div className="text-center max-w-md w-full space-y-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
             <Calendar className="w-8 h-8 text-white" />
           </div>
           <div>
@@ -47,17 +47,17 @@ const Index = () => {
               Your personal growth companion for mindful living
             </p>
           </div>
-          <Link to="/auth">
-            <Button size="lg" className="px-8 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full h-12">
+          <Button size="lg" className="px-8 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-2xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" asChild>
+            <Link to="/auth">
               Start Your Journey
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Create flippable stat cards
+  // Create enhanced stat cards with proper mobile spacing
   const createStatCard = (
     icon: React.ReactNode,
     title: string,
@@ -66,7 +66,7 @@ const Index = () => {
     color: string
   ) => {
     const front = (
-      <div className={`h-full w-full rounded-2xl ${color} p-6 flex flex-col justify-between`}>
+      <div className={`h-full w-full rounded-2xl ${color} p-6 flex flex-col justify-between shadow-lg border border-white/10`}>
         <div className="flex items-center justify-between">
           <div className="text-white/80">{icon}</div>
         </div>
@@ -78,8 +78,8 @@ const Index = () => {
     );
 
     const back = (
-      <div className={`h-full w-full rounded-2xl ${color} p-6 flex items-center justify-center`}>
-        <p className="text-white/90 text-center font-light">{description}</p>
+      <div className={`h-full w-full rounded-2xl ${color} p-6 flex items-center justify-center shadow-lg border border-white/10`}>
+        <p className="text-white/90 text-center font-light text-sm leading-relaxed">{description}</p>
       </div>
     );
 
@@ -111,17 +111,19 @@ const Index = () => {
   );
 
   return (
-    <ResponsiveLayout>
-      <div className="space-y-12 max-w-4xl mx-auto">
-        {/* Welcome Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-light text-white tracking-tight">{greeting}</h1>
-          <p className="text-xl text-gray-300 font-light max-w-2xl mx-auto">{todayContent.prompt}</p>
+    <ResponsiveLayout showHeader={false}>
+      <div className="space-y-8 md:space-y-12">
+        {/* Welcome Section with enhanced spacing */}
+        <div className="text-center space-y-4 pt-4 md:pt-8">
+          <h1 className="text-3xl md:text-5xl font-light text-white tracking-tight">{greeting}</h1>
+          <p className="text-lg md:text-xl text-gray-300 font-light max-w-2xl mx-auto leading-relaxed">
+            {todayContent.prompt}
+          </p>
         </div>
 
-        {/* Intention Setting */}
+        {/* Intention Setting with enhanced design */}
         {todayContent.showIntentionBox && (
-          <Card className="bg-gray-800/30 border-gray-700/50 backdrop-blur-sm max-w-md mx-auto">
+          <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm max-w-md mx-auto shadow-lg rounded-2xl">
             <CardContent className="p-6">
               {todayContent.intention ? (
                 <div className="text-center space-y-4">
@@ -133,7 +135,7 @@ const Index = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => todayContent.setIntention("")}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-xl"
                   >
                     Change intention
                   </Button>
@@ -153,7 +155,7 @@ const Index = () => {
                     <label className="block text-gray-400 text-sm mb-2">Set your intention for today</label>
                     <input
                       type="text"
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="e.g. Be present in every moment"
                       value={intentionInput}
                       onChange={e => setIntentionInput(e.target.value)}
@@ -161,7 +163,7 @@ const Index = () => {
                       autoFocus
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl">
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl">
                     Set Intention
                   </Button>
                 </form>
@@ -170,43 +172,43 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Interactive Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Enhanced Interactive Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <FlippableCard
             frontContent={streakCard.front}
             backContent={streakCard.back}
             height="h-32"
-            className="cursor-pointer"
+            className="cursor-pointer transform transition-all duration-200 hover:scale-[1.02]"
           />
           <FlippableCard
             frontContent={entriesCard.front}
             backContent={entriesCard.back}
             height="h-32"
-            className="cursor-pointer"
+            className="cursor-pointer transform transition-all duration-200 hover:scale-[1.02]"
           />
           <FlippableCard
             frontContent={habitsCard.front}
             backContent={habitsCard.back}
             height="h-32"
-            className="cursor-pointer"
+            className="cursor-pointer transform transition-all duration-200 hover:scale-[1.02]"
           />
         </div>
 
-        {/* Today's Habits */}
+        {/* Today's Habits with enhanced design */}
         {todaysHabits.length > 0 && (
-          <Card className="bg-gray-800/30 border-gray-700/50 backdrop-blur-sm">
+          <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
             <CardContent className="p-6">
               <h3 className="text-white font-medium mb-4 text-lg">Today's Focus</h3>
               <div className="space-y-3">
                 {todaysHabits.map(habit => (
                   <div
                     key={habit.id}
-                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-colors"
+                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/30 hover:border-gray-500/50 transition-all duration-200 hover:bg-gray-700/40"
                   >
                     <span className="text-gray-200 font-medium">{habit.title}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-gray-400">🔥 {habit.current_streak}d</span>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700 rounded-lg">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg">
                         Complete
                       </Button>
                     </div>
@@ -217,9 +219,9 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Main Actions */}
+        {/* Enhanced Main Actions */}
         <div className="space-y-6">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-14 text-lg font-medium rounded-2xl shadow-lg" asChild>
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-14 text-lg font-medium rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]" asChild>
             <Link to="/journal">
               <Plus className="w-5 h-5 mr-3" />
               Start Journaling
@@ -227,19 +229,19 @@ const Index = () => {
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50" asChild>
+            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50 hover:border-gray-500/50 shadow-md hover:shadow-lg transition-all duration-200" asChild>
               <Link to="/goals">
                 <Target className="w-4 h-4 mr-2" />
                 Manage Habits
               </Link>
             </Button>
-            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50" asChild>
+            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50 hover:border-gray-500/50 shadow-md hover:shadow-lg transition-all duration-200" asChild>
               <Link to="/insights">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Insights
               </Link>
             </Button>
-            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50" asChild>
+            <Button className="bg-gray-700/50 hover:bg-gray-600/50 text-white h-12 rounded-xl border border-gray-600/50 hover:border-gray-500/50 shadow-md hover:shadow-lg transition-all duration-200" asChild>
               <Link to="/coach">
                 <BookOpen className="w-4 h-4 mr-2" />
                 Chat with Coach
