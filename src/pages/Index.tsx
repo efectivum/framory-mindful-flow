@@ -24,6 +24,13 @@ const Index = () => {
   const [intentionInput, setIntentionInput] = React.useState('');
   const [isSettingIntention, setIsSettingIntention] = React.useState(false);
 
+  // Debug logging for streak
+  React.useEffect(() => {
+    console.log('Homepage stats:', stats);
+    console.log('Entries:', entries.length);
+    console.log('Current streak from stats:', stats.currentStreak);
+  }, [stats, entries]);
+
   // Calculate habit stats and filter out completed habits
   const activeHabits = habits.filter(habit => habit.is_active);
   const uncompletedHabits = activeHabits.filter(habit => !todayCompletions.includes(habit.id));
@@ -137,10 +144,14 @@ const Index = () => {
     return { front, back };
   };
 
+  // Debug the streak value before using it
+  const currentStreak = stats.currentStreak || 0;
+  console.log('Using streak value:', currentStreak);
+
   const streakCard = createStatCard(
     <Calendar className="w-6 h-6" />,
     "Day Streak",
-    stats.currentStreak,
+    currentStreak,
     "Keep writing daily to maintain your momentum and build lasting habits.",
     "bg-gradient-to-br from-blue-500/80 to-cyan-600/80"
   );
@@ -172,7 +183,6 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Intention Setting with enhanced design */}
         {todayContent.showIntentionBox && (
           <ButtonErrorBoundary fallbackMessage="Intention setting is not available">
             <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm max-w-md mx-auto shadow-lg rounded-2xl">
@@ -261,7 +271,6 @@ const Index = () => {
         {/* Dynamic Homepage Features - Time-aware content */}
         <DynamicHomepageFeatures />
 
-        {/* Today's Habits with enhanced design and proper filtering */}
         {activeHabits.length > 0 && (
           <ButtonErrorBoundary fallbackMessage="Habit tracking is not available">
             <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
