@@ -6,6 +6,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import React from 'npm:react@18.3.1'
 import { WelcomeEmail } from './_templates/welcome-email.tsx'
 import { PasswordResetEmail } from './_templates/password-reset-email.tsx'
+import { BetaInvitationEmail } from './_templates/beta-invitation-email.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,11 +14,12 @@ const corsHeaders = {
 }
 
 interface AuthEmailRequest {
-  type: 'welcome' | 'password_reset'
+  type: 'welcome' | 'password_reset' | 'beta_invitation'
   email: string
   name?: string
   confirmationUrl?: string
   resetUrl?: string
+  signupUrl?: string
 }
 
 serve(async (req) => {
@@ -27,7 +29,7 @@ serve(async (req) => {
 
   try {
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
-    const { type, email, name, confirmationUrl, resetUrl }: AuthEmailRequest = await req.json()
+    const { type, email, name, confirmationUrl, resetUrl, signupUrl }: AuthEmailRequest = await req.json()
 
     let html: string
     let subject: string
@@ -57,12 +59,25 @@ serve(async (req) => {
       )
       subject = 'Reset your password'
       
+    } else if (type === 'beta_invitation') {
+      if (!signupUrl) {
+        throw new Error('Signup URL is required for beta invitation emails')
+      }
+      
+      html = await renderAsync(
+        React.createElement(BetaInvitationEmail, {
+          email,
+          signupUrl,
+        })
+      )
+      subject = "You're invited to join the Lumatori Beta Program! 🌟"
+      
     } else {
       throw new Error('Invalid email type')
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'Personal Growth <noreply@yourdomain.com>', // Update with your domain
+      from: 'Lumatori <noreply@yourdomain.com>', // Update with your domain
       to: [email],
       subject,
       html,

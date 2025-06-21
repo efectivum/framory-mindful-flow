@@ -13,12 +13,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Mail, Users } from 'lucide-react';
+import { Loader2, Mail, Users, AlertTriangle } from 'lucide-react';
 
 interface AddBetaUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUserAdded: () => void;
+}
+
+interface ProcessResult {
+  email: string;
+  success: boolean;
+  error?: string;
+  emailSent?: boolean;
+  emailError?: string;
 }
 
 export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
@@ -32,6 +40,33 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
   const [bulkEmails, setBulkEmails] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'single' | 'bulk'>('single');
+
+  const sendBetaInvitationEmail = async (emailAddress: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const signupUrl = `${window.location.origin}/auth?tab=signup`;
+      
+      const { data, error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          type: 'beta_invitation',
+          email: emailAddress,
+          signupUrl
+        }
+      });
+
+      if (error) {
+        console.error('Email sending error:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Email sending error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send email' 
+      };
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,13 +96,17 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
         ? [email.trim()]
         : bulkEmails.split('\n').map(e => e.trim()).filter(e => e);
 
-      const results = [];
+      const results: ProcessResult[] = [];
       
       for (const emailAddress of emailsToAdd) {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(emailAddress)) {
-          results.push({ email: emailAddress, success: false, error: 'Invalid email format' });
+          results.push({ 
+            email: emailAddress, 
+            success: false, 
+            error: 'Invalid email format' 
+          });
           continue;
         }
 
@@ -79,9 +118,15 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
             .eq('email', emailAddress)
             .single();
 
+          let dbOperationSuccess = false;
+
           if (existing) {
             if (existing.subscription_tier === 'beta') {
-              results.push({ email: emailAddress, success: false, error: 'Already a beta user' });
+              results.push({ 
+                email: emailAddress, 
+                success: false, 
+                error: 'Already a beta user' 
+              });
               continue;
             } else {
               // Update existing user to beta
@@ -94,9 +139,14 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
                 .eq('email', emailAddress);
 
               if (updateError) {
-                results.push({ email: emailAddress, success: false, error: updateError.message });
+                results.push({ 
+                  email: emailAddress, 
+                  success: false, 
+                  error: updateError.message 
+                });
                 continue;
               }
+              dbOperationSuccess = true;
             }
           } else {
             // Create new beta user
@@ -110,11 +160,19 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
               });
 
             if (insertError) {
-              results.push({ email: emailAddress, success: false, error: insertError.message });
+              results.push({ 
+                email: emailAddress, 
+                success: false, 
+                error: insertError.message 
+              });
               continue;
             }
+            dbOperationSuccess = true;
           }
 
+          // Send invitation email
+          const emailResult = await sendBetaInvitationEmail(emailAddress);
+          
           // Log admin action
           await supabase
             .from('admin_audit_log')
@@ -122,10 +180,20 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
               admin_user_id: user?.id,
               action: 'add_beta_user',
               target_user_email: emailAddress,
-              details: { mode }
+              details: { 
+                mode,
+                emailSent: emailResult.success,
+                emailError: emailResult.error
+              }
             });
 
-          results.push({ email: emailAddress, success: true });
+          results.push({ 
+            email: emailAddress, 
+            success: dbOperationSuccess,
+            emailSent: emailResult.success,
+            emailError: emailResult.error
+          });
+
         } catch (error) {
           results.push({ 
             email: emailAddress, 
@@ -135,14 +203,43 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
         }
       }
 
+      // Process results and show appropriate feedback
       const successful = results.filter(r => r.success).length;
       const failed = results.filter(r => !r.success).length;
+      const emailsSent = results.filter(r => r.emailSent).length;
+      const emailsFailed = results.filter(r => r.success && !r.emailSent).length;
 
       if (successful > 0) {
+        let message = `Added ${successful} beta user${successful === 1 ? '' : 's'}`;
+        
+        if (emailsSent > 0) {
+          message += `, ${emailsSent} invitation email${emailsSent === 1 ? '' : 's'} sent`;
+        }
+        
+        if (emailsFailed > 0) {
+          message += `, ${emailsFailed} email${emailsFailed === 1 ? '' : 's'} failed to send`;
+        }
+        
+        if (failed > 0) {
+          message += `, ${failed} failed to add`;
+        }
+
         toast({
           title: "Success",
-          description: `Added ${successful} beta user${successful === 1 ? '' : 's'}${failed > 0 ? `, ${failed} failed` : ''}`,
+          description: message,
+          variant: emailsFailed > 0 ? "default" : "default",
         });
+
+        // Show warning for email failures
+        if (emailsFailed > 0) {
+          setTimeout(() => {
+            toast({
+              title: "Email Warning",
+              description: `Some invitation emails failed to send. Users were added to beta but didn't receive invitations.`,
+              variant: "destructive",
+            });
+          }, 2000);
+        }
         
         // Reset form
         setEmail('');
@@ -202,6 +299,19 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
             </Button>
           </div>
 
+          {/* Email Notice */}
+          <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <Mail className="w-4 h-4 text-blue-400 mt-0.5" />
+              <div className="text-sm">
+                <p className="text-blue-200 font-medium">Beta Invitation Emails</p>
+                <p className="text-blue-300/80">
+                  Users will receive a personalized invitation email with instructions to join the beta program.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {mode === 'single' ? (
             <div>
               <Label htmlFor="email" className="text-white">Email Address</Label>
@@ -251,10 +361,10 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Adding...
+                  Processing...
                 </>
               ) : (
-                `Add Beta User${mode === 'bulk' ? 's' : ''}`
+                `Add & Invite Beta User${mode === 'bulk' ? 's' : ''}`
               )}
             </Button>
           </div>

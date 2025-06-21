@@ -158,6 +158,11 @@ export const BetaUsersList: React.FC<BetaUsersListProps> = ({
                         Active Account
                       </Badge>
                     )}
+                    {!betaUser.user_id && (
+                      <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                        Pending Signup
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-4 text-sm text-gray-400">

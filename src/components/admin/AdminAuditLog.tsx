@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +8,8 @@ import {
   User, 
   Plus, 
   Trash2,
-  Loader2 
+  Loader2, 
+  Mail 
 } from 'lucide-react';
 
 interface AuditLogEntry {
@@ -24,15 +24,8 @@ interface AuditLogEntry {
 export const AdminAuditLog: React.FC = React.memo(() => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastFetch, setLastFetch] = useState<number>(0);
 
   const loadAuditLogs = useCallback(async () => {
-    // Rate limiting - only fetch once per 10 seconds
-    const now = Date.now();
-    if (now - lastFetch < 10000 && lastFetch > 0) {
-      return;
-    }
-
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -41,18 +34,42 @@ export const AdminAuditLog: React.FC = React.memo(() => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading audit logs:', error);
+        throw error;
+      }
+      
+      console.log('Loaded audit logs:', data);
       setAuditLogs(data || []);
-      setLastFetch(now);
     } catch (error) {
       console.error('Error loading audit logs:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [lastFetch]);
+  }, []);
 
   useEffect(() => {
     loadAuditLogs();
+    
+    // Set up real-time subscription for audit log updates
+    const subscription = supabase
+      .channel('admin_audit_log_changes')
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'admin_audit_log' 
+        }, 
+        (payload) => {
+          console.log('New audit log entry:', payload);
+          setAuditLogs(current => [payload.new as AuditLogEntry, ...current.slice(0, 49)]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [loadAuditLogs]);
 
   const getActionIcon = useCallback((action: string) => {
@@ -156,8 +173,21 @@ export const AdminAuditLog: React.FC = React.memo(() => {
                   </div>
                   
                   {log.details && Object.keys(log.details).length > 0 && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      Details: {JSON.stringify(log.details)}
+                    <div className="mt-2 text-xs">
+                      {log.details.emailSent !== undefined && (
+                        <div className={`flex items-center gap-1 ${log.details.emailSent ? 'text-green-400' : 'text-red-400'}`}>
+                          <Mail className="w-3 h-3" />
+                          Email: {log.details.emailSent ? 'Sent' : 'Failed'}
+                          {log.details.emailError && (
+                            <span className="text-red-400 ml-1">({log.details.emailError})</span>
+                          )}
+                        </div>
+                      )}
+                      {log.details.mode && (
+                        <div className="text-gray-500 mt-1">
+                          Mode: {log.details.mode}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
