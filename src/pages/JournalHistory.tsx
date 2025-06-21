@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalEntryAnalysis } from '@/hooks/useJournalEntryAnalysis';
 import { useJournalFiltering } from '@/hooks/useJournalFiltering';
@@ -12,9 +13,12 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { AnalysisStatusButton } from '@/components/AnalysisStatusButton';
 import { LoadingCard } from '@/components/ui/loading-card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 const JournalHistory = () => {
-  const { entries, isLoading, triggerMissingAnalysis } = useJournalEntries();
+  const navigate = useNavigate();
+  const { entries, isLoading, triggerMissingAnalysis, stats } = useJournalEntries();
   const { isAnalyzing, analysisError } = useJournalEntryAnalysis();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   
@@ -49,7 +53,7 @@ const JournalHistory = () => {
 
   if (isLoading) {
     return (
-      <ResponsiveLayout title="Journal History" subtitle="Loading your entries...">
+      <ResponsiveLayout title="My Journal" subtitle="Loading your entries...">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <LoadingCard key={i} className="h-48" />
@@ -92,7 +96,7 @@ const JournalHistory = () => {
 
   return (
     <ResponsiveLayout 
-      title="Journal History" 
+      title="My Journal" 
       subtitle={getSubtitle()}
     >
       <div className="max-w-4xl mx-auto">
@@ -106,6 +110,39 @@ const JournalHistory = () => {
               resultCount={resultCount}
             />
           </div>
+        )}
+
+        {/* Quick Stats Card - Mobile Focused */}
+        {!isSearchActive && (
+          <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl mb-6">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-white">{stats.totalEntries}</div>
+                  <div className="text-gray-400 text-xs">Total Entries</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white">{stats.currentStreak}</div>
+                  <div className="text-gray-400 text-xs">Day Streak</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white">{stats.thisWeekEntries}</div>
+                  <div className="text-gray-400 text-xs">This Week</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* New Entry Button - Prominent on Mobile */}
+        {!isSearchActive && (
+          <Button 
+            onClick={() => navigate('/journal')}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white h-14 text-lg font-medium rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] mb-6"
+          >
+            <Plus className="w-5 h-5 mr-3" />
+            Write New Entry
+          </Button>
         )}
 
         {/* Header with Analysis Status, Search, and Filter */}
@@ -196,8 +233,15 @@ const JournalHistory = () => {
               </>
             ) : entries.length === 0 ? (
               <>
-                <h3 className="text-lg font-semibold text-white mb-2">No entries yet</h3>
-                <p className="text-gray-400">Start writing your first journal entry to see it here.</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Start your journaling journey</h3>
+                <p className="text-gray-400 mb-6">Write your first entry to begin tracking your thoughts and growth.</p>
+                <Button 
+                  onClick={() => navigate('/journal')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Write First Entry
+                </Button>
               </>
             ) : (
               <>

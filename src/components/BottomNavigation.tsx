@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { id: 'dashboard', label: 'Home', icon: Home, path: '/' },
   { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
-  { id: 'journal', label: 'Journal', icon: BookOpen, path: '/journal' },
+  { id: 'journal', label: 'Journal', icon: BookOpen, path: '/journal-history' },
   { id: 'coach', label: 'Coach', icon: MessageSquare, path: '/coach' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
@@ -18,6 +18,7 @@ export const BottomNavigation: React.FC = () => {
 
   const getCurrentPageId = () => {
     const currentPath = location.pathname;
+    if (currentPath === '/journal-history') return 'journal';
     const currentItem = navItems.find(item => item.path === currentPath);
     return currentItem?.id || 'dashboard';
   };
