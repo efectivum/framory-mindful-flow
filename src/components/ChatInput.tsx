@@ -190,8 +190,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 height: '44px',
                 lineHeight: '1.5',
                 scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                WebkitScrollbar: 'none'
+                msOverflowStyle: 'none'
               }}
             />
           </div>
