@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { Send, Plus, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,6 +42,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isGeneratingResponse,
   textAreaRef,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -69,6 +71,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     requestAnimationFrame(() => {
       adjustTextareaHeight();
     });
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Auto-focus management
@@ -135,25 +141,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         )}
 
         <div className="flex items-end gap-2">
-          <label className="relative">
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              className="hidden"
-              onChange={handleFileChange}
-              disabled={isDisabled}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-11 w-11 rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
-              type="button"
-              tabIndex={-1}
-              disabled={isDisabled}
-            >
-              <Paperclip className="w-5 h-5" />
-            </Button>
-          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={isDisabled}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleFileButtonClick}
+            className="text-gray-500 hover:text-blue-400 hover:bg-blue-950 h-11 w-11 rounded-full shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
+            type="button"
+            disabled={isDisabled}
+          >
+            <Paperclip className="w-5 h-5" />
+          </Button>
 
           <div className="relative">
             <Button
