@@ -5,7 +5,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { OnboardingWelcome } from './onboarding/OnboardingWelcome';
 import { OnboardingCreateEntry } from './onboarding/OnboardingCreateEntry';
 import { OnboardingCreateHabit } from './onboarding/OnboardingCreateHabit';
@@ -15,9 +15,16 @@ import { OnboardingComplete } from './onboarding/OnboardingComplete';
 interface OnboardingFlowProps {
   onComplete?: () => void;
   onSkip?: () => void;
+  onForceClose?: () => void;
+  isSkipping?: boolean;
 }
 
-export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onSkip }) => {
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ 
+  onComplete, 
+  onSkip, 
+  onForceClose,
+  isSkipping = false 
+}) => {
   const { 
     steps, 
     currentStep, 
@@ -30,6 +37,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onSk
   } = useOnboarding();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [skipError, setSkipError] = useState<string | null>(null);
 
   const handleNext = () => {
     const current = steps[currentStepIndex];
@@ -52,9 +60,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onSk
     }
   };
 
-  const handleSkip = () => {
-    skipOnboarding();
-    onSkip?.();
+  const handleSkip = async () => {
+    setSkipError(null);
+    try {
+      await onSkip?.();
+    } catch (error) {
+      console.error('Skip failed:', error);
+      setSkipError('Failed to skip onboarding. Please try again.');
+    }
   };
 
   const renderStepContent = () => {
@@ -88,15 +101,44 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onSk
                 Step {currentStepIndex + 1} of {steps.length}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              {onForceClose && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onForceClose}
+                  className="text-red-500 hover:text-red-600"
+                  title="Force close (if stuck)"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSkip}
+                disabled={isSkipping || isUpdating}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
+
+          {/* Skip Error */}
+          {skipError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{skipError}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onForceClose}
+                className="mt-2 text-red-600"
+              >
+                Force Close
+              </Button>
+            </div>
+          )}
 
           {/* Progress */}
           <div className="mb-8">
@@ -136,9 +178,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onSk
                 <Button
                   variant="ghost"
                   onClick={handleSkip}
+                  disabled={isSkipping || isUpdating}
                   className="text-muted-foreground"
                 >
-                  Skip Tour
+                  {isSkipping ? 'Skipping...' : 'Skip Tour'}
                 </Button>
                 <Button
                   onClick={handleNext}
