@@ -51,7 +51,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="bg-[#161c26] border-t border-gray-800 safe-area-pb">
-      <div className="p-3 md:p-4">
+      <div className="p-4">
         {selectedActivity && (
           <div className="mb-3 flex items-center justify-between">
             <span className="inline-block px-3 py-1.5 bg-blue-900 text-blue-300 text-xs rounded-full border border-blue-700">
