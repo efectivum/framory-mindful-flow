@@ -65,13 +65,42 @@ export const VoiceRecordingControls = ({
           <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
             <SelectValue placeholder="Select language" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-600">
-            <SelectItem value="et">Estonian</SelectItem>
+          <SelectContent className="bg-gray-800 border-gray-600 max-h-60 overflow-y-auto">
             <SelectItem value="en">English</SelectItem>
+            <SelectItem value="et">Estonian</SelectItem>
             <SelectItem value="ru">Russian</SelectItem>
             <SelectItem value="fi">Finnish</SelectItem>
             <SelectItem value="lv">Latvian</SelectItem>
             <SelectItem value="lt">Lithuanian</SelectItem>
+            <SelectItem value="de">German</SelectItem>
+            <SelectItem value="fr">French</SelectItem>
+            <SelectItem value="es">Spanish</SelectItem>
+            <SelectItem value="it">Italian</SelectItem>
+            <SelectItem value="pt">Portuguese</SelectItem>
+            <SelectItem value="nl">Dutch</SelectItem>
+            <SelectItem value="pl">Polish</SelectItem>
+            <SelectItem value="sv">Swedish</SelectItem>
+            <SelectItem value="no">Norwegian</SelectItem>
+            <SelectItem value="da">Danish</SelectItem>
+            <SelectItem value="cs">Czech</SelectItem>
+            <SelectItem value="sk">Slovak</SelectItem>
+            <SelectItem value="hu">Hungarian</SelectItem>
+            <SelectItem value="ro">Romanian</SelectItem>
+            <SelectItem value="bg">Bulgarian</SelectItem>
+            <SelectItem value="hr">Croatian</SelectItem>
+            <SelectItem value="sr">Serbian</SelectItem>
+            <SelectItem value="sl">Slovenian</SelectItem>
+            <SelectItem value="uk">Ukrainian</SelectItem>
+            <SelectItem value="el">Greek</SelectItem>
+            <SelectItem value="tr">Turkish</SelectItem>
+            <SelectItem value="ar">Arabic</SelectItem>
+            <SelectItem value="he">Hebrew</SelectItem>
+            <SelectItem value="ja">Japanese</SelectItem>
+            <SelectItem value="ko">Korean</SelectItem>
+            <SelectItem value="zh">Chinese</SelectItem>
+            <SelectItem value="th">Thai</SelectItem>
+            <SelectItem value="vi">Vietnamese</SelectItem>
+            <SelectItem value="hi">Hindi</SelectItem>
           </SelectContent>
         </Select>
       </div>
