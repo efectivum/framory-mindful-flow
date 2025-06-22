@@ -66,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkSubscriptionStatus = React.useCallback(async () => {
     if (!user?.email) {
+      console.log('Auth: No user email, setting to free tier');
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
@@ -74,6 +75,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
+      console.log('Auth: Checking subscription status for:', user.email);
+      
       // Check database first for subscription info
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
@@ -82,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching subscription data:', error);
+        console.error('Auth: Error fetching subscription data:', error);
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -91,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (!subscriberData) {
-        // No subscription record found - user is free tier
+        console.log('Auth: No subscription record found - user is free tier');
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -99,24 +102,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const now = new Date();
-      const endDate = subscriberData.subscription_end ? new Date(subscriberData.subscription_end) : null;
-      
-      // Check if subscription is still valid based on end date
-      const isSubscriptionActive = subscriberData.subscribed && (!endDate || endDate > now);
-      
+      console.log('Auth: Subscriber data found:', {
+        tier: subscriberData.subscription_tier,
+        subscribed: subscriberData.subscribed,
+        endDate: subscriberData.subscription_end
+      });
+
+      // Check for beta users FIRST - beta users get access regardless of subscription status
       if (subscriberData.subscription_tier === 'beta') {
+        console.log('Auth: Beta user detected, granting beta access');
         setSubscriptionTier('beta');
         setIsBeta(true);
         setIsPremium(false);
         setSubscriptionEnd(subscriberData.subscription_end);
-      } else if (isSubscriptionActive && subscriberData.subscription_tier === 'premium') {
+        return;
+      }
+
+      // For non-beta users, check subscription status
+      const now = new Date();
+      const endDate = subscriberData.subscription_end ? new Date(subscriberData.subscription_end) : null;
+      const isSubscriptionActive = subscriberData.subscribed && (!endDate || endDate > now);
+      
+      if (isSubscriptionActive && subscriberData.subscription_tier === 'premium') {
+        console.log('Auth: Premium subscription active');
         setSubscriptionTier('premium');
         setIsPremium(true);
         setIsBeta(false);
         setSubscriptionEnd(subscriberData.subscription_end);
       } else {
-        // Subscription expired or not found
+        console.log('Auth: No active subscription, setting to free tier');
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -124,7 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      console.error('Auth: Error checking subscription:', error);
       // Default to free on any error
       setSubscriptionTier('free');
       setIsPremium(false);
@@ -137,13 +151,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user?.email) return;
     
     try {
+      console.log('Auth: Refreshing subscription status');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error) throw error;
       
       // Refresh subscription status from database after Stripe sync
       await checkSubscriptionStatus();
     } catch (error) {
-      console.error('Error refreshing subscription:', error);
+      console.error('Auth: Error refreshing subscription:', error);
     }
   }, [user?.email, checkSubscriptionStatus]);
 
@@ -196,6 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           // If admin, grant premium access immediately without DB check
           if (adminStatus) {
+            console.log('Auth: Admin user detected, granting premium access');
             setSubscriptionTier('premium');
             setIsPremium(true);
             setIsBeta(false);
@@ -207,6 +223,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }, 0);
           }
         } else {
+          console.log('Auth: User logged out, resetting subscription state');
           setIsAdmin(false);
           setSubscriptionTier('free');
           setIsPremium(false);
@@ -238,6 +255,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         checkAdminStatus().then(adminStatus => {
           if (adminStatus) {
+            console.log('Auth: Existing admin session detected');
             setSubscriptionTier('premium');
             setIsPremium(true);
             setIsBeta(false);
