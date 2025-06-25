@@ -16,6 +16,7 @@ import { Message } from '@/types/chat';
 import { createUserMessage, createBotMessage } from '@/utils/messageUtils';
 
 export const ChatInterface = () => {
+  // Initialize all hooks first - this ensures consistent hook order
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
   const { isDetectingIntent, generateResponse } = useConversationalAI();
@@ -33,34 +34,23 @@ export const ChatInterface = () => {
     hasInitialized
   } = useLocalChatState();
 
-  // Local UI state
+  // Local UI state hooks
   const [inputText, setInputText] = useState('');
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [fileAttachment, setFileAttachment] = useState<File | null>(null);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [showSessionSidebar, setShowSessionSidebar] = useState(false);
   
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Stable callback for scrolling
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Show loading state while initializing
-  if (isLoadingSessions || !hasInitialized) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26]">
-        <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <h3 className="text-white font-medium mb-2">Setting up your chat...</h3>
-          <p className="text-gray-400 text-sm">Loading your conversation history</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle sending messages
+  // Handle sending messages with simplified dependencies
   const handleSend = useCallback(async () => {
     if (!inputText.trim() && !fileAttachment) return;
     
@@ -125,7 +115,7 @@ export const ChatInterface = () => {
   }, [inputText, fileAttachment, selectedActivity, messages, addMessage, generateResponse, journalSuggestion, setIsGeneratingResponse]);
 
   // File handling
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
@@ -134,20 +124,20 @@ export const ChatInterface = () => {
     }
     setFileAttachment(file);
     textAreaRef.current?.focus();
-  };
+  }, []);
 
   // Voice transcription
-  const handleVoiceTranscription = (transcribedText: string) => {
+  const handleVoiceTranscription = useCallback((transcribedText: string) => {
     setInputText(transcribedText);
     textAreaRef.current?.focus();
-  };
+  }, []);
 
   // Activity selection
-  const handleActivitySelect = (activity: string) => {
+  const handleActivitySelect = useCallback((activity: string) => {
     setSelectedActivity(activity);
     setShowActivitySelector(false);
     textAreaRef.current?.focus();
-  };
+  }, []);
 
   // Journal handling
   const handleJournalSave = useCallback((content: string) => {
@@ -180,6 +170,19 @@ export const ChatInterface = () => {
   }) => {
     console.log('Coaching feedback received:', feedbackData);
   }, []);
+
+  // Now handle loading state rendering - after all hooks are defined
+  if (isLoadingSessions || !hasInitialized) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <h3 className="text-white font-medium mb-2">Setting up your chat...</h3>
+          <p className="text-gray-400 text-sm">Loading your conversation history</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ChatErrorBoundary>
