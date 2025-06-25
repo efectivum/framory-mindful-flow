@@ -688,6 +688,36 @@ export type Database = {
           },
         ]
       }
+      email_subscribers: {
+        Row: {
+          email: string
+          id: string
+          metadata: Json | null
+          resend_contact_id: string | null
+          source: string
+          status: string
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          metadata?: Json | null
+          resend_contact_id?: string | null
+          source?: string
+          status?: string
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          metadata?: Json | null
+          resend_contact_id?: string | null
+          source?: string
+          status?: string
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
       entry_quick_analysis: {
         Row: {
           action_suggestions: string[] | null

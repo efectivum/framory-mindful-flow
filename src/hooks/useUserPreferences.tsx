@@ -40,14 +40,46 @@ export const useUserPreferences = () => {
     mutationFn: async (updates: Partial<Omit<UserPreferences, 'id'>>) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
+      // First, try to get existing preferences
+      const { data: existingPrefs } = await supabase
         .from('user_preferences')
-        .upsert([{ user_id: user.id, ...updates }])
-        .select()
+        .select('id')
+        .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
-      return data;
+      let result;
+      
+      if (existingPrefs) {
+        // Update existing record
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-preferences'] });
@@ -78,6 +110,7 @@ export const useUserPreferences = () => {
       }
     },
     onError: (error) => {
+      console.error('Error updating preferences:', error);
       toast({
         title: "Error",
         description: `Failed to update preferences: ${error.message}`,
@@ -93,4 +126,3 @@ export const useUserPreferences = () => {
     isUpdating: updatePreferencesMutation.isPending,
   };
 };
-
