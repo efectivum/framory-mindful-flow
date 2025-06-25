@@ -127,7 +127,7 @@ serve(async (req) => {
     console.log('Sending email to:', user.email)
 
     const { data, error } = await resend.emails.send({
-      from: 'Weekly Insights <onboarding@resend.dev>', // Using Resend's default domain
+      from: 'Lumatori Insights <insights@lumatori.com>',
       to: [user.email],
       subject: '📊 Your weekly growth insights are ready!',
       html,
