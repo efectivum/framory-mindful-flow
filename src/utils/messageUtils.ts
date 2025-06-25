@@ -1,9 +1,13 @@
 
-import { v4 as uuidv4 } from 'uuid';
 import { Message } from '@/types/chat';
 
 export const generateMessageId = (): string => {
-  return uuidv4();
+  // Generate a UUID v4 compatible string without external dependencies
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
 
 export const createWelcomeMessage = (): Message => {
