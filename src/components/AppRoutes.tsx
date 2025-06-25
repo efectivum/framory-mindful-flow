@@ -9,7 +9,6 @@ import ConversationalOnboarding from '@/pages/ConversationalOnboarding';
 import Onboarding from '@/pages/Onboarding';
 import Journal from '@/pages/Journal';
 import JournalEntry from '@/pages/JournalEntry';
-import JournalHistory from '@/pages/JournalHistory';
 import Coach from '@/pages/Coach';
 import Insights from '@/pages/Insights';
 import Goals from '@/pages/Goals';
@@ -110,6 +109,8 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      
+      {/* Unified Journal Routes */}
       <Route
         path="/journal"
         element={
@@ -119,21 +120,14 @@ export const AppRoutes = () => {
         }
       />
       <Route
-        path="/journal/:id"
+        path="/journal/entry/:id"
         element={
           <ProtectedRoute>
             <JournalEntry />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/journal-history"
-        element={
-          <ProtectedRoute>
-            <JournalHistory />
-          </ProtectedRoute>
-        }
-      />
+      
       <Route
         path="/coach"
         element={

@@ -1,32 +1,28 @@
 
 import React from 'react';
-import { Home, MessageSquare, Target, BookOpen, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { id: 'dashboard', label: 'Home', icon: Home, path: '/' },
-  { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
-  { id: 'journal', label: 'Journal', icon: BookOpen, path: '/journal-history' },
-  { id: 'coach', label: 'Coach', icon: MessageSquare, path: '/coach' },
-  { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
-];
+import { getVisibleNavigationItems } from '@/config/navigation';
+import { useAdmin } from '@/hooks/useAdmin';
 
 export const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAdmin } = useAdmin();
+  
+  // Get main navigation items (exclude admin for mobile to save space)
+  const mainNavItems = getVisibleNavigationItems(false).slice(0, 5); // Show first 5 items
 
   const getCurrentPageId = () => {
     const currentPath = location.pathname;
-    if (currentPath === '/journal-history') return 'journal';
-    const currentItem = navItems.find(item => item.path === currentPath);
+    const currentItem = mainNavItems.find(item => item.path === currentPath);
     return currentItem?.id || 'dashboard';
   };
 
   const currentPageId = getCurrentPageId();
 
-  const handleNavigation = React.useCallback((path: string, label: string) => {
-    console.log(`Bottom nav clicked: ${label} (${path})`);
+  const handleNavigation = React.useCallback((path: string, title: string) => {
+    console.log(`Bottom nav clicked: ${title} (${path})`);
     
     // Add haptic feedback for mobile devices
     if ('vibrate' in navigator) {
@@ -47,14 +43,14 @@ export const BottomNavigation: React.FC = () => {
       {/* Glass morphism background with subtle gradient */}
       <div className="bg-gray-900/90 backdrop-blur-xl border-t border-gray-700/30 shadow-2xl">
         <div className="flex items-center justify-around px-2 py-1">
-          {navItems.map((item) => {
+          {mainNavItems.map((item) => {
             const isActive = currentPageId === item.id;
             const Icon = item.icon;
             
             return (
               <button
                 key={item.id}
-                onClick={() => handleNavigation(item.path, item.label)}
+                onClick={() => handleNavigation(item.path, item.title)}
                 className={cn(
                   "flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 ease-out min-w-16 min-h-16",
                   "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-gray-900",
@@ -68,7 +64,7 @@ export const BottomNavigation: React.FC = () => {
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation'
                 }}
-                aria-label={`Navigate to ${item.label}`}
+                aria-label={`Navigate to ${item.title}`}
                 role="tab"
                 aria-selected={isActive}
               >
@@ -93,7 +89,7 @@ export const BottomNavigation: React.FC = () => {
                       : "text-gray-500"
                   )}
                 >
-                  {item.label}
+                  {item.title}
                 </span>
               </button>
             );

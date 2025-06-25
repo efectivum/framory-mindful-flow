@@ -1,15 +1,5 @@
 
-import {
-  Calendar,
-  Target,
-  BookOpen,
-  TrendingUp,
-  Library,
-  User,
-  Home,
-  MessageSquare,
-  Shield,
-} from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -25,47 +15,11 @@ import {
 import { Link } from 'react-router-dom';
 import { UserButton } from '@/components/UserButton';
 import { useAdmin } from '@/hooks/useAdmin';
-
-const menuItems = [
-  {
-    title: 'Dashboard',
-    url: '/',
-    icon: Home,
-  },
-  {
-    title: 'Goals & Habits',
-    url: '/goals',
-    icon: Target,
-  },
-  {
-    title: 'Journaling',
-    url: '/journal',
-    icon: BookOpen,
-  },
-  {
-    title: 'Coach',
-    url: '/coach',
-    icon: MessageSquare,
-  },
-  {
-    title: 'Insights',
-    url: '/insights',
-    icon: TrendingUp,
-  },
-  {
-    title: 'Resources',
-    url: '/resources',
-    icon: Library,
-  },
-  {
-    title: 'Profile',
-    url: '/profile',
-    icon: User,
-  },
-];
+import { getVisibleNavigationItems } from '@/config/navigation';
 
 export function AppSidebar() {
   const { isAdmin, isLoading } = useAdmin();
+  const menuItems = getVisibleNavigationItems(isAdmin);
 
   return (
     <Sidebar collapsible="icon" className="bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700">
@@ -86,27 +40,20 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors">
-                    <Link to={item.url} className="flex items-center gap-3 px-3 py-2 rounded-lg">
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton 
+                    asChild 
+                    className={`text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors ${
+                      item.adminOnly ? 'border-t border-gray-700 mt-2 pt-2 text-red-300 hover:text-red-100 hover:bg-red-900/20' : ''
+                    }`}
+                  >
+                    <Link to={item.path} className="flex items-center gap-3 px-3 py-2 rounded-lg">
                       <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
-              {/* Admin Panel Link */}
-              {!isLoading && isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild className="text-red-300 hover:text-red-100 hover:bg-red-900/20 transition-colors border-t border-gray-700 mt-2 pt-2">
-                    <Link to="/admin" className="flex items-center gap-3 px-3 py-2 rounded-lg">
-                      <Shield className="w-5 h-5" />
-                      <span>Admin Panel</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
