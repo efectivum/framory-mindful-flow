@@ -15,6 +15,16 @@ export const JournalSearchBar = ({
   onClose,
   resultCount 
 }: JournalSearchBarProps) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   return (
     <div className="bg-gray-800/60 backdrop-blur-sm border-b border-gray-700/50 p-4 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center gap-3">
@@ -22,7 +32,8 @@ export const JournalSearchBar = ({
         <Input
           placeholder="Search your journal entries..."
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           className="flex-1 bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500"
           autoFocus
         />

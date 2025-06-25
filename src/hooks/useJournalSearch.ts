@@ -1,41 +1,43 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { JournalEntry } from '@/hooks/useJournalEntries';
 
 export const useJournalSearch = (entries: JournalEntry[]) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
-  // Search entries based on content, title, and tags
+  // Search entries based on content, title, and tags - now more comprehensive
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return entries;
 
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    const searchTerms = query.split(' ').filter(term => term.length > 0);
+    
     return entries.filter(entry => {
-      // Search in content
-      if (entry.content.toLowerCase().includes(query)) return true;
+      const searchableText = [
+        entry.content,
+        entry.title || '',
+        ...(entry.tags || []),
+        ...(entry.ai_detected_emotions || [])
+      ].join(' ').toLowerCase();
       
-      // Search in title
-      if (entry.title?.toLowerCase().includes(query)) return true;
-      
-      // Search in tags
-      if (entry.tags?.some(tag => tag.toLowerCase().includes(query))) return true;
-      
-      // Search in detected emotions
-      if (entry.ai_detected_emotions?.some(emotion => emotion.toLowerCase().includes(query))) return true;
-      
-      return false;
+      // Match if ANY search term is found
+      return searchTerms.some(term => searchableText.includes(term));
     });
   }, [entries, searchQuery]);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchQuery('');
     setIsSearchActive(false);
-  };
+  }, []);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
   return {
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     searchResults,
     isSearchActive,
     setIsSearchActive,

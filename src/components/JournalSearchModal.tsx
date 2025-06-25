@@ -33,13 +33,12 @@ export const JournalSearchModal = ({
     setLocalQuery(searchQuery);
   }, [searchQuery]);
 
-  useEffect(() => {
-    const delayedUpdate = setTimeout(() => {
-      onSearchChange(localQuery);
-    }, 300);
-
-    return () => clearTimeout(delayedUpdate);
-  }, [localQuery, onSearchChange]);
+  // Immediate search updates - no delay
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalQuery(value);
+    onSearchChange(value);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -47,8 +46,12 @@ export const JournalSearchModal = ({
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] bg-gray-900 border-gray-700 text-white p-0">
         <DialogHeader className="p-6 pb-4">
           <div className="flex items-center gap-3">
@@ -56,13 +59,13 @@ export const JournalSearchModal = ({
             <Input
               placeholder="Search your journal entries..."
               value={localQuery}
-              onChange={(e) => setLocalQuery(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               className="flex-1 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500"
               autoFocus
             />
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
