@@ -43,6 +43,32 @@ export const BetaUserManagement: React.FC = React.memo(() => {
       setIsLoading(true);
       console.log('Loading beta users...');
       
+      // First, let's check for the specific user we know exists
+      console.log('Checking for specific user: kiidemaa.chris@gmail.com');
+      const { data: specificUser, error: specificError } = await supabase
+        .from('subscribers')
+        .select('*')
+        .eq('email', 'kiidemaa.chris@gmail.com')
+        .maybeSingle();
+
+      if (specificError) {
+        console.error('Error checking specific user:', specificError);
+      } else {
+        console.log('Specific user found:', specificUser);
+      }
+
+      // Also check all subscribers to see what we have
+      const { data: allSubscribers, error: allError } = await supabase
+        .from('subscribers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (allError) {
+        console.error('Error loading all subscribers:', allError);
+      } else {
+        console.log('All subscribers:', allSubscribers?.length || 0, allSubscribers);
+      }
+      
       // Query for all subscribers with beta tier
       const { data, error } = await supabase
         .from('subscribers')
