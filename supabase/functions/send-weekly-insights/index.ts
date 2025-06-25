@@ -114,7 +114,8 @@ serve(async (req) => {
 
     console.log('Generated insights:', insights)
 
-    const dashboardUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app') || 'https://your-app.vercel.app'}/insights`
+    // Use the correct dashboard URL - this should be your actual app domain
+    const dashboardUrl = 'https://declymxlblaoeexpgfzq.supabase.co/insights'
 
     const html = await renderAsync(
       React.createElement(WeeklyInsightsEmail, {
