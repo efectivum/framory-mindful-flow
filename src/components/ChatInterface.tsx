@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -12,6 +13,7 @@ import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { LoadingSpinner } from './ui/loading-spinner';
 import { Message } from '@/types/chat';
+import { createUserMessage, createBotMessage } from '@/utils/messageUtils';
 
 export const ChatInterface = () => {
   const { createEntry } = useJournalEntries();
@@ -69,14 +71,12 @@ export const ChatInterface = () => {
       attachmentType = fileAttachment.type;
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputText,
-      activityType: selectedActivity || undefined,
-      timestamp: new Date(),
-      ...(attachmentUrl ? { attachmentUrl, attachmentType } : {}),
-    };
+    const userMessage = createUserMessage(
+      inputText,
+      selectedActivity || undefined,
+      attachmentUrl,
+      attachmentType
+    );
 
     await addMessage(userMessage);
     const currentInput = inputText;
@@ -97,12 +97,7 @@ export const ChatInterface = () => {
       const aiResponse = await generateResponse(currentInput, conversationHistory, false, 'coaching');
 
       if (aiResponse) {
-        const botResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'bot',
-          content: aiResponse,
-          timestamp: new Date(),
-        };
+        const botResponse = createBotMessage(aiResponse);
         await addMessage(botResponse);
 
         if (aiResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
@@ -113,22 +108,16 @@ export const ChatInterface = () => {
           journalSuggestion.setSuggestion(conversationSummary);
         }
       } else {
-        const errorResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'bot',
-          content: "I'm sorry, I'm having trouble responding right now. Please try again.",
-          timestamp: new Date(),
-        };
+        const errorResponse = createBotMessage(
+          "I'm sorry, I'm having trouble responding right now. Please try again."
+        );
         await addMessage(errorResponse);
       }
     } catch (error) {
       console.error('Error generating response:', error);
-      const errorResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: "I'm sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
-      };
+      const errorResponse = createBotMessage(
+        "I'm sorry, I encountered an error. Please try again."
+      );
       await addMessage(errorResponse);
     } finally {
       setIsGeneratingResponse(false);
@@ -167,23 +156,17 @@ export const ChatInterface = () => {
       title: selectedActivity ? `${selectedActivity} entry` : undefined,
     });
 
-    const botResponse = {
-      id: Date.now().toString(),
-      type: 'bot' as const,
-      content: "Great! Your journal entry has been saved successfully. How are you feeling about what you've shared?",
-      timestamp: new Date(),
-    };
+    const botResponse = createBotMessage(
+      "Great! Your journal entry has been saved successfully. How are you feeling about what you've shared?"
+    );
     addMessage(botResponse);
     journalSuggestion.clearSuggestion();
   }, [createEntry, selectedActivity, addMessage, journalSuggestion]);
 
   const handleJournalCancel = useCallback(() => {
-    const botResponse = {
-      id: Date.now().toString(),
-      type: 'bot' as const,
-      content: "No worries! Your thoughts weren't saved. Feel free to continue our conversation or let me know if you'd like to journal about something else.",
-      timestamp: new Date(),
-    };
+    const botResponse = createBotMessage(
+      "No worries! Your thoughts weren't saved. Feel free to continue our conversation or let me know if you'd like to journal about something else."
+    );
     addMessage(botResponse);
     journalSuggestion.clearSuggestion();
   }, [addMessage, journalSuggestion]);

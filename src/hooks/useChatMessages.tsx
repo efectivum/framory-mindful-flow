@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types/chat';
 import { useToast } from '@/hooks/use-toast';
+import { createWelcomeMessage, generateMessageId } from '@/utils/messageUtils';
 
 interface MessageMetadata {
   activityType?: string;
@@ -29,15 +30,6 @@ export const useChatMessages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
-
-  const createWelcomeMessage = useCallback((): Message => {
-    return {
-      id: 'welcome-' + Date.now(),
-      type: 'bot',
-      content: "Hi! I'm your personal growth coach. I'm here to help you explore your thoughts, work through challenges, and gain deeper insights. What's on your mind today?",
-      timestamp: new Date(),
-    };
-  }, []);
 
   const saveMessageToDatabase = useCallback(async (message: Message, sessionId: string) => {
     if (!user) return;
@@ -65,16 +57,17 @@ export const useChatMessages = () => {
 
       if (error) {
         console.error('Messages: Error saving message:', error);
-        // Retry once after a brief delay
+        // Retry once after a brief delay with a new ID if UUID conflict
         setTimeout(async () => {
+          const retryMessage = { ...message, id: generateMessageId() };
           const { error: retryError } = await supabase
             .from('chat_messages')
             .insert({
-              id: message.id,
+              id: retryMessage.id,
               session_id: sessionId,
               user_id: user.id,
-              type: message.type,
-              content: message.content,
+              type: retryMessage.type,
+              content: retryMessage.content,
               metadata: metadata as any
             });
           
@@ -151,7 +144,7 @@ export const useChatMessages = () => {
       const welcomeMessage = createWelcomeMessage();
       setMessages([welcomeMessage]);
     }
-  }, [user, toast, createWelcomeMessage, saveMessageToDatabase]);
+  }, [user, toast, saveMessageToDatabase]);
 
   const addMessage = useCallback(async (message: Message, currentSessionId: string | null) => {
     if (!currentSessionId) {
@@ -172,7 +165,7 @@ export const useChatMessages = () => {
     console.log('Messages: Setting welcome message');
     const welcomeMessage = createWelcomeMessage();
     setMessages([welcomeMessage]);
-  }, [createWelcomeMessage]);
+  }, []);
 
   return {
     messages,
