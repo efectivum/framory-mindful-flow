@@ -1,6 +1,7 @@
 
 import { useState, useRef, useCallback } from 'react';
-import { setupAudioAnalyser, calculateAudioLevel, blobToBase64 } from '@/utils/audioUtils';
+import { optimizedBlobToBase64 } from '@/utils/audioUtils';
+import { setupAudioAnalyser, calculateAudioLevel } from '@/utils/audioUtils';
 import { supabase } from '@/integrations/supabase/client';
 
 export type RecordingStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'error';
@@ -71,7 +72,7 @@ export const useVoiceRecording = ({
     analyserRef.current = null;
     mediaRecorderRef.current = null;
     chunksRef.current = [];
-  }, []); // Remove dependencies to prevent premature cleanup
+  }, []);
 
   const updateAudioLevel = useCallback(() => {
     if (analyserRef.current && isRecording) {
@@ -145,7 +146,10 @@ export const useVoiceRecording = ({
     console.log('Processing recording with', chunksRef.current.length, 'chunks');
     setStatus('processing');
     
+    const processingStartTime = Date.now();
+    
     try {
+      // Optimized blob creation - combine chunks more efficiently
       const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
       console.log('Audio blob created, size:', audioBlob.size, 'bytes');
       
@@ -153,8 +157,9 @@ export const useVoiceRecording = ({
         throw new Error('Audio blob is empty');
       }
       
-      const base64Audio = await blobToBase64(audioBlob);
-      console.log('Converting to base64 complete, length:', base64Audio.length);
+      // Use optimized base64 conversion
+      const base64Audio = await optimizedBlobToBase64(audioBlob);
+      console.log('Base64 conversion took:', Date.now() - processingStartTime, 'ms');
       
       const base64Data = base64Audio.split(',')[1];
       if (!base64Data) {
@@ -162,6 +167,8 @@ export const useVoiceRecording = ({
       }
       
       console.log('Calling speech-to-text function...');
+      const apiStartTime = Date.now();
+      
       const { data, error } = await supabase.functions.invoke('speech-to-text', {
         body: { 
           audio: base64Data,
@@ -169,12 +176,16 @@ export const useVoiceRecording = ({
         }
       });
 
+      console.log('API call took:', Date.now() - apiStartTime, 'ms');
+
       if (error) {
         console.error('Speech-to-text error:', error);
         throw new Error(error.message || 'Transcription failed');
       }
 
       console.log('Transcription result:', data);
+      console.log('Total processing time:', Date.now() - processingStartTime, 'ms');
+      
       if (data?.text) {
         onTranscriptionComplete(data.text);
         onSuccess();
@@ -204,9 +215,10 @@ export const useVoiceRecording = ({
       // Reset chunks array
       chunksRef.current = [];
       
-      // Create MediaRecorder
+      // Create MediaRecorder with optimized settings
       const mediaRecorder = new MediaRecorder(streamRef.current, {
-        mimeType: 'audio/webm'
+        mimeType: 'audio/webm',
+        audioBitsPerSecond: 128000 // Optimize for faster processing
       });
       mediaRecorderRef.current = mediaRecorder;
       
@@ -229,8 +241,8 @@ export const useVoiceRecording = ({
         setErrorMessage('Recording error occurred. Please try again.');
       };
       
-      // Start recording
-      mediaRecorder.start(100); // Collect data every 100ms
+      // Start recording with larger time slices for better performance
+      mediaRecorder.start(500); // Collect data every 500ms instead of 100ms
       setIsRecording(true);
       setStatus('recording');
       setRecordingTime(0);

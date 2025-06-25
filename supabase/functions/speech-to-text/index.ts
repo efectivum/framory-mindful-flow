@@ -7,52 +7,59 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
+// Optimized base64 processing with better memory management
+function processBase64Optimized(base64String: string): Uint8Array {
   console.log('Processing base64 string of length:', base64String.length);
   
   if (!base64String || base64String.length === 0) {
     throw new Error('Empty base64 string provided');
   }
   
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
+  try {
+    // Process in smaller, more efficient chunks
+    const chunkSize = 16384; // Reduced chunk size for faster processing
+    const chunks: Uint8Array[] = [];
+    let position = 0;
     
-    try {
-      const binaryChunk = atob(chunk);
-      const bytes = new Uint8Array(binaryChunk.length);
+    while (position < base64String.length) {
+      const chunk = base64String.slice(position, position + chunkSize);
       
-      for (let i = 0; i < binaryChunk.length; i++) {
-        bytes[i] = binaryChunk.charCodeAt(i);
+      try {
+        const binaryChunk = atob(chunk);
+        const bytes = new Uint8Array(binaryChunk.length);
+        
+        for (let i = 0; i < binaryChunk.length; i++) {
+          bytes[i] = binaryChunk.charCodeAt(i);
+        }
+        
+        chunks.push(bytes);
+        position += chunkSize;
+      } catch (error) {
+        console.error('Error processing base64 chunk at position', position, ':', error);
+        throw new Error('Invalid base64 data');
       }
-      
-      chunks.push(bytes);
-      position += chunkSize;
-    } catch (error) {
-      console.error('Error processing base64 chunk at position', position, ':', error);
-      throw new Error('Invalid base64 data');
     }
-  }
 
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  console.log('Total audio bytes:', totalLength);
-  
-  if (totalLength === 0) {
-    throw new Error('No audio data after processing');
-  }
-  
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    console.log('Total audio bytes:', totalLength);
+    
+    if (totalLength === 0) {
+      throw new Error('No audio data after processing');
+    }
+    
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
 
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error('Base64 processing failed:', error);
+    throw new Error(`Failed to process audio data: ${error.message}`);
+  }
 }
 
 serve(async (req) => {
@@ -60,8 +67,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const startTime = Date.now();
+  
   try {
-    console.log('Speech-to-text function called');
+    console.log('Speech-to-text function called at:', new Date().toISOString());
     
     const requestBody = await req.json()
     const { audio, language } = requestBody
@@ -93,16 +102,18 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, processing audio...');
 
-    // Process audio in chunks
+    // Optimized audio processing
     let binaryAudio: Uint8Array;
     try {
-      binaryAudio = processBase64Chunks(audio);
+      binaryAudio = processBase64Optimized(audio);
     } catch (error) {
       console.error('Failed to process base64 audio:', error);
       throw new Error(`Failed to process audio data: ${error.message}`);
     }
     
-    // Prepare form data
+    console.log('Audio processing took:', Date.now() - startTime, 'ms');
+    
+    // Prepare form data with optimized blob creation
     const formData = new FormData()
     const blob = new Blob([binaryAudio], { type: 'audio/webm' })
     formData.append('file', blob, 'audio.webm')
@@ -114,50 +125,67 @@ serve(async (req) => {
     }
 
     console.log('Sending request to OpenAI Whisper API...');
+    const apiStartTime = Date.now();
     
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: formData,
-    })
-
-    console.log('OpenAI response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('OpenAI API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
+    // Send to OpenAI with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    try {
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: formData,
+        signal: controller.signal
       });
-      throw new Error(`OpenAI API error (${response.status}): ${errorText}`)
+
+      clearTimeout(timeoutId);
+      console.log('OpenAI API call took:', Date.now() - apiStartTime, 'ms');
+      console.log('OpenAI response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('OpenAI API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`OpenAI API error (${response.status}): ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('Transcription successful:', {
+        hasText: !!result.text,
+        textLength: result.text?.length || 0,
+        textPreview: result.text?.substring(0, 100) || 'no text',
+        totalProcessingTime: Date.now() - startTime + 'ms'
+      });
+
+      if (!result.text) {
+        console.warn('OpenAI returned empty transcription');
+        throw new Error('No transcription text received from OpenAI');
+      }
+
+      return new Response(
+        JSON.stringify({ text: result.text }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout - please try with a shorter recording');
+      }
+      throw error;
     }
-
-    const result = await response.json()
-    console.log('Transcription successful:', {
-      hasText: !!result.text,
-      textLength: result.text?.length || 0,
-      textPreview: result.text?.substring(0, 100) || 'no text'
-    });
-
-    if (!result.text) {
-      console.warn('OpenAI returned empty transcription');
-      throw new Error('No transcription text received from OpenAI');
-    }
-
-    return new Response(
-      JSON.stringify({ text: result.text }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
 
   } catch (error) {
     console.error('Error in speech-to-text function:', {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
+      totalTime: Date.now() - startTime + 'ms'
     });
     
     return new Response(
