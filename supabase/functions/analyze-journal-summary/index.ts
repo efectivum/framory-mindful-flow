@@ -1,299 +1,161 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Helper function to clean and parse JSON from OpenAI response
-function cleanAndParseJSON(rawResponse: string) {
-  try {
-    // Remove markdown code blocks if present
-    let cleaned = rawResponse.trim();
-    if (cleaned.startsWith('```json')) {
-      cleaned = cleaned.replace(/^```json\s*/, '');
-    }
-    if (cleaned.endsWith('```')) {
-      cleaned = cleaned.replace(/\s*```$/, '');
-    }
-    
-    return JSON.parse(cleaned);
-  } catch (error) {
-    console.error('Failed to parse JSON:', error);
-    console.error('Raw response:', rawResponse);
-    throw new Error('Invalid JSON response from AI');
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
+
+  try {
+    const { entryId, content, userId } = await req.json()
+
+    if (!entryId || !content || !userId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    console.log(`Generating focused analysis for entry ${entryId} (${content.split(' ').length} words)`)
+
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured')
+    }
+
+    // Create focused analysis prompt
+    const prompt = `Analyze this journal entry and provide focused insights in JSON format:
+
+"${content}"
+
+Provide analysis in this exact JSON structure:
+{
+  "quick_takeaways": ["insight 1", "insight 2"],
+  "emotional_insights": ["emotional pattern or observation"],
+  "growth_indicators": ["signs of personal growth or areas for development"],
+  "action_suggestions": ["specific actionable suggestion"],
+  "confidence_score": 0.85
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+Focus on:
+- 2 key takeaways maximum
+- 1 emotional insight
+- 1 growth indicator
+- 1 practical action suggestion
+- Keep insights concise and actionable`
 
-  try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert journal analysis assistant. Provide concise, actionable insights in valid JSON format only.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`)
     }
 
-    const { entries, analysisType = 'quick', userPreferences, userPatterns } = await req.json();
-    
-    if (!entries || entries.length === 0) {
-      throw new Error('No entries provided for analysis');
+    const aiResponse = await response.json()
+    const analysisContent = aiResponse.choices[0]?.message?.content
+
+    if (!analysisContent) {
+      throw new Error('No analysis content received from AI')
     }
 
-    const entry = entries[0];
-    
-    if (!entry || !entry.content) {
-      throw new Error('Invalid entry data provided');
+    let analysisData
+    try {
+      analysisData = JSON.parse(analysisContent)
+      console.log('Raw AI response:', analysisData)
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', analysisContent)
+      throw new Error('Invalid AI response format')
     }
 
-    const wordCount = entry.content.trim().split(' ').length;
-    
-    // Skip analysis for very short content (minimum 50 words)
-    if (wordCount < 50) {
-      console.log(`Skipping quick analysis for short content (${wordCount} words)`);
-      const defaultAnalysis = {
-        quick_takeaways: [],
-        emotional_insights: [],
-        growth_indicators: [],
-        action_suggestions: [],
-        confidence_score: 0.1
-      };
-      
-      try {
-        const { error: insertError } = await supabase
-          .from('entry_quick_analysis')
-          .upsert({
-            entry_id: entry.id,
-            user_id: entry.user_id,
-            ...defaultAnalysis
-          }, {
-            onConflict: 'entry_id'
-          });
-
-        if (insertError) {
-          console.error('Error storing default analysis:', insertError);
-        }
-      } catch (dbError) {
-        console.error('Database operation failed:', dbError);
+    // Validate required fields
+    const requiredFields = ['quick_takeaways', 'emotional_insights', 'growth_indicators', 'action_suggestions', 'confidence_score']
+    for (const field of requiredFields) {
+      if (!analysisData[field]) {
+        console.error(`Missing required field: ${field}`)
+        throw new Error(`Analysis missing required field: ${field}`)
       }
-
-      return new Response(JSON.stringify(defaultAnalysis), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    // Smart content-driven analysis logic - Mindsera style
-    let maxTakeaways, maxGrowthIndicators, analysisDepth;
-    if (wordCount < 100) {
-      maxTakeaways = 1;
-      maxGrowthIndicators = 1;
-      analysisDepth = "concise";
-    } else if (wordCount < 200) {
-      maxTakeaways = 2;
-      maxGrowthIndicators = 1;
-      analysisDepth = "focused";
-    } else if (wordCount < 400) {
-      maxTakeaways = 3;
-      maxGrowthIndicators = 2;
-      analysisDepth = "balanced";
-    } else {
-      maxTakeaways = 4;
-      maxGrowthIndicators = 2;
-      analysisDepth = "comprehensive";
     }
 
-    if (analysisType === 'quick') {
-      console.log(`Generating ${analysisDepth} analysis for entry ${entry.id} (${wordCount} words)`);
-      
-      const analysisPrompt = `You are an expert journal analyst specializing in extracting concise, meaningful insights from personal writing.
+    console.log(`Quick analysis complete: ${analysisData.quick_takeaways?.length || 0} takeaways, ${analysisData.growth_indicators?.length || 0} growth indicators`)
 
-Entry content: "${entry.content}"
-Word count: ${wordCount}
-Analysis approach: ${analysisDepth}
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-Provide a JSON response with these fields:
-- quick_takeaways: Array of ${maxTakeaways} concise insights (one clear sentence each)
-- emotional_insights: Array of emotional observations (only if emotionally significant)
-- growth_indicators: Array of ${maxGrowthIndicators} growth signals (only if clearly present)
-- action_suggestions: Array of actionable suggestions (only if appropriate)
-- confidence_score: 0.0-1.0 confidence level
+    // Store analysis using upsert to handle conflicts properly
+    const { data, error } = await supabase
+      .from('entry_quick_analysis')
+      .upsert({
+        entry_id: entryId,
+        user_id: userId,
+        quick_takeaways: analysisData.quick_takeaways || [],
+        emotional_insights: analysisData.emotional_insights || [],
+        growth_indicators: analysisData.growth_indicators || [],
+        action_suggestions: analysisData.action_suggestions || [],
+        confidence_score: analysisData.confidence_score || 0.5,
+      }, {
+        onConflict: 'entry_id',
+        ignoreDuplicates: false
+      })
 
-Mindsera-style guidelines:
-- Each takeaway must be ONE sentence, clear and specific
-- Focus on the most important insight(s) only
-- For shorter entries: Extract 1-2 core themes, avoid over-analysis
-- For longer entries: Identify key patterns but stay concise
-- Don't force insights if content is simple
-- Make each insight genuinely valuable and specific to this content
-- Avoid generic advice - personalize to what was actually written
-
-Return only valid JSON with no markdown formatting.`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: analysisPrompt }],
-          temperature: 0.2,
-          max_tokens: 500,
+    if (error) {
+      console.error('Error storing analysis:', error)
+      // Don't throw here, return the analysis even if storage fails
+      return new Response(
+        JSON.stringify({
+          success: true,
+          analysis: analysisData,
+          warning: 'Analysis completed but storage failed'
         }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI API error:', response.status, errorText);
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const aiResponse = await response.json();
-      
-      if (!aiResponse.choices?.[0]?.message?.content) {
-        throw new Error('Invalid response from OpenAI API');
-      }
-
-      console.log('Raw AI response:', aiResponse.choices[0].message.content);
-      
-      const analysis = cleanAndParseJSON(aiResponse.choices[0].message.content);
-
-      // Validate and ensure limits are respected
-      if (!Array.isArray(analysis.quick_takeaways)) {
-        analysis.quick_takeaways = [];
-      }
-      if (!Array.isArray(analysis.emotional_insights)) {
-        analysis.emotional_insights = [];
-      }
-      if (!Array.isArray(analysis.growth_indicators)) {
-        analysis.growth_indicators = [];
-      }
-      if (!Array.isArray(analysis.action_suggestions)) {
-        analysis.action_suggestions = [];
-      }
-      if (typeof analysis.confidence_score !== 'number') {
-        analysis.confidence_score = 0.5;
-      }
-
-      // Ensure limits are respected
-      if (analysis.quick_takeaways.length > maxTakeaways) {
-        analysis.quick_takeaways = analysis.quick_takeaways.slice(0, maxTakeaways);
-      }
-      if (analysis.growth_indicators.length > maxGrowthIndicators) {
-        analysis.growth_indicators = analysis.growth_indicators.slice(0, maxGrowthIndicators);
-      }
-
-      console.log(`Quick analysis complete: ${analysis.quick_takeaways?.length || 0} takeaways, ${analysis.growth_indicators?.length || 0} growth indicators`);
-
-      // Store the analysis with error handling
-      try {
-        const { error: insertError } = await supabase
-          .from('entry_quick_analysis')
-          .upsert({
-            entry_id: entry.id,
-            user_id: entry.user_id,
-            quick_takeaways: analysis.quick_takeaways || [],
-            emotional_insights: analysis.emotional_insights || [],
-            growth_indicators: analysis.growth_indicators || [],
-            action_suggestions: analysis.action_suggestions || [],
-            confidence_score: analysis.confidence_score || 0.5
-          }, {
-            onConflict: 'entry_id'
-          });
-
-        if (insertError) {
-          console.error('Error storing analysis:', insertError);
-          // Don't throw here, return the analysis anyway
-        }
-      } catch (dbError) {
-        console.error('Database operation failed:', dbError);
-        // Don't throw here, return the analysis anyway
-      }
-
-      return new Response(JSON.stringify(analysis), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Individual entry analysis for deep reflection
-    if (analysisType === 'individual') {
-      const analysisPrompt = `You are an expert therapeutic journal analyst. Provide deep analysis for this journal entry.
-
-Entry: "${entry.content}"
-Analysis depth: ${analysisDepth}
-
-Provide comprehensive analysis with:
-- insights: Array of deep psychological insights
-- emotionalThemes: Array of emotional themes
-- cognitivePatterns: Array of thinking patterns
-- suggestions: Array of growth suggestions
-- emotionalComplexity: 1-10 rating
-- selfAwareness: 1-10 rating
-- growthIndicators: Array of positive signals
-- concerns: Array of areas needing attention
-
-Extract meaningful insights based on content richness. Quality over quantity.
-
-Return only valid JSON with no markdown formatting.`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: analysisPrompt }],
-          temperature: 0.3,
-          max_tokens: 800,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI API error:', response.status, errorText);
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const aiResponse = await response.json();
-      
-      if (!aiResponse.choices?.[0]?.message?.content) {
-        throw new Error('Invalid response from OpenAI API');
-      }
-
-      const analysis = cleanAndParseJSON(aiResponse.choices[0].message.content);
-
-      return new Response(JSON.stringify(analysis), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    throw new Error('Invalid analysis type');
+    return new Response(
+      JSON.stringify({
+        success: true,
+        analysis: analysisData
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
-    console.error('Error in analyze-journal-summary function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      quick_takeaways: [],
-      emotional_insights: [],
-      growth_indicators: [],
-      action_suggestions: [],
-      confidence_score: 0.0
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Analysis error:', error)
+    
+    return new Response(
+      JSON.stringify({
+        error: 'Analysis failed',
+        details: error.message
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      }
+    )
   }
-});
+})
