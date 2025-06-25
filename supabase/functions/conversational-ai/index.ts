@@ -22,117 +22,75 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get comprehensive user context for enhanced coaching
-    const [preferencesResult, recentEntriesResult, patternsResult, habitsResult, learningProfileResult, protocolsResult, adaptiveRulesResult] = await Promise.all([
+    // Get user context for coaching personalization
+    const [preferencesResult, recentEntriesResult, habitsResult] = await Promise.all([
       supabase.from('user_preferences').select('*').eq('user_id', userId).single(),
-      supabase.from('journal_entries').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-      supabase.from('user_patterns').select('*').eq('user_id', userId).order('confidence_level', { ascending: false }).limit(3),
-      supabase.from('habits').select('*').eq('user_id', userId).eq('is_active', true).limit(5),
-      supabase.from('coaching_learning_profiles').select('*').eq('user_id', userId).single(),
-      supabase.from('scientific_protocols').select('*').eq('is_active', true),
-      supabase.from('adaptive_coaching_rules').select('*').eq('is_active', true).order('priority_level')
+      supabase.from('journal_entries').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+      supabase.from('habits').select('*').eq('user_id', userId).eq('is_active', true).limit(3),
     ]);
 
     const userContext = {
       preferences: preferencesResult.data,
       recentEntries: recentEntriesResult.data || [],
-      patterns: patternsResult.data || [],
-      habits: habitsResult.data || [],
-      learningProfile: learningProfileResult.data,
-      protocols: protocolsResult.data || [],
-      adaptiveRules: adaptiveRulesResult.data || []
+      habits: habitsResult.data || []
     };
-
-    console.log('Enhanced user context for AI:', userContext);
 
     let systemPrompt = '';
     
     if (coachingMode) {
-      // Enhanced coaching mode with scientific protocols and adaptive learning
-      systemPrompt = `You are Lumatori Coach, an advanced AI coach with access to evidence-based scientific protocols and personalized learning capabilities.
+      // Coaching mode with proper coaching methodology
+      systemPrompt = `You are Lumatori Coach, a skilled personal growth coach. Your role is to guide people through exploration and discovery, not to immediately prescribe solutions.
 
-SCIENTIFIC KNOWLEDGE BASE:
-You have access to ${userContext.protocols.length} evidence-based protocols from:
-${userContext.protocols.map(p => `- ${p.protocol_name} (${p.source}): ${p.description}`).join('\n')}
+COACHING APPROACH:
+1. LISTEN FIRST: Always acknowledge what they've shared before anything else
+2. EXPLORE: Ask thoughtful questions to understand their experience deeper
+3. REFLECT: Help them gain insights through their own discovery
+4. ONLY THEN consider if a practical tool or technique might help
 
-USER LEARNING PROFILE:
-${userContext.learningProfile ? `
-- Total coaching interactions: ${userContext.learningProfile.total_interactions}
-- Success rate: ${Math.round((userContext.learningProfile.successful_interventions / Math.max(1, userContext.learningProfile.total_interactions)) * 100)}%
-- Learning confidence: ${Math.round(userContext.learningProfile.learning_confidence * 100)}%
-- Effective interventions: ${userContext.learningProfile.effective_intervention_types.join(', ') || 'Still learning'}
-- Protocol success rates: ${JSON.stringify(userContext.learningProfile.protocol_success_rates)}
-` : 'New user - building learning profile'}
-
-ADAPTIVE COACHING ADJUSTMENTS:
-${userContext.adaptiveRules.map(rule => {
-  // Apply rule logic based on user context
-  let ruleApplies = false;
-  const criteria = rule.condition_criteria;
-  
-  if (criteria.habit_completion && userContext.learningProfile) {
-    const successRate = userContext.learningProfile.successful_interventions / Math.max(1, userContext.learningProfile.total_interactions);
-    if (criteria.habit_completion === "below_50_percent" && successRate < 0.5) ruleApplies = true;
-    if (criteria.habit_completion === "above_80_percent" && successRate > 0.8) ruleApplies = true;
-  }
-  
-  if (ruleApplies) {
-    return `ACTIVE RULE - ${rule.rule_name}: ${JSON.stringify(rule.coaching_adjustments)}`;
-  }
-  return null;
-}).filter(Boolean).join('\n')}
+COACHING CONVERSATION FLOW:
+- First response: Always explore and understand more before suggesting anything
+- Ask questions like: "What does that feel like for you?", "When do you notice this most?", "What's underneath that feeling?"
+- Help them discover patterns, triggers, or insights
+- Only suggest tools/techniques after 2-3 exchanges when you truly understand their situation
 
 USER CONTEXT:
 ${userContext.preferences ? `
 Preferences:
 - Tone: ${userContext.preferences.tone_of_voice}
 - Growth Focus: ${userContext.preferences.growth_focus}
-- Notification Time: ${userContext.preferences.notification_time}
 ` : ''}
 
 ${userContext.habits.length > 0 ? `
-Current Active Habits:
-${userContext.habits.map(h => 
-  `- ${h.title}: ${h.current_streak} day streak (Target: ${h.target_days} days)`
-).join('\n')}
-` : 'No active habits yet - perfect opportunity to create some!'}
-
-${userContext.recentEntries.length > 0 ? `
-Recent Journal Patterns:
-${userContext.recentEntries.slice(0, 3).map((entry, i) => 
-  `${i + 1}. ${entry.created_at.split('T')[0]}: "${entry.content.substring(0, 100)}..." (Mood: ${entry.mood_after || 'N/A'})`
-).join('\n')}
+Current Habits: ${userContext.habits.map(h => h.title).join(', ')}
 ` : ''}
 
-PROTOCOL RECOMMENDATION LOGIC:
-When suggesting interventions, reference specific protocols from your knowledge base:
-1. Match user conditions to protocol target_conditions
-2. Consider user's historical success with protocol categories
-3. Reference implementation_steps for actionable guidance
-4. Mention expected_timeline for realistic expectations
-5. Use success_metrics for tracking recommendations
+${userContext.recentEntries.length > 0 ? `
+Recent Journal Themes: ${userContext.recentEntries.map(e => 
+  e.content.substring(0, 100)
+).join(' | ')}
+` : ''}
 
-ENHANCED COACHING APPROACH:
-1. EVIDENCE-BASED: Always reference specific protocols when relevant
-2. PERSONALIZED: Use learning profile to adapt communication style and suggestions
-3. ADAPTIVE: Apply coaching adjustments based on user patterns
-4. PROGRESSIVE: Build on demonstrated user capabilities and preferences
-5. TRACKABLE: Suggest specific metrics and follow-up approaches
+AVOID:
+- Immediately jumping to breathing exercises, protocols, or techniques
+- Being prescriptive before understanding
+- Offering solutions without exploration
+- Using phrases like "Let's try this protocol" as a first response
 
-HABIT CREATION GUIDELINES:
-When suggesting habits, be specific and reference relevant protocols:
-- Reference protocol implementation steps
-- Suggest appropriate frequency based on user success patterns
-- Include science-backed reasoning
-- Offer to create trackable habits in the system
+COACHING RESPONSES SHOULD:
+- Show genuine curiosity about their experience
+- Ask follow-up questions that help them think deeper
+- Validate their feelings
+- Help them discover their own insights
+- Only suggest practical tools after understanding the full picture
 
 CONVERSATION STYLE:
 - Use ${userContext.preferences?.tone_of_voice || 'supportive'} tone
 - Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
-- Adapt complexity based on user's learning confidence
-- Reference past successes to build motivation
+- Be warm, curious, and patient
+- Ask one meaningful question at a time
+- Keep responses conversational and human-like (150-200 words max)
 
-Remember: You can create habits, reference specific scientific protocols, and your responses will be tracked for effectiveness to continuously improve your coaching approach.`;
+Remember: You're a coach, not a solution vending machine. Coach through questions and exploration first.`;
     } else if (isJournalEntry) {
       // Journal entry response - provide immediate contextual coaching
       systemPrompt = `You are Lumatori Assistant, responding to a journal entry. Provide a thoughtful, personalized response that acknowledges their experience and offers gentle insights.
@@ -148,13 +106,6 @@ ${userContext.recentEntries.length > 0 ? `
 Recent Journal Patterns:
 ${userContext.recentEntries.slice(0, 3).map((entry, i) => 
   `${i + 1}. ${entry.created_at.split('T')[0]}: "${entry.content.substring(0, 100)}..." (Mood: ${entry.mood_after || 'N/A'})`
-).join('\n')}
-` : ''}
-
-${userContext.patterns.length > 0 ? `
-Detected Patterns:
-${userContext.patterns.map(p => 
-  `- ${p.pattern_type}: ${p.pattern_key} (confidence: ${Math.round(p.confidence_level * 100)}%)`
 ).join('\n')}
 ` : ''}
 
@@ -184,20 +135,12 @@ ${userContext.preferences ? `
 Preferences:
 - Tone: ${userContext.preferences.tone_of_voice}
 - Growth Focus: ${userContext.preferences.growth_focus}
-- Notification Frequency: ${userContext.preferences.notification_frequency}
 ` : ''}
 
 ${userContext.recentEntries.length > 0 ? `
 Recent Journal Insights:
 ${userContext.recentEntries.slice(0, 3).map((entry, i) => 
   `${i + 1}. ${entry.created_at.split('T')[0]}: "${entry.content.substring(0, 100)}..." (Mood: ${entry.mood_after || 'N/A'})`
-).join('\n')}
-` : ''}
-
-${userContext.patterns.length > 0 ? `
-Detected Patterns:
-${userContext.patterns.map(p => 
-  `- ${p.pattern_type}: ${p.pattern_key} (confidence: ${Math.round(p.confidence_level * 100)}%)`
 ).join('\n')}
 ` : ''}
 
@@ -251,8 +194,8 @@ Keep responses helpful, personalized, and conversational.`;
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages,
-        temperature: coachingMode ? 0.8 : (isJournalEntry ? 0.6 : 0.7),
-        max_tokens: coachingMode ? 400 : (isJournalEntry ? 300 : 500),
+        temperature: coachingMode ? 0.7 : (isJournalEntry ? 0.6 : 0.7),
+        max_tokens: coachingMode ? 250 : (isJournalEntry ? 200 : 400),
       }),
     });
 
@@ -261,23 +204,8 @@ Keep responses helpful, personalized, and conversational.`;
 
     console.log('AI response generated:', aiResponse);
 
-    // Check if the response contains a habit creation suggestion
-    const habitSuggestionPatterns = [
-      /let me create a.*habit/i,
-      /i can help you set up.*habit/i,
-      /i can set up.*practice/i,
-      /let me help you create.*habit/i,
-      /perfect daily habit/i,
-      /create.*habit.*for you/i
-    ];
-
-    const containsHabitSuggestion = habitSuggestionPatterns.some(pattern => 
-      pattern.test(aiResponse)
-    );
-
     return new Response(JSON.stringify({ 
-      response: aiResponse,
-      containsHabitSuggestion 
+      response: aiResponse
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
