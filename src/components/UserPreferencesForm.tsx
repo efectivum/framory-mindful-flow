@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useUserPreferences, UserPreferences } from '@/hooks/useUserPreferences';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { Loader2, Settings } from 'lucide-react';
 
 interface PreferencesFormData {
@@ -26,6 +26,9 @@ interface PreferencesFormData {
   notification_frequency: 'daily' | 'weekly' | 'custom' | 'none';
   whatsapp_enabled: boolean;
   push_notifications_enabled: boolean;
+  weekly_insights_email: boolean;
+  security_alerts_email: boolean;
+  marketing_emails: boolean;
 }
 
 export const UserPreferencesForm = () => {
@@ -33,30 +36,37 @@ export const UserPreferencesForm = () => {
 
   const form = useForm<PreferencesFormData>({
     defaultValues: {
-      tone_of_voice: preferences?.tone_of_voice || 'supportive',
-      growth_focus: preferences?.growth_focus || 'habits',
-      notification_time: preferences?.notification_time || '09:00',
-      notification_frequency: preferences?.notification_frequency || 'daily',
-      whatsapp_enabled: preferences?.whatsapp_enabled || false,
-      push_notifications_enabled: preferences?.push_notifications_enabled || true,
+      tone_of_voice: 'supportive',
+      growth_focus: 'habits',
+      notification_time: '09:00',
+      notification_frequency: 'daily',
+      whatsapp_enabled: false,
+      push_notifications_enabled: true,
+      weekly_insights_email: true,
+      security_alerts_email: true,
+      marketing_emails: false,
     },
   });
 
   // Update form when preferences load
   React.useEffect(() => {
-    if (preferences) {
+    if (preferences && !isLoading) {
       form.reset({
-        tone_of_voice: preferences.tone_of_voice,
-        growth_focus: preferences.growth_focus,
-        notification_time: preferences.notification_time,
-        notification_frequency: preferences.notification_frequency,
-        whatsapp_enabled: preferences.whatsapp_enabled,
-        push_notifications_enabled: preferences.push_notifications_enabled,
+        tone_of_voice: preferences.tone_of_voice || 'supportive',
+        growth_focus: preferences.growth_focus || 'habits',
+        notification_time: preferences.notification_time || '09:00',
+        notification_frequency: preferences.notification_frequency || 'daily',
+        whatsapp_enabled: preferences.whatsapp_enabled || false,
+        push_notifications_enabled: preferences.push_notifications_enabled !== false,
+        weekly_insights_email: preferences.weekly_insights_email !== false,
+        security_alerts_email: preferences.security_alerts_email !== false,
+        marketing_emails: preferences.marketing_emails || false,
       });
     }
-  }, [preferences, form]);
+  }, [preferences, isLoading, form]);
 
   const onSubmit = (data: PreferencesFormData) => {
+    console.log('Form submitted with data:', data);
     updatePreferences(data);
   };
 
@@ -251,6 +261,74 @@ export const UserPreferencesForm = () => {
                       <FormLabel className="text-white font-medium">WhatsApp Notifications</FormLabel>
                       <FormDescription className="text-gray-400">
                         Receive gentle reminders and prompts via WhatsApp
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Email Preferences */}
+            <div className="space-y-4">
+              <h3 className="text-white font-medium">Email Preferences</h3>
+              
+              <FormField
+                control={form.control}
+                name="weekly_insights_email"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel className="text-white font-medium">Weekly Insights</FormLabel>
+                      <FormDescription className="text-gray-400">
+                        Get personalized insights about your mood trends and habit progress
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="security_alerts_email"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel className="text-white font-medium">Security Alerts</FormLabel>
+                      <FormDescription className="text-gray-400">
+                        Important notifications about your account security
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="marketing_emails"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel className="text-white font-medium">Product Updates</FormLabel>
+                      <FormDescription className="text-gray-400">
+                        Occasional updates about new features and improvements
                       </FormDescription>
                     </div>
                     <FormControl>

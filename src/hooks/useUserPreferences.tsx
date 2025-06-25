@@ -6,13 +6,31 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface UserPreferences {
   id: string;
+  user_id: string;
   tone_of_voice: 'calm' | 'motivational' | 'supportive' | 'direct' | 'gentle';
   growth_focus: 'habits' | 'mindfulness' | 'goals' | 'journaling';
   notification_time: string;
   notification_frequency: 'daily' | 'weekly' | 'custom' | 'none';
   whatsapp_enabled: boolean;
   push_notifications_enabled: boolean;
+  weekly_insights_email: boolean;
+  security_alerts_email: boolean;
+  marketing_emails: boolean;
+  created_at: string;
+  updated_at: string;
 }
+
+const DEFAULT_PREFERENCES: Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+  tone_of_voice: 'supportive',
+  growth_focus: 'habits',
+  notification_time: '09:00',
+  notification_frequency: 'daily',
+  whatsapp_enabled: false,
+  push_notifications_enabled: true,
+  weekly_insights_email: true,
+  security_alerts_email: true,
+  marketing_emails: false,
+};
 
 export const useUserPreferences = () => {
   const { user } = useAuth();
@@ -28,88 +46,73 @@ export const useUserPreferences = () => {
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as UserPreferences | null;
+      if (error) {
+        console.error('Error fetching preferences:', error);
+        throw error;
+      }
+
+      // Return preferences with defaults if no data exists
+      if (!data) {
+        return {
+          ...DEFAULT_PREFERENCES,
+          id: '',
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as UserPreferences;
+      }
+
+      return data as UserPreferences;
     },
     enabled: !!user,
   });
 
   const updatePreferencesMutation = useMutation({
-    mutationFn: async (updates: Partial<Omit<UserPreferences, 'id'>>) => {
+    mutationFn: async (updates: Partial<Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
       if (!user) throw new Error('User not authenticated');
 
-      // First, try to get existing preferences
-      const { data: existingPrefs } = await supabase
-        .from('user_preferences')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      let result;
-      
-      if (existingPrefs) {
-        // Update existing record
+      try {
+        // Use upsert with proper conflict resolution
         const { data, error } = await supabase
           .from('user_preferences')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        result = data;
-      } else {
-        // Insert new record
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .insert({
+          .upsert({
             user_id: user.id,
+            ...DEFAULT_PREFERENCES,
             ...updates,
             updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
           })
           .select()
           .single();
 
         if (error) throw error;
-        result = data;
+        return data;
+      } catch (error) {
+        console.error('Error in updatePreferencesMutation:', error);
+        throw error;
       }
-
-      return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-preferences'] });
+    onSuccess: (data) => {
+      queryClient.setQueryData(['user-preferences', user?.id], data);
       
+      toast({
+        title: "Success!",
+        description: "Preferences updated successfully!",
+      });
+
+      // Schedule notifications in background
       if (user) {
         supabase.functions.invoke('schedule-notifications', {
           body: { userId: user.id },
-        }).then(({ error }) => {
-          if (error) {
-            console.error('Failed to schedule notifications:', error);
-            toast({
-              title: "Preferences saved, but...",
-              description: `We couldn't update your notification schedule. Error: ${error.message}`,
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Success!",
-              description: "Preferences and notification schedule updated successfully!",
-            });
-          }
+        }).catch((error) => {
+          console.error('Failed to schedule notifications:', error);
         });
-      } else {
-          toast({
-            title: "Success!",
-            description: "Preferences updated successfully!",
-          });
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating preferences:', error);
       toast({
         title: "Error",
@@ -120,7 +123,13 @@ export const useUserPreferences = () => {
   });
 
   return {
-    preferences,
+    preferences: preferences || {
+      ...DEFAULT_PREFERENCES,
+      id: '',
+      user_id: user?.id || '',
+      created_at: '',
+      updated_at: '',
+    },
     isLoading,
     updatePreferences: updatePreferencesMutation.mutate,
     isUpdating: updatePreferencesMutation.isPending,
