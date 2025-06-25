@@ -41,14 +41,21 @@ export const BetaUserManagement: React.FC = React.memo(() => {
   const loadBetaUsers = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log('Loading beta users...');
+      
+      // Query for all subscribers with beta tier
       const { data, error } = await supabase
         .from('subscribers')
         .select('*')
         .eq('subscription_tier', 'beta')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading beta users:', error);
+        throw error;
+      }
 
+      console.log('Found beta users:', data?.length || 0, data);
       setBetaUsers(data || []);
       
       // Calculate stats
@@ -60,11 +67,14 @@ export const BetaUserManagement: React.FC = React.memo(() => {
         return createdAt > weekAgo;
       }).length || 0;
 
-      setStats({
+      const newStats = {
         totalBeta: total,
-        activeBeta: total,
+        activeBeta: total, // For now, consider all beta users as active
         recentlyAdded: recent
-      });
+      };
+
+      console.log('Beta user stats:', newStats);
+      setStats(newStats);
     } catch (error) {
       console.error('Error loading beta users:', error);
       toast({
