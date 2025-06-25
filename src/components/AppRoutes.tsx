@@ -1,5 +1,7 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
+import { AdminProtectedRoute } from './AdminProtectedRoute';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import CompleteSignup from '@/pages/CompleteSignup';
@@ -16,6 +18,12 @@ import Resources from '@/pages/Resources';
 import NotFound from '@/pages/NotFound';
 import PremiumSuccess from '@/pages/PremiumSuccess';
 import EmailConfirmation from '@/pages/EmailConfirmation';
+import AdminDashboard from '@/pages/AdminDashboard';
+import AdminUsers from '@/pages/AdminUsers';
+import AdminNotifications from '@/pages/AdminNotifications';
+import AdminAnalytics from '@/pages/AdminAnalytics';
+import AdminContent from '@/pages/AdminContent';
+import AdminSystem from '@/pages/AdminSystem';
 import { ChallengeDetail } from '@/components/ChallengeDetail';
 
 export const AppRoutes = () => {
@@ -26,6 +34,56 @@ export const AppRoutes = () => {
       <Route path="/auth/confirm" element={<EmailConfirmation />} />
       <Route path="/complete-signup" element={<CompleteSignup />} />
       <Route path="/premium-success" element={<PremiumSuccess />} />
+      
+      {/* Admin routes */}
+      <Route
+        path="/admin"
+        element={
+          <AdminProtectedRoute>
+            <AdminDashboard />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <AdminProtectedRoute>
+            <AdminUsers />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notifications"
+        element={
+          <AdminProtectedRoute>
+            <AdminNotifications />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <AdminProtectedRoute>
+            <AdminAnalytics />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/content"
+        element={
+          <AdminProtectedRoute>
+            <AdminContent />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/system"
+        element={
+          <AdminProtectedRoute>
+            <AdminSystem />
+          </AdminProtectedRoute>
+        }
+      />
       
       {/* Protected routes */}
       <Route
