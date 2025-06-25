@@ -872,6 +872,89 @@ export type Database = {
           },
         ]
       }
+      habit_steps: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_optional: boolean
+          prompt_question: string | null
+          step_order: number
+          template_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_optional?: boolean
+          prompt_question?: string | null
+          step_order: number
+          template_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_optional?: boolean
+          prompt_question?: string | null
+          step_order?: number
+          template_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_steps_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "habit_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habit_templates: {
+        Row: {
+          category: string
+          coach_context: string | null
+          created_at: string
+          description: string | null
+          difficulty_level: string
+          estimated_duration_minutes: number | null
+          id: string
+          is_coach_recommended: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          coach_context?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_coach_recommended?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          coach_context?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_coach_recommended?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       habits: {
         Row: {
           created_at: string
@@ -1109,6 +1192,44 @@ export type Database = {
         }
         Relationships: []
       }
+      routine_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          mood_rating: number | null
+          notes: string | null
+          total_steps_completed: number
+          user_id: string
+          user_routine_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          total_steps_completed?: number
+          user_id: string
+          user_routine_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          mood_rating?: number | null
+          notes?: string | null
+          total_steps_completed?: number
+          user_id?: string
+          user_routine_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_completions_user_routine_id_fkey"
+            columns: ["user_routine_id"]
+            isOneToOne: false
+            referencedRelation: "user_habit_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sample_templates: {
         Row: {
           category: string | null
@@ -1192,6 +1313,51 @@ export type Database = {
           target_conditions?: Json
         }
         Relationships: []
+      }
+      step_completions: {
+        Row: {
+          completed_at: string
+          duration_minutes: number | null
+          id: string
+          reflection_response: string | null
+          routine_completion_id: string | null
+          step_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          duration_minutes?: number | null
+          id?: string
+          reflection_response?: string | null
+          routine_completion_id?: string | null
+          step_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          duration_minutes?: number | null
+          id?: string
+          reflection_response?: string | null
+          routine_completion_id?: string | null
+          step_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "step_completions_routine_completion_id_fkey"
+            columns: ["routine_completion_id"]
+            isOneToOne: false
+            referencedRelation: "routine_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "step_completions_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "habit_steps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscribers: {
         Row: {
@@ -1413,6 +1579,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_habit_routines: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          is_active: boolean
+          longest_streak: number
+          scheduled_time: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          is_active?: boolean
+          longest_streak?: number
+          scheduled_time?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          is_active?: boolean
+          longest_streak?: number
+          scheduled_time?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_habit_routines_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "habit_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_onboarding: {
         Row: {
@@ -1653,6 +1866,10 @@ export type Database = {
       }
       update_habit_streak: {
         Args: { habit_id_param: string }
+        Returns: undefined
+      }
+      update_routine_streak: {
+        Args: { user_routine_id_param: string }
         Returns: undefined
       }
     }

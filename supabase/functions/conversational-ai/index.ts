@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
@@ -48,6 +47,21 @@ interface HabitAnalysis {
   decliningHabits: string[];
 }
 
+interface RoutineAnalysis {
+  totalRoutines: number;
+  activeRoutines: Array<{
+    title: string;
+    currentStreak: number;
+    longestStreak: number;
+    completionRate: number;
+    trend: string;
+    isCoachRecommended: boolean;
+  }>;
+  overallCompletionRate: number;
+  averageStreak: number;
+  coachRecommendedCount: number;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,16 +73,18 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Enhanced user context gathering with comprehensive analysis
-    const [preferencesResult, journalAnalysisData, habitsAnalysisData] = await Promise.all([
+    const [preferencesResult, journalAnalysisData, habitsAnalysisData, routinesData] = await Promise.all([
       supabase.from('user_preferences').select('*').eq('user_id', userId).single(),
       getJournalAnalysis(supabase, userId),
-      getHabitAnalysis(supabase, userId)
+      getHabitAnalysis(supabase, userId),
+      getRoutineAnalysis(supabase, userId)
     ]);
 
     const userContext = {
       preferences: preferencesResult.data,
       journalAnalysis: journalAnalysisData,
-      habitAnalysis: habitsAnalysisData
+      habitAnalysis: habitsAnalysisData,
+      routineAnalysis: routinesData
     };
 
     let systemPrompt = '';
@@ -99,7 +115,7 @@ ${userContext.journalAnalysis.recentEntries.map(entry =>
 
 HABIT PROGRESS ANALYSIS:
 ${userContext.habitAnalysis ? `
-🎯 Habit Overview:
+🎯 Simple Habits Overview:
 - Active habits: ${userContext.habitAnalysis.totalHabits}
 - Overall success rate: ${userContext.habitAnalysis.overallSuccessRate.toFixed(1)}%
 - Average streak: ${userContext.habitAnalysis.averageStreak} days
@@ -111,7 +127,22 @@ ${userContext.habitAnalysis.activeHabits.map(habit =>
 
 🚀 Improving: ${userContext.habitAnalysis.improvingHabits.join(', ') || 'None identified'}
 ⚠️ Needs attention: ${userContext.habitAnalysis.decliningHabits.join(', ') || 'None identified'}
-` : 'No habit data available yet.'}
+` : 'No simple habit data available yet.'}
+
+ROUTINE PROGRESS ANALYSIS:
+${userContext.routineAnalysis ? `
+🔄 Multi-Step Routines Overview:
+- Active routines: ${userContext.routineAnalysis.totalRoutines}
+- Overall completion rate: ${userContext.routineAnalysis.overallCompletionRate.toFixed(1)}%
+- Average routine streak: ${userContext.routineAnalysis.averageStreak} days
+
+📋 Individual Routine Performance:
+${userContext.routineAnalysis.activeRoutines.map(routine => 
+  `• ${routine.title}: ${routine.currentStreak}/${routine.longestStreak} streak (${routine.completionRate.toFixed(1)}% completion, ${routine.trend})`
+).join('\n')}
+
+✨ Coach-recommended routines in use: ${userContext.routineAnalysis.coachRecommendedCount}
+` : 'No routine data available yet.'}
 
 USER PREFERENCES:
 ${userContext.preferences ? `
@@ -121,10 +152,10 @@ ${userContext.preferences ? `
 ` : 'Default supportive approach'}
 
 COACHING APPROACH:
-With this comprehensive understanding of the user's emotional patterns, habit progress, and personal journey:
+With this comprehensive understanding of the user's emotional patterns, habit progress, routine engagement, and personal journey:
 
 1. **Acknowledge Patterns**: Reference specific trends and progress you observe
-2. **Personalized Guidance**: Tailor advice based on their emotional patterns and habit success rates
+2. **Personalized Guidance**: Tailor advice based on their emotional patterns and success rates
 3. **Strategic Support**: Address declining areas while reinforcing successful patterns
 4. **Emotional Intelligence**: Respond to their emotional state and recent themes
 5. **Progress Recognition**: Celebrate improvements and address setbacks with understanding
@@ -132,19 +163,33 @@ With this comprehensive understanding of the user's emotional patterns, habit pr
 COACHING CAPABILITIES:
 - Suggest journaling when you see patterns worth exploring deeper
 - Recommend habit adjustments based on their success/failure patterns
+- **ROUTINE RECOMMENDATIONS**: When you provide detailed step-by-step guidance (like morning routines, evening routines, or any multi-step process), include a clear suggestion to create it as a structured routine
 - Offer specific techniques that align with their emotional needs
 - Provide data-driven insights about their progress
 - When appropriate, suggest creating new habits or modifying existing ones
+
+ROUTINE SUGGESTION GUIDELINES:
+When you provide step-by-step guidance for routines, end your response with:
+"This would make a great structured routine in Lumatori! Would you like me to help you create this as a trackable routine with guided steps and reflection prompts?"
+
+Look for opportunities to suggest routines when discussing:
+- Morning/evening routines
+- Workout sequences
+- Meditation practices
+- Study/work sessions
+- Self-care practices
+- Any multi-step processes
 
 CONVERSATION STYLE:
 - Use ${userContext.preferences?.tone_of_voice || 'supportive'} tone
 - Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
 - Be data-informed but emotionally intelligent
 - Reference specific patterns and progress when relevant
-- Keep responses conversational (150-200 words max)
+- Keep responses conversational (150-250 words max)
 - Integrate insights naturally into coaching responses
+- **Actively look for routine suggestion opportunities**
 
-Remember: You have deep insight into their journey. Use this knowledge to provide personalized, relevant, and impactful coaching that acknowledges their unique patterns and progress.`;
+Remember: You have deep insight into their journey. Use this knowledge to provide personalized, relevant, and impactful coaching that acknowledges their unique patterns and progress. Always look for opportunities to suggest structured routines when providing step-by-step guidance.`;
     } else if (isJournalEntry) {
       // Enhanced journal entry response with pattern awareness
       systemPrompt = `You are Lumatori Assistant, responding to a journal entry with deep understanding of the user's patterns.
@@ -158,6 +203,10 @@ Recent themes: ${userContext.journalAnalysis.recentThemes.join(', ')}
 
 ${userContext.habitAnalysis ? `
 Habit progress: ${userContext.habitAnalysis.overallSuccessRate.toFixed(1)}% success rate across ${userContext.habitAnalysis.totalHabits} habits
+` : ''}
+
+${userContext.routineAnalysis ? `
+Routine progress: ${userContext.routineAnalysis.overallCompletionRate.toFixed(1)}% completion rate across ${userContext.routineAnalysis.totalRoutines} routines
 ` : ''}
 
 RESPONSE STYLE:
@@ -178,7 +227,11 @@ Journal insights: ${userContext.journalAnalysis.totalEntries} entries, recent em
 ` : ''}
 
 ${userContext.habitAnalysis && userContext.habitAnalysis.totalHabits > 0 ? `
-Habit progress: ${userContext.habitAnalysis.totalHabits} active habits with ${userContext.habitAnalysis.overallSuccessRate.toFixed(1)}% success rate
+Simple habits: ${userContext.habitAnalysis.totalHabits} active habits with ${userContext.habitAnalysis.overallSuccessRate.toFixed(1)}% success rate
+` : ''}
+
+${userContext.routineAnalysis && userContext.routineAnalysis.totalRoutines > 0 ? `
+Structured routines: ${userContext.routineAnalysis.totalRoutines} active routines with ${userContext.routineAnalysis.overallCompletionRate.toFixed(1)}% completion rate
 ` : ''}
 
 JOURNAL SUGGESTION GUIDELINES:
@@ -191,12 +244,24 @@ Suggest journaling when the user shares:
 
 When suggesting journaling, use this exact phrase: "This sounds like something meaningful to capture. Would you like to save this thought in your journal?"
 
+ROUTINE SUGGESTION GUIDELINES:
+Suggest creating structured routines when you provide step-by-step guidance for:
+- Morning/evening routines
+- Workout sequences  
+- Meditation practices
+- Study/work sessions
+- Self-care practices
+- Any multi-step processes
+
+When suggesting routines, use this phrase: "This would make a great structured routine in Lumatori! Would you like me to help you create this as a trackable routine with guided steps and reflection prompts?"
+
 PERSONALITY:
 - Use a ${userContext.preferences?.tone_of_voice || 'supportive'} tone
 - Focus on ${userContext.preferences?.growth_focus || 'personal growth'}
 - Be conversational and engaging
 - Reference their patterns when relevant and natural
 - Provide actionable advice when asked
+- **Actively look for routine creation opportunities**
 
 Keep responses helpful, personalized, and conversational.`;
     }
@@ -462,6 +527,99 @@ async function getHabitAnalysis(supabase: any, userId: string): Promise<HabitAna
     };
   } catch (error) {
     console.error('Error in habit analysis:', error);
+    return null;
+  }
+}
+
+// New routine analysis function
+async function getRoutineAnalysis(supabase: any, userId: string) {
+  try {
+    // Get user routines with template info
+    const { data: routines, error: routinesError } = await supabase
+      .from('user_habit_routines')
+      .select(`
+        *,
+        habit_templates (
+          title,
+          is_coach_recommended
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (routinesError || !routines || routines.length === 0) {
+      console.log('No active routines found for analysis');
+      return null;
+    }
+
+    // Get recent completions for analysis
+    const { data: completions, error: completionsError } = await supabase
+      .from('routine_completions')
+      .select('user_routine_id, completed_at')
+      .eq('user_id', userId)
+      .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('completed_at', { ascending: false });
+
+    if (completionsError) {
+      console.error('Error fetching routine completions:', completionsError);
+    }
+
+    const recentCompletions = completions || [];
+
+    // Analyze each routine
+    const activeRoutines = routines.map(routine => {
+      const routineCompletions = recentCompletions.filter(c => c.user_routine_id === routine.id);
+      const recentCompletionsCount = routineCompletions.length;
+      
+      // Calculate completion rate (completions vs days in last 30 days)
+      const daysToAnalyze = 30;
+      const completionRate = (recentCompletionsCount / daysToAnalyze) * 100;
+      
+      // Determine trend based on recent vs older completions
+      const last7Days = routineCompletions.filter(c => 
+        new Date(c.completed_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      ).length;
+      const previous7Days = routineCompletions.filter(c => {
+        const completionDate = new Date(c.completed_at);
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+        return completionDate <= sevenDaysAgo && completionDate > fourteenDaysAgo;
+      }).length;
+      
+      let trend = 'stable';
+      if (last7Days > previous7Days) trend = 'improving';
+      else if (last7Days < previous7Days) trend = 'declining';
+
+      return {
+        title: routine.title,
+        currentStreak: routine.current_streak,
+        longestStreak: routine.longest_streak,
+        completionRate,
+        trend,
+        isCoachRecommended: routine.habit_templates?.is_coach_recommended || false
+      };
+    });
+
+    // Overall analysis
+    const totalRoutines = routines.length;
+    const overallCompletionRate = activeRoutines.length > 0
+      ? activeRoutines.reduce((sum, routine) => sum + routine.completionRate, 0) / activeRoutines.length
+      : 0;
+    const averageStreak = activeRoutines.length > 0
+      ? activeRoutines.reduce((sum, routine) => sum + routine.currentStreak, 0) / activeRoutines.length
+      : 0;
+
+    const coachRecommendedCount = activeRoutines.filter(r => r.isCoachRecommended).length;
+
+    return {
+      totalRoutines,
+      activeRoutines,
+      overallCompletionRate,
+      averageStreak,
+      coachRecommendedCount
+    };
+  } catch (error) {
+    console.error('Error in routine analysis:', error);
     return null;
   }
 }
