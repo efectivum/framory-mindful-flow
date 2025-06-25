@@ -2,14 +2,24 @@
 import React from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Bell, BarChart3, AlertCircle, TrendingUp, Shield, Activity, Database, Server } from 'lucide-react';
+import { Users, Bell, BarChart3, AlertCircle, TrendingUp, Shield, Activity, Database, Server, RefreshCw } from 'lucide-react';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { useSystemHealth } from '@/hooks/useSystemHealth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboard() {
-  const { data: stats, isLoading: statsLoading, error: statsError } = useAdminStats();
-  const { data: systemHealth, isLoading: healthLoading } = useSystemHealth();
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useAdminStats();
+  const { data: systemHealth, isLoading: healthLoading, error: healthError, refetch: refetchHealth } = useSystemHealth();
+
+  console.log('AdminDashboard render:', { 
+    statsLoading, 
+    healthLoading, 
+    statsError: statsError?.message, 
+    healthError: healthError?.message,
+    stats,
+    systemHealth 
+  });
 
   if (statsLoading) {
     return (
@@ -26,10 +36,21 @@ export default function AdminDashboard() {
       <AdminLayout title="Admin Dashboard" subtitle="Overview of system status and key metrics">
         <Card className="bg-red-900/20 border-red-800">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2 text-red-400">
+            <div className="flex items-center gap-2 text-red-400 mb-4">
               <AlertCircle className="w-5 h-5" />
               <span>Failed to load dashboard data</span>
             </div>
+            <p className="text-gray-400 text-sm mb-4">
+              Error: {statsError.message}
+            </p>
+            <Button 
+              onClick={() => refetchStats()}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </AdminLayout>
@@ -97,12 +118,31 @@ export default function AdminDashboard() {
         {/* System Status */}
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">System Status</CardTitle>
+            <CardTitle className="text-white flex items-center justify-between">
+              System Status
+              {healthError && (
+                <Button 
+                  onClick={() => refetchHealth()}
+                  size="sm"
+                  variant="outline"
+                  className="text-red-400 border-red-400 hover:bg-red-400/10"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {healthLoading ? (
               <div className="flex items-center justify-center h-24">
                 <LoadingSpinner />
+              </div>
+            ) : healthError ? (
+              <div className="text-center text-red-400 py-4">
+                <AlertCircle className="w-6 h-6 mx-auto mb-2" />
+                <p className="text-sm">Failed to load system status</p>
+                <p className="text-xs text-gray-500 mt-1">{healthError.message}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

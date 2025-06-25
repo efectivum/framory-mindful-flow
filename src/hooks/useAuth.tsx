@@ -44,21 +44,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAdminStatus = React.useCallback(async (): Promise<boolean> => {
     if (!user) {
+      console.log('Auth: checkAdminStatus - no user');
       setIsAdmin(false);
       return false;
     }
 
     try {
+      console.log('Auth: Checking admin status for user:', user.email);
       const { data, error } = await supabase.rpc('is_admin', {
         user_id_param: user.id
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Auth: Admin check RPC error:', error);
+        throw error;
+      }
+      
       const adminStatus = data || false;
+      console.log('Auth: Admin status result:', adminStatus);
       setIsAdmin(adminStatus);
       return adminStatus;
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Auth: Error checking admin status:', error);
       setIsAdmin(false);
       return false;
     }
@@ -198,15 +205,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   React.useEffect(() => {
+    console.log('Auth: Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth: State change event:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Check admin status and subscription when user signs in
         if (session?.user) {
+          console.log('Auth: User session found, checking admin status');
           const adminStatus = await checkAdminStatus();
           
           // If admin, grant premium access immediately without DB check
@@ -217,6 +228,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsBeta(false);
             setSubscriptionEnd(null);
           } else {
+            console.log('Auth: Non-admin user, checking subscription');
             // Check subscription status for non-admin users
             setTimeout(() => {
               checkSubscriptionStatus();
@@ -248,12 +260,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Auth: Existing session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
       if (session?.user) {
         checkAdminStatus().then(adminStatus => {
+          console.log('Auth: Existing session admin check:', adminStatus);
           if (adminStatus) {
             console.log('Auth: Existing admin session detected');
             setSubscriptionTier('premium');
