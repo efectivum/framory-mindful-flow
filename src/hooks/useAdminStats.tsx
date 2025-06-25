@@ -19,6 +19,23 @@ export const useAdminStats = () => {
       console.log('Fetching admin stats...');
 
       try {
+        // Check admin status first
+        const { data: adminCheck, error: adminError } = await supabase.rpc('is_admin', {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id
+        });
+
+        if (adminError) {
+          console.error('Admin check failed:', adminError);
+          throw new Error(`Admin check failed: ${adminError.message}`);
+        }
+
+        if (!adminCheck) {
+          console.error('User is not an admin');
+          throw new Error('Access denied: Admin privileges required');
+        }
+
+        console.log('Admin access confirmed, fetching stats...');
+
         // Get total users count
         const { count: totalUsers, error: usersError } = await supabase
           .from('profiles')
@@ -29,7 +46,9 @@ export const useAdminStats = () => {
           throw new Error(`Failed to fetch users: ${usersError.message}`);
         }
 
-        // Get beta users count
+        console.log('Total users found:', totalUsers);
+
+        // Get beta users count with detailed logging
         const { count: betaUsers, error: betaError } = await supabase
           .from('subscribers')
           .select('*', { count: 'exact', head: true })
@@ -37,7 +56,21 @@ export const useAdminStats = () => {
 
         if (betaError) {
           console.error('Error fetching beta users:', betaError);
-          // Don't throw, continue with default value
+          throw new Error(`Failed to fetch beta users: ${betaError.message}`);
+        }
+
+        console.log('Beta users found:', betaUsers);
+
+        // Let's also check what subscribers exist
+        const { data: allSubscribers, error: allSubError } = await supabase
+          .from('subscribers')
+          .select('email, subscription_tier')
+          .limit(10);
+
+        if (allSubError) {
+          console.error('Error fetching all subscribers for debug:', allSubError);
+        } else {
+          console.log('All subscribers (first 10):', allSubscribers);
         }
 
         // Get active notifications count
@@ -48,10 +81,10 @@ export const useAdminStats = () => {
 
         if (notifError) {
           console.error('Error fetching notifications:', notifError);
-          // Don't throw, continue with default value
+          // Don't throw for notifications, just log and continue
         }
 
-        // Calculate growth rates (simplified for now)
+        // Calculate growth rates
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -81,13 +114,13 @@ export const useAdminStats = () => {
           totalUsers: totalUsers || 0,
           betaUsers: betaUsers || 0,
           activeNotifications: activeNotifications || 0,
-          systemHealth: 99.9, // This would come from actual monitoring
+          systemHealth: 99.9,
           growthRate,
           betaGrowth,
-          notificationChange: -2 // This would be calculated from historical data
+          notificationChange: -2
         };
 
-        console.log('Admin stats fetched successfully:', stats);
+        console.log('Admin stats compiled successfully:', stats);
         return stats;
 
       } catch (error) {
@@ -95,7 +128,7 @@ export const useAdminStats = () => {
         throw error;
       }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

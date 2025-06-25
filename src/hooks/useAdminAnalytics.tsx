@@ -25,6 +25,20 @@ export const useAdminAnalytics = () => {
       console.log('Fetching admin analytics...');
 
       try {
+        // Check admin status first
+        const { data: adminCheck, error: adminError } = await supabase.rpc('is_admin', {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id
+        });
+
+        if (adminError) {
+          console.error('Admin check failed:', adminError);
+          throw new Error(`Admin check failed: ${adminError.message}`);
+        }
+
+        if (!adminCheck) {
+          throw new Error('Access denied: Admin privileges required');
+        }
+
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -84,7 +98,7 @@ export const useAdminAnalytics = () => {
         if (habitUsersError) console.error('Error fetching habit users:', habitUsersError);
         if (chatUsersError) console.error('Error fetching chat users:', chatUsersError);
 
-        const totalUsers = Math.max(monthlyActiveUsers, 1); // Avoid division by zero
+        const totalUsers = Math.max(monthlyActiveUsers, 1);
 
         const featureUsage = [
           {
@@ -104,7 +118,7 @@ export const useAdminAnalytics = () => {
           },
           {
             name: 'Insights',
-            usage: Math.round(((monthlyActiveUsers || 0) / totalUsers) * 60), // Estimated
+            usage: Math.round(((monthlyActiveUsers || 0) / totalUsers) * 60),
             color: 'bg-yellow-500'
           }
         ];
@@ -129,7 +143,7 @@ export const useAdminAnalytics = () => {
           });
         }
 
-        // Calculate retention (simplified - users active this month vs last month)
+        // Calculate retention
         const sixtyDaysAgo = new Date();
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
@@ -160,7 +174,7 @@ export const useAdminAnalytics = () => {
         throw error;
       }
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

@@ -33,9 +33,23 @@ export const useSystemHealth = () => {
     queryFn: async (): Promise<SystemHealthData> => {
       console.log('Checking system health...');
 
-      // Test database connectivity and response time
-      const dbStart = Date.now();
       try {
+        // Check admin status first
+        const { data: adminCheck, error: adminError } = await supabase.rpc('is_admin', {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id
+        });
+
+        if (adminError) {
+          console.error('Admin check failed:', adminError);
+          throw new Error(`Admin check failed: ${adminError.message}`);
+        }
+
+        if (!adminCheck) {
+          throw new Error('Access denied: Admin privileges required');
+        }
+
+        // Test database connectivity and response time
+        const dbStart = Date.now();
         const { error: dbTestError } = await supabase.from('profiles').select('id').limit(1);
         const dbResponseTime = Date.now() - dbStart;
 
@@ -80,7 +94,7 @@ export const useSystemHealth = () => {
         }
 
         // Calculate error rate
-        const errorRatePercentage = Math.min((totalErrors / 1000) * 100, 100); // Normalized
+        const errorRatePercentage = Math.min((totalErrors / 1000) * 100, 100);
 
         const healthData = {
           database: {
@@ -90,7 +104,7 @@ export const useSystemHealth = () => {
           },
           edgeFunctions: {
             status: 'online' as const,
-            activeCount: 15 // This would come from actual monitoring
+            activeCount: 15
           },
           apiResponse: {
             averageTime: dbResponseTime,
@@ -138,7 +152,7 @@ export const useSystemHealth = () => {
         };
       }
     },
-    refetchInterval: 30000, // Check every 30 seconds
+    refetchInterval: 30000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

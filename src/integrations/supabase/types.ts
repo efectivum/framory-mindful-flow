@@ -1635,6 +1635,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_current_user_admin_status: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       initialize_user_onboarding: {
         Args: { user_id_param: string }
         Returns: undefined
