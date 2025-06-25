@@ -45,7 +45,7 @@ serve(async (req) => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     // If profile exists and has a name, use it
     if (profile && (profile.name || profile.full_name)) {
@@ -62,7 +62,7 @@ serve(async (req) => {
       .from('user_preferences')
       .select('weekly_insights_email')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     if (prefError) {
       console.log('No preferences found, assuming user wants emails')
@@ -127,7 +127,7 @@ serve(async (req) => {
     console.log('Sending email to:', user.email)
 
     const { data, error } = await resend.emails.send({
-      from: 'Personal Growth Insights <insights@yourdomain.com>', // Update with your domain
+      from: 'Weekly Insights <onboarding@resend.dev>', // Using Resend's default domain
       to: [user.email],
       subject: '📊 Your weekly growth insights are ready!',
       html,
