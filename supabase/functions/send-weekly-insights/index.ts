@@ -28,16 +28,34 @@ serve(async (req) => {
       throw new Error('User ID is required')
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabaseAdmin
+    console.log('Processing weekly insights for user:', userId)
+
+    // Get user's auth info for email and basic profile info
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
+    if (userError || !user?.email) {
+      console.error('Error fetching user:', userError)
+      throw new Error('Could not fetch user email')
+    }
+
+    console.log('User email found:', user.email)
+
+    // Try to get user profile, but don't fail if it doesn't exist
+    let userName = 'there'
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
 
-    if (profileError || !profile) {
-      throw new Error('Could not fetch user profile')
+    // If profile exists and has a name, use it
+    if (profile && (profile.name || profile.full_name)) {
+      userName = profile.name || profile.full_name || 'there'
+    } else {
+      // Fallback to email username if no profile name
+      userName = user.email.split('@')[0] || 'there'
     }
+
+    console.log('Using name:', userName)
 
     // Get user preferences to check if they want weekly emails
     const { data: preferences, error: prefError } = await supabaseAdmin
@@ -46,7 +64,9 @@ serve(async (req) => {
       .eq('user_id', userId)
       .single()
 
-    if (prefError || !preferences?.weekly_insights_email) {
+    if (prefError) {
+      console.log('No preferences found, assuming user wants emails')
+    } else if (!preferences?.weekly_insights_email) {
       console.log('User has disabled weekly insights emails')
       return new Response(JSON.stringify({ message: 'Weekly insights emails disabled' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -54,20 +74,16 @@ serve(async (req) => {
       })
     }
 
-    // Get user's auth info for email
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
-    if (userError || !user?.email) {
-      throw new Error('Could not fetch user email')
-    }
-
     // Calculate insights for the past week
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
+    console.log('Fetching data from:', oneWeekAgo.toISOString())
+
     // Get mood entries from the past week
     const { data: moodEntries, error: moodError } = await supabaseAdmin
       .from('journal_entries')
-      .select('mood, emotions, created_at')
+      .select('mood_after, ai_detected_emotions, created_at')
       .eq('user_id', userId)
       .gte('created_at', oneWeekAgo.toISOString())
 
@@ -86,6 +102,8 @@ serve(async (req) => {
       console.error('Error fetching habit completions:', habitError)
     }
 
+    console.log('Found', moodEntries?.length || 0, 'mood entries and', habitCompletions?.length || 0, 'habit completions')
+
     // Calculate insights
     const insights = {
       moodTrend: calculateMoodTrend(moodEntries || []),
@@ -94,15 +112,19 @@ serve(async (req) => {
       weeklyStreak: calculateWeeklyStreak(moodEntries || [], habitCompletions || []),
     }
 
+    console.log('Generated insights:', insights)
+
     const dashboardUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app') || 'https://your-app.vercel.app'}/insights`
 
     const html = await renderAsync(
       React.createElement(WeeklyInsightsEmail, {
-        name: profile.name || 'there',
+        name: userName,
         insights,
         dashboardUrl,
       })
     )
+
+    console.log('Sending email to:', user.email)
 
     const { data, error } = await resend.emails.send({
       from: 'Personal Growth Insights <insights@yourdomain.com>', // Update with your domain
@@ -135,7 +157,7 @@ serve(async (req) => {
 function calculateMoodTrend(entries: any[]): string {
   if (entries.length === 0) return "No mood data this week"
   
-  const avgMood = entries.reduce((sum, entry) => sum + (entry.mood || 5), 0) / entries.length
+  const avgMood = entries.reduce((sum, entry) => sum + (entry.mood_after || 5), 0) / entries.length
   
   if (avgMood >= 7) return "Your mood has been consistently positive this week! 😊"
   if (avgMood >= 5) return "Your mood has been balanced this week 😌"
@@ -147,8 +169,8 @@ function calculateTopEmotion(entries: any[]): string {
   
   const emotions: { [key: string]: number } = {}
   entries.forEach(entry => {
-    if (entry.emotions) {
-      entry.emotions.forEach((emotion: string) => {
+    if (entry.ai_detected_emotions) {
+      entry.ai_detected_emotions.forEach((emotion: string) => {
         emotions[emotion] = (emotions[emotion] || 0) + 1
       })
     }
