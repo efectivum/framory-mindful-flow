@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -11,6 +10,7 @@ import { ChatInput } from './ChatInput';
 import { JournalPreviewModal } from './JournalPreviewModal';
 import { ChatSessionSidebar } from './ChatSessionSidebar';
 import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
+import { LoadingSpinner } from './ui/loading-spinner';
 import { Message } from '@/types/chat';
 
 export const ChatInterface = () => {
@@ -24,9 +24,11 @@ export const ChatInterface = () => {
     currentSessionId,
     isGeneratingResponse,
     setIsGeneratingResponse,
+    isLoadingSessions,
     addMessage,
     switchToSession,
-    startNewChat
+    startNewChat,
+    hasInitialized
   } = useLocalChatState();
 
   // Local UI state
@@ -42,6 +44,19 @@ export const ChatInterface = () => {
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  // Show loading state while initializing
+  if (isLoadingSessions || !hasInitialized) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26]">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <h3 className="text-white font-medium mb-2">Setting up your chat...</h3>
+          <p className="text-gray-400 text-sm">Loading your conversation history</p>
+        </div>
+      </div>
+    );
+  }
 
   // Handle sending messages
   const handleSend = useCallback(async () => {

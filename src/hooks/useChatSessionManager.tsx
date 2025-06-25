@@ -33,6 +33,7 @@ export const useChatSessionManager = () => {
         .from('chat_sessions')
         .select('id, title, created_at, updated_at')
         .eq('user_id', user.id)
+        .eq('is_active', true)
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -67,7 +68,7 @@ export const useChatSessionManager = () => {
 
     setIsCreatingSession(true);
     try {
-      console.log('Session manager: Creating new session');
+      console.log('Session manager: Creating new session with title:', title);
       const { data, error } = await supabase
         .from('chat_sessions')
         .insert({

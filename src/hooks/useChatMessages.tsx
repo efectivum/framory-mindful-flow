@@ -39,6 +39,59 @@ export const useChatMessages = () => {
     };
   }, []);
 
+  const saveMessageToDatabase = useCallback(async (message: Message, sessionId: string) => {
+    if (!user) return;
+
+    try {
+      const metadata: MessageMetadata = {
+        activityType: message.activityType,
+        isJournalEntry: message.isJournalEntry,
+        attachmentUrl: message.attachmentUrl,
+        attachmentType: message.attachmentType,
+        habitSuggestion: message.habitSuggestion,
+        coachingMetadata: message.coachingMetadata
+      };
+
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          id: message.id,
+          session_id: sessionId,
+          user_id: user.id,
+          type: message.type,
+          content: message.content,
+          metadata: metadata as any
+        });
+
+      if (error) {
+        console.error('Messages: Error saving message:', error);
+        // Retry once after a brief delay
+        setTimeout(async () => {
+          const { error: retryError } = await supabase
+            .from('chat_messages')
+            .insert({
+              id: message.id,
+              session_id: sessionId,
+              user_id: user.id,
+              type: message.type,
+              content: message.content,
+              metadata: metadata as any
+            });
+          
+          if (retryError) {
+            console.error('Messages: Retry failed:', retryError);
+          } else {
+            console.log('Messages: Message saved on retry');
+          }
+        }, 1000);
+      } else {
+        console.log('Messages: Message saved successfully');
+      }
+    } catch (error) {
+      console.error('Messages: Failed to save message:', error);
+    }
+  }, [user]);
+
   const loadMessagesForSession = useCallback(async (sessionId: string) => {
     if (!user) {
       console.log('Messages: No user, cannot load messages');
@@ -78,11 +131,12 @@ export const useChatMessages = () => {
 
       console.log('Messages: Loaded messages:', convertedMessages.length);
       
-      // If no messages exist for this session, add welcome message
       if (convertedMessages.length === 0) {
         console.log('Messages: Session is empty, adding welcome message');
         const welcomeMessage = createWelcomeMessage();
         setMessages([welcomeMessage]);
+        // Save welcome message to database
+        await saveMessageToDatabase(welcomeMessage, sessionId);
       } else {
         setMessages(convertedMessages);
       }
@@ -93,8 +147,11 @@ export const useChatMessages = () => {
         description: "Failed to load conversation history.",
         variant: "destructive"
       });
+      // Set welcome message as fallback
+      const welcomeMessage = createWelcomeMessage();
+      setMessages([welcomeMessage]);
     }
-  }, [user, toast, createWelcomeMessage]);
+  }, [user, toast, createWelcomeMessage, saveMessageToDatabase]);
 
   const addMessage = useCallback(async (message: Message, currentSessionId: string | null) => {
     if (!currentSessionId) {
@@ -107,56 +164,9 @@ export const useChatMessages = () => {
     // Add to local state immediately for instant UI update
     setMessages(prev => [...prev, message]);
 
-    // Background sync to database
-    if (user) {
-      try {
-        const metadata: MessageMetadata = {
-          activityType: message.activityType,
-          isJournalEntry: message.isJournalEntry,
-          attachmentUrl: message.attachmentUrl,
-          attachmentType: message.attachmentType,
-          habitSuggestion: message.habitSuggestion,
-          coachingMetadata: message.coachingMetadata
-        };
-
-        console.log('Messages: Saving message to database');
-        const { error: insertError } = await supabase
-          .from('chat_messages')
-          .insert({
-            id: message.id,
-            session_id: currentSessionId,
-            user_id: user.id,
-            type: message.type,
-            content: message.content,
-            metadata: metadata as any
-          });
-
-        if (insertError) {
-          console.error('Messages: Error saving message:', insertError);
-          throw insertError;
-        }
-
-        // Update session's last_message_at
-        const { error: updateError } = await supabase
-          .from('chat_sessions')
-          .update({ 
-            updated_at: new Date().toISOString(),
-            last_message_at: new Date().toISOString()
-          })
-          .eq('id', currentSessionId);
-
-        if (updateError) {
-          console.error('Messages: Error updating session timestamp:', updateError);
-        }
-
-        console.log('Messages: Message saved successfully');
-      } catch (error) {
-        console.error('Messages: Background sync failed:', error);
-        // Don't show error to user - message is already in UI
-        // But we could implement retry logic here in the future
-      }
-    }
-  }, [user]);
+    // Save to database
+    await saveMessageToDatabase(message, currentSessionId);
+  }, [saveMessageToDatabase]);
 
   const setWelcomeMessage = useCallback(() => {
     console.log('Messages: Setting welcome message');
@@ -164,23 +174,11 @@ export const useChatMessages = () => {
     setMessages([welcomeMessage]);
   }, [createWelcomeMessage]);
 
-  const ensureWelcomeMessage = useCallback(() => {
-    console.log('Messages: Ensuring welcome message exists');
-    setMessages(prev => {
-      if (prev.length === 0) {
-        const welcomeMessage = createWelcomeMessage();
-        return [welcomeMessage];
-      }
-      return prev;
-    });
-  }, [createWelcomeMessage]);
-
   return {
     messages,
     setMessages,
     loadMessagesForSession,
     addMessage,
-    setWelcomeMessage,
-    ensureWelcomeMessage
+    setWelcomeMessage
   };
 };

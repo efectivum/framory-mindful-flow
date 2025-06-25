@@ -11,11 +11,10 @@ export const useChatInitialization = () => {
   const { toast } = useToast();
   const [hasInitialized, setHasInitialized] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
-  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
   
   const {
     sessions,
-    setSessions,
     currentSessionId,
     setCurrentSessionId,
     isLoadingSessions,
@@ -30,176 +29,95 @@ export const useChatInitialization = () => {
     setMessages,
     loadMessagesForSession,
     addMessage: addMessageToState,
-    setWelcomeMessage,
-    ensureWelcomeMessage
+    setWelcomeMessage
   } = useChatMessages();
 
   const initializeChatState = useCallback(async () => {
-    if (!user) {
-      console.log('Chat initialization: No user found');
+    if (!user || hasInitialized || isInitializing) {
       return;
     }
 
+    console.log('Chat initialization: Starting for user:', user.id);
+    setIsInitializing(true);
+    
     try {
-      console.log('Chat initialization: Starting...');
-      setInitializationError(null);
-      
-      // Load all sessions first
+      // Load all user sessions
       await loadSessions();
-      console.log('Chat initialization: Sessions loaded');
       
-      // Try to restore saved session
-      const savedSessionId = localStorage.getItem('current-chat-session');
-      console.log('Chat initialization: Saved session ID:', savedSessionId);
-      
-      if (savedSessionId) {
-        try {
-          // Verify saved session exists and is active
-          const { data, error } = await supabase
-            .from('chat_sessions')
-            .select('id')
-            .eq('id', savedSessionId)
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-            .maybeSingle();
-          
-          if (!error && data) {
-            console.log('Chat initialization: Restoring saved session');
-            setCurrentSessionId(savedSessionId);
-            await loadMessagesForSession(savedSessionId);
-            return;
-          } else {
-            console.log('Chat initialization: Saved session invalid, removing from storage');
-            localStorage.removeItem('current-chat-session');
-          }
-        } catch (error) {
-          console.error('Chat initialization: Error verifying saved session:', error);
-          localStorage.removeItem('current-chat-session');
-        }
+      // Try to find the most recent active session
+      const { data: recentSession, error } = await supabase
+        .from('chat_sessions')
+        .select('id, title, created_at, updated_at')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Chat initialization: Error loading recent session:', error);
       }
-      
-      // Look for existing active session
-      try {
-        const { data: activeSessions, error } = await supabase
-          .from('chat_sessions')
-          .select('id, title, created_at, updated_at')
-          .eq('user_id', user.id)
-          .eq('context_type', 'coaching')
-          .eq('is_active', true)
-          .order('updated_at', { ascending: false })
-          .limit(1);
-        
-        if (error) throw error;
-        
-        if (activeSessions && activeSessions.length > 0) {
-          const activeSession = activeSessions[0];
-          console.log('Chat initialization: Found existing active session');
-          setCurrentSessionId(activeSession.id);
-          localStorage.setItem('current-chat-session', activeSession.id);
-          await loadMessagesForSession(activeSession.id);
-          return;
-        }
-      } catch (error) {
-        console.error('Chat initialization: Error loading active sessions:', error);
-      }
-      
-      // Create new session as last resort
-      console.log('Chat initialization: Creating new session');
-      const newSession = await createNewSession();
-      if (newSession) {
-        console.log('Chat initialization: New session created successfully');
-        // Welcome message will be automatically added by loadMessagesForSession for empty sessions
+
+      if (recentSession) {
+        console.log('Chat initialization: Restoring recent session:', recentSession.id);
+        setCurrentSessionId(recentSession.id);
+        localStorage.setItem('current-chat-session', recentSession.id);
+        await loadMessagesForSession(recentSession.id);
       } else {
-        throw new Error('Failed to create new session');
+        console.log('Chat initialization: No sessions found, creating new one');
+        const newSession = await createNewSession('New Conversation');
+        if (newSession) {
+          console.log('Chat initialization: New session created:', newSession.id);
+          // Welcome message will be added by loadMessagesForSession for empty sessions
+        } else {
+          throw new Error('Failed to create initial session');
+        }
       }
+
+      setHasInitialized(true);
     } catch (error) {
-      console.error('Chat initialization: Failed to initialize:', error);
-      setInitializationError(error instanceof Error ? error.message : 'Failed to initialize chat');
+      console.error('Chat initialization: Failed:', error);
       toast({
-        title: "Chat Initialization Error",
-        description: "Failed to set up chat session. Please refresh the page.",
+        title: "Chat Setup Error",
+        description: "Failed to set up chat. Please refresh the page.",
         variant: "destructive"
       });
+    } finally {
+      setIsInitializing(false);
     }
-  }, [user, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, toast]);
+  }, [user, hasInitialized, isInitializing, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, toast]);
 
-  // Initialize on mount
+  // Initialize when user is available and we haven't initialized yet
   useEffect(() => {
-    if (user && !hasInitialized && !isLoadingSessions) {
-      console.log('Chat initialization: Starting initialization effect');
+    if (user && !hasInitialized && !isLoadingSessions && !isInitializing) {
       initializeChatState();
-      setHasInitialized(true);
     }
-  }, [user, hasInitialized, isLoadingSessions, initializeChatState]);
+  }, [user, hasInitialized, isLoadingSessions, isInitializing, initializeChatState]);
 
   const addMessage = useCallback(async (message: any) => {
     if (!currentSessionId) {
-      console.error('Chat: Cannot add message - no current session');
-      toast({
-        title: "Session Error",
-        description: "No active chat session. Please refresh the page.",
-        variant: "destructive"
-      });
+      console.warn('Chat: Cannot add message - no current session');
       return;
     }
     
-    try {
-      console.log('Chat: Adding message to session:', currentSessionId);
-      await addMessageToState(message, currentSessionId);
-    } catch (error) {
-      console.error('Chat: Failed to add message:', error);
-      toast({
-        title: "Message Error",
-        description: "Failed to save message. Please try again.",
-        variant: "destructive"
-      });
-    }
-  }, [addMessageToState, currentSessionId, toast]);
+    console.log('Chat: Adding message to session:', currentSessionId);
+    await addMessageToState(message, currentSessionId);
+  }, [addMessageToState, currentSessionId]);
 
   const startNewChat = useCallback(async () => {
-    try {
-      console.log('Chat: Starting new chat');
-      const session = await createNewSession();
-      if (session) {
-        console.log('Chat: New chat session created');
-        // Clear messages and ensure welcome message is shown
-        setMessages([]);
-        setWelcomeMessage();
-      } else {
-        throw new Error('Failed to create new session');
-      }
-    } catch (error) {
-      console.error('Chat: Failed to start new chat:', error);
-      toast({
-        title: "New Chat Error",
-        description: "Failed to create new conversation. Please try again.",
-        variant: "destructive"
-      });
+    console.log('Chat: Starting new chat');
+    const session = await createNewSession('New Conversation');
+    if (session) {
+      setMessages([]);
+      setWelcomeMessage();
     }
-  }, [createNewSession, setWelcomeMessage, setMessages, toast]);
+  }, [createNewSession, setWelcomeMessage, setMessages]);
 
   const handleSwitchToSession = useCallback(async (sessionId: string) => {
-    try {
-      console.log('Chat: Switching to session:', sessionId);
-      await switchToSession(sessionId);
-      await loadMessagesForSession(sessionId);
-    } catch (error) {
-      console.error('Chat: Failed to switch session:', error);
-      toast({
-        title: "Session Switch Error",
-        description: "Failed to switch conversations. Please try again.",
-        variant: "destructive"
-      });
-    }
-  }, [switchToSession, loadMessagesForSession, toast]);
-
-  // Ensure welcome message is present when component mounts and session is ready
-  useEffect(() => {
-    if (currentSessionId && hasInitialized && messages.length === 0) {
-      console.log('Chat: Ensuring welcome message for empty session');
-      ensureWelcomeMessage();
-    }
-  }, [currentSessionId, hasInitialized, messages.length, ensureWelcomeMessage]);
+    console.log('Chat: Switching to session:', sessionId);
+    await switchToSession(sessionId);
+    await loadMessagesForSession(sessionId);
+  }, [switchToSession, loadMessagesForSession]);
 
   return {
     messages,
@@ -208,12 +126,11 @@ export const useChatInitialization = () => {
     currentSessionId,
     isGeneratingResponse,
     setIsGeneratingResponse,
-    isLoadingSessions,
+    isLoadingSessions: isLoadingSessions || isInitializing,
     addMessage,
     loadSessions,
     switchToSession: handleSwitchToSession,
     startNewChat,
-    initializationError,
     hasInitialized
   };
 };
