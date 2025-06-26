@@ -1054,6 +1054,54 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_templates: {
+        Row: {
+          channel: string
+          content_template: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          subject_template: string | null
+          type: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          channel: string
+          content_template: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          subject_template?: string | null
+          type: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          channel?: string
+          content_template?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          subject_template?: string | null
+          type?: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           channel: string
@@ -1064,6 +1112,7 @@ export type Database = {
           scheduled_for: string
           sent_at: string | null
           status: string
+          template_id: string | null
           type: string
           updated_at: string
           user_id: string
@@ -1077,6 +1126,7 @@ export type Database = {
           scheduled_for: string
           sent_at?: string | null
           status?: string
+          template_id?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -1090,11 +1140,20 @@ export type Database = {
           scheduled_for?: string
           sent_at?: string | null
           status?: string
+          template_id?: string | null
           type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pending_signups: {
         Row: {

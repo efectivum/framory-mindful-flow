@@ -7,6 +7,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface TemplateVariables {
+  [key: string]: string | number | boolean;
+}
+
+class TemplateEngine {
+  static render(template: string, variables: TemplateVariables = {}): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (match, variableName) => {
+      const value = variables[variableName];
+      if (value === undefined || value === null) {
+        console.warn(`Template variable '${variableName}' not found`);
+        return match;
+      }
+      return String(value);
+    });
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -25,7 +42,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Get user preferences
+    // 1. Get user preferences and profile
     const { data: preferences, error: prefError } = await supabaseAdmin
       .from('user_preferences')
       .select('*')
@@ -36,7 +53,20 @@ serve(async (req) => {
       console.error(`Error fetching preferences for user ${userId}:`, prefError)
       throw new Error('Could not fetch user preferences.')
     }
-    
+
+    // Get user profile for personalization
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    // Get user's name from auth metadata if available
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
+    const userName = authUser?.user?.user_metadata?.full_name || 
+                    authUser?.user?.email?.split('@')[0] || 
+                    'there'
+
     // 2. Clear existing pending reminders for this user
     const { error: deleteError } = await supabaseAdmin
       .from('notifications')
@@ -59,10 +89,36 @@ serve(async (req) => {
         })
     }
 
+    // 3. Get appropriate notification template
+    const { data: template, error: templateError } = await supabaseAdmin
+      .from('notification_templates')
+      .select('*')
+      .eq('channel', 'push')
+      .eq('type', 'daily_reminder')
+      .eq('is_active', true)
+      .limit(1)
+      .single()
+
+    let notificationContent = "It's time for your daily reflection. How are you feeling today?"
+    
+    if (template && !templateError) {
+      // Render template with user data
+      const templateVariables: TemplateVariables = {
+        user_name: userName,
+        current_time: new Date().toLocaleTimeString(),
+        streak_count: 0, // TODO: Get actual streak from habits/routines
+      }
+      
+      notificationContent = TemplateEngine.render(template.content_template, templateVariables)
+      console.log(`Using template "${template.name}" for user ${userId}`)
+    } else {
+      console.log(`No template found, using default content for user ${userId}`)
+    }
+
     const notificationsToCreate = []
     const now = new Date()
 
-    // 3. Schedule new notifications
+    // 4. Schedule new notifications
     if (preferences.notification_frequency === 'daily' && preferences.notification_time) {
       for (let i = 0; i < 7; i++) { // Schedule for the next 7 days
         const scheduledDate = new Date()
@@ -70,17 +126,16 @@ serve(async (req) => {
         const [hours, minutes] = preferences.notification_time.split(':')
         scheduledDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0)
         
-        // In user's local timezone, this will be converted to UTC by Supabase
-        
         // Only schedule if it's in the future
         if (scheduledDate > now) {
             notificationsToCreate.push({
                 user_id: userId,
                 channel: 'push',
                 type: 'daily_reminder',
-                content: "It's time for your daily reflection. How are you feeling today?",
+                content: notificationContent,
                 status: 'pending',
                 scheduled_for: scheduledDate.toISOString(),
+                template_id: template?.id || null,
             })
         }
       }
@@ -99,7 +154,10 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ message: `${notificationsToCreate.length} notifications scheduled.` }), {
+    return new Response(JSON.stringify({ 
+      message: `${notificationsToCreate.length} notifications scheduled.`,
+      template_used: template?.name || 'default'
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
@@ -111,4 +169,3 @@ serve(async (req) => {
     })
   }
 })
-
