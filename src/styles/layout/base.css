@@ -1,32 +1,43 @@
 
-/* Base Layout Classes */
+/* Enhanced Base Layout Classes - Mobile-First */
 
 .app-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--app-bg-primary) 0%, var(--app-bg-secondary) 100%);
+  background: var(--app-bg-primary);
   color: var(--app-text-primary);
+  position: relative;
+  overflow-x: hidden;
 }
 
 .app-content {
   max-width: 4xl;
   margin: 0 auto;
   padding: var(--app-space-lg);
+  position: relative;
 }
 
 .app-content-centered {
   max-width: 2xl;
   margin: 0 auto;
   padding: var(--app-space-lg);
+  position: relative;
 }
 
 .app-content-wide {
   max-width: 6xl;
   margin: 0 auto;
   padding: var(--app-space-lg);
+  position: relative;
 }
 
-/* Mobile Content Adjustments - Zero padding override */
+/* Enhanced Mobile Content - Zero padding override with organic spacing */
 @media (max-width: 768px) {
+  .app-container {
+    background: var(--app-bg-primary);
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
   .app-content,
   .app-content-centered,
   .app-content-wide {
@@ -34,26 +45,105 @@
     max-width: 100%;
   }
 
-  /* Mobile-specific container with proper spacing */
+  /* Mobile-specific container with organic spacing */
   .app-content-mobile {
-    padding: var(--app-mobile-space-md);
+    padding: var(--app-mobile-space-lg) var(--app-mobile-space-md);
     max-width: 100%;
   }
 
-  /* Mobile page container - structured layout */
+  /* Enhanced mobile page container - flowing layout */
   .app-mobile-page {
-    padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
+    padding: var(--app-mobile-space-md) var(--app-mobile-space-md);
     max-width: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    gap: var(--app-mobile-space-lg);
   }
 
+  /* Organic section spacing */
   .app-mobile-section {
-    margin-bottom: var(--app-mobile-space-lg);
+    margin-bottom: var(--app-mobile-space-xl);
+    position: relative;
   }
 
   .app-mobile-section:last-child {
-    margin-bottom: 0;
+    margin-bottom: var(--app-mobile-space-lg);
   }
+
+  /* Flowing content areas */
+  .app-content-flow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--app-mobile-space-lg);
+    padding: var(--app-mobile-space-md);
+  }
+
+  /* Organic card layouts */
+  .app-card-organic {
+    border-radius: var(--app-radius-organic);
+    padding: var(--app-mobile-space-lg);
+    background: var(--app-bg-card);
+    backdrop-filter: var(--app-backdrop);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--app-shadow-md);
+    transition: all var(--app-transition-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-card-organic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  }
+
+  .app-card-organic:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: var(--app-shadow-lg);
+  }
+
+  /* Breathing room utilities */
+  .breathe-sm { margin: var(--app-mobile-space-sm) 0; }
+  .breathe-md { margin: var(--app-mobile-space-md) 0; }
+  .breathe-lg { margin: var(--app-mobile-space-lg) 0; }
+  .breathe-xl { margin: var(--app-mobile-space-xl) 0; }
+}
+
+/* Organic shape utilities */
+.organic-shape-1 {
+  clip-path: polygon(0% 0%, 100% 0%, 95% 85%, 5% 100%);
+}
+
+.organic-shape-2 {
+  clip-path: polygon(5% 0%, 100% 0%, 100% 90%, 0% 100%);
+}
+
+/* Gradient text utilities */
+.gradient-text-warm {
+  background: var(--app-accent-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+.gradient-text-primary {
+  background: var(--app-accent-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
