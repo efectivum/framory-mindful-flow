@@ -15,6 +15,7 @@ import { MiniCalendar } from '@/components/MiniCalendar';
 import { PremiumGate } from '@/components/PremiumGate';
 import { FlippableCard } from '@/components/ui/FlippableCard';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
+import { PersonalityInsight } from '@/components/PersonalityInsight';
 
 const Insights = () => {
   const { entries, stats } = useJournalEntries();
@@ -39,7 +40,7 @@ const Insights = () => {
     details: string
   ) => {
     const front = (
-      <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm app-card-organic`}
+      <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm transition-all duration-300`}
            style={{ background: gradient }}>
         <div className="flex items-center justify-between">
           <div className="text-white/80">{icon}</div>
@@ -48,7 +49,7 @@ const Insights = () => {
           </Badge>
         </div>
         <div>
-          <div className="text-3xl font-light text-white mb-2 animate-gentle-pulse">{value}</div>
+          <div className="text-3xl font-light text-white mb-2">{value}</div>
           <div className="text-white/80 text-sm font-medium">{title}</div>
           <div className="text-white/60 text-xs mt-1">{description}</div>
         </div>
@@ -98,15 +99,16 @@ const Insights = () => {
   return (
     <ResponsiveLayout title="Insights" subtitle="Discover patterns in your journey">
       <NetworkStatusIndicator />
-      <div className="app-content-flow">
-        {/* Enhanced Overview Stats */}
+      
+      <div className="space-y-8">
+        {/* Overview Stats */}
         <ButtonErrorBoundary fallbackMessage="Overview statistics are not available">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
             <FlippableCard
               frontContent={streakCard.front}
               backContent={streakCard.back}
               height="h-44"
-              className="card-hover"
+              className="transition-all duration-300 hover:scale-105"
               flipOnHover={false}
               flipOnClick={true}
             />
@@ -114,7 +116,7 @@ const Insights = () => {
               frontContent={wordsCard.front}
               backContent={wordsCard.back}
               height="h-44"
-              className="card-hover"
+              className="transition-all duration-300 hover:scale-105"
               flipOnHover={false}
               flipOnClick={true}
             />
@@ -122,7 +124,7 @@ const Insights = () => {
               frontContent={habitsCard.front}
               backContent={habitsCard.back}
               height="h-44"
-              className="card-hover"
+              className="transition-all duration-300 hover:scale-105"
               flipOnHover={false}
               flipOnClick={true}
             />
@@ -130,22 +132,22 @@ const Insights = () => {
         </ButtonErrorBoundary>
 
         {entries.length === 0 ? (
-          <div className="text-center space-y-6 pt-12">
-            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
-                 style={{ background: 'var(--app-accent-primary)' }}>
+          <div className="text-center space-y-6 py-12">
+            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-pulse" 
+                 style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>
               <TrendingUp className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h3 className="text-hero mb-4">Start Your Journey</h3>
-              <p className="text-subhero max-w-2xl mx-auto">
+              <h3 className="text-2xl font-semibold text-white mb-4">Start Your Journey</h3>
+              <p className="text-gray-400 max-w-2xl mx-auto">
                 Your insights will appear here as you write more journal entries and build habits. Start by creating your first entry.
               </p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Enhanced Charts and Analytics */}
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Main Charts Column */}
+            <div className="xl:col-span-2 space-y-6">
               <MoodTrendChart data={moodTrends} timeRange={30} />
 
               <PremiumGate 
@@ -157,18 +159,20 @@ const Insights = () => {
               </PremiumGate>
             </div>
 
-            {/* Enhanced Sidebar Insights */}
+            {/* Sidebar Column */}
             <div className="space-y-6">
-              <Card className="app-card-organic animate-fade-in">
+              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
                 <CardContent className="p-0">
                   <MiniCalendar />
                 </CardContent>
               </Card>
 
+              <PersonalityInsight />
+
               <RecurringTopics />
 
-              <Card className="app-card-organic animate-fade-in">
-                <CardHeader>
+              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
+                <CardHeader className="pb-4">
                   <CardTitle className="text-white flex items-center gap-2">
                     <Brain className="w-5 h-5 text-blue-300" />
                     Growth Summary
