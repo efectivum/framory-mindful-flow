@@ -54,42 +54,58 @@ export const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({ in
         </CardTitle>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        <div className="px-2">
-          <ChartContainer config={chartConfig} className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={data} margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
-                <PolarGrid stroke="#374151" />
-                <PolarAngleAxis 
-                  dataKey="trait" 
-                  tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 500 }}
-                  className="text-xs font-medium"
-                />
-                <PolarRadiusAxis 
-                  angle={90} 
-                  domain={[0, 100]} 
-                  tick={{ fill: '#6b7280', fontSize: 10, fontWeight: 500 }}
-                  tickCount={5}
-                />
-                <Radar
-                  name="Personality"
-                  dataKey="value"
-                  stroke="#8b5cf6"
-                  fill="#8b5cf6"
-                  fillOpacity={0.2}
-                  strokeWidth={2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </div>
-        
-        <div className="mt-4 grid grid-cols-2 gap-2 text-mobile-xs md:text-xs px-2">
-          {data.map((item) => (
-            <div key={item.trait} className="flex justify-between">
-              <span className="text-gray-400 text-premium">{item.trait.replace('\n', ' ')}</span>
-              <span className="text-white font-medium text-premium-bold">{item.value}/100</span>
+        <div className="flex flex-col items-center">
+          <div className="w-full max-w-xs mx-auto mb-6">
+            <ChartContainer config={chartConfig} className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={data} margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
+                  <PolarGrid stroke="#374151" />
+                  <PolarAngleAxis 
+                    dataKey="trait" 
+                    tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 500 }}
+                    className="text-xs font-medium"
+                  />
+                  <PolarRadiusAxis 
+                    angle={90} 
+                    domain={[0, 100]} 
+                    tick={{ fill: '#6b7280', fontSize: 9, fontWeight: 500 }}
+                    tickCount={4}
+                  />
+                  <Radar
+                    name="Personality"
+                    dataKey="value"
+                    stroke="#8b5cf6"
+                    fill="#8b5cf6"
+                    fillOpacity={0.2}
+                    strokeWidth={2}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+          
+          <div className="w-full space-y-3">
+            <div className="grid grid-cols-1 gap-3">
+              {data.map((item) => (
+                <div key={item.trait} className="flex items-center justify-between py-2 px-3 bg-gray-700/20 rounded-lg">
+                  <span className="text-gray-300 text-sm font-medium text-premium">
+                    {item.trait.replace('\n', ' ')}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
+                        style={{ width: `${item.value}%` }}
+                      />
+                    </div>
+                    <span className="text-white font-semibold text-sm w-8 text-right text-premium-bold">
+                      {item.value}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </CardContent>
     </Card>

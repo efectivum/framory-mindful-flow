@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { MoodTrend } from '@/hooks/useAnalytics';
 
 interface MoodTrendChartProps {
@@ -47,31 +48,40 @@ export const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data, timeRange 
 
   return (
     <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
-      <CardHeader className="px-6 pt-6 pb-4">
-        <CardTitle className="text-white text-mobile-lg md:text-lg flex items-center justify-between text-premium-bold">
-          Mood Trends ({timeRange} days)
-          <div className="flex items-center gap-2 text-mobile-sm md:text-sm">
-            {trendDirection === 'up' ? (
-              <TrendingUp className="w-4 h-4 text-green-400" />
-            ) : (
-              <TrendingDown className="w-4 h-4 text-red-400" />
-            )}
-            <span className={trendDirection === 'up' ? 'text-green-400' : 'text-red-400'}>
-              {trendPercentage.toFixed(1)}%
-            </span>
+      <CardHeader className="px-6 pt-6 pb-3">
+        <div className="flex flex-col space-y-3">
+          <CardTitle className="text-white text-mobile-lg md:text-lg text-premium-bold">
+            Mood Trends ({timeRange} days)
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="outline" 
+              className={`${
+                trendDirection === 'up' 
+                  ? 'bg-green-500/10 text-green-400 border-green-500/30' 
+                  : 'bg-red-500/10 text-red-400 border-red-500/30'
+              }`}
+            >
+              {trendDirection === 'up' ? (
+                <TrendingUp className="w-3 h-3 mr-1" />
+              ) : (
+                <TrendingDown className="w-3 h-3 mr-1" />
+              )}
+              {trendPercentage.toFixed(1)}% trend
+            </Badge>
           </div>
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        <div className="mb-4">
-          <div className="text-2xl font-bold text-white text-premium-bold">{avgMood.toFixed(1)}/5</div>
-          <div className="text-gray-400 text-mobile-sm md:text-sm text-premium">Average mood</div>
+        <div className="mb-6">
+          <div className="text-3xl font-bold text-white text-premium-bold mb-1">{avgMood.toFixed(1)}/5</div>
+          <div className="text-gray-400 text-mobile-sm md:text-sm text-premium">Average mood this period</div>
         </div>
         
-        <div className="px-2">
-          <ChartContainer config={chartConfig} className="h-48 w-full">
+        <div className="h-48 -mx-2">
+          <ChartContainer config={chartConfig} className="h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={validData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+              <LineChart data={validData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <XAxis 
                   dataKey="date" 
                   stroke="#9ca3af" 
@@ -93,9 +103,9 @@ export const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data, timeRange 
                   type="monotone" 
                   dataKey="mood" 
                   stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5 }}
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: '#3b82f6' }}
                 />
               </LineChart>
             </ResponsiveContainer>
