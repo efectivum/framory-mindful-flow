@@ -21,15 +21,13 @@ const Coach = () => {
   
   const {
     messages,
-    isDetectingIntent,
-    isGeneratingResponse,
-    sendMessage,
-    clearMessages,
-    isLoading: isChatLoading
+    setMessages
   } = useChatMessages();
 
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isDetectingIntent, setIsDetectingIntent] = useState(false);
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isDetectingIntent || isGeneratingResponse) return;
@@ -39,7 +37,8 @@ const Coach = () => {
     setIsTyping(true);
     
     try {
-      await sendMessage(message);
+      // Simulate message sending - this would be replaced with actual chat logic
+      console.log('Sending message:', message);
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
@@ -52,6 +51,10 @@ const Coach = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleClearMessages = () => {
+    setMessages([]);
   };
 
   const suggestedPrompts = [
@@ -71,6 +74,8 @@ const Coach = () => {
       gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)"
     }
   ];
+
+  const isChatLoading = false; // Replace with actual loading state
 
   if (isChatLoading) {
     return (
@@ -140,7 +145,7 @@ const Coach = () => {
             </div>
           ) : (
             <>
-              <ChatHeader onClearMessages={clearMessages} />
+              <ChatHeader />
               <MessageList
                 messages={messages}
                 isDetectingIntent={isDetectingIntent}

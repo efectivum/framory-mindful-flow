@@ -24,17 +24,13 @@ const Journal = () => {
   const [showFilters, setShowFilters] = useState(false);
   const { greeting } = useTimeOfDay();
 
-  const { entries, isLoading, hasMore, loadMore } = useJournalEntries();
+  const { entries, isLoading } = useJournalEntries();
   const {
+    filters,
     filteredEntries,
-    selectedMoods,
-    selectedDateRange,
-    selectedTags,
-    setSelectedMoods,
-    setSelectedDateRange,
-    setSelectedTags,
-    clearFilters,
-    hasActiveFilters
+    updateFilter,
+    clearAllFilters,
+    activeFilterCount
   } = useJournalFiltering(entries);
 
   const {
@@ -47,23 +43,6 @@ const Journal = () => {
 
   const displayEntries = searchQuery ? searchResults : filteredEntries;
   const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, isLoading, loadMore]);
 
   const handleVoiceComplete = (transcript: string) => {
     setShowVoiceModal(false);
@@ -164,10 +143,10 @@ const Journal = () => {
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4 ${hasActiveFilters ? 'glow-warm' : ''}`}
+                className={`app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4 ${activeFilterCount > 0 ? 'glow-warm' : ''}`}
               >
                 <Filter className="w-5 h-5" />
-                {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
+                {activeFilterCount > 0 && <span className="ml-1 text-xs">•</span>}
               </Button>
               
               <Button
@@ -186,13 +165,13 @@ const Journal = () => {
           <Card className="app-card-organic mb-6 animate-fade-in">
             <CardContent className="p-6">
               <JournalFilterDropdown
-                selectedMoods={selectedMoods}
-                selectedDateRange={selectedDateRange}
-                selectedTags={selectedTags}
-                onMoodsChange={setSelectedMoods}
-                onDateRangeChange={setSelectedDateRange}
-                onTagsChange={setSelectedTags}
-                onClearFilters={clearFilters}
+                selectedMoods={filters.moods || []}
+                selectedDateRange={filters.dateRange}
+                selectedTags={filters.tags || []}
+                onMoodsChange={(moods) => updateFilter('moods', moods)}
+                onDateRangeChange={(dateRange) => updateFilter('dateRange', dateRange)}
+                onTagsChange={(tags) => updateFilter('tags', tags)}
+                onClearFilters={clearAllFilters}
               />
             </CardContent>
           </Card>
@@ -224,20 +203,13 @@ const Journal = () => {
         </div>
 
         {/* Enhanced Load More */}
-        {hasMore && (
+        {isLoading && (
           <div ref={loadMoreRef} className="flex justify-center py-8">
-            {isLoading ? (
-              <div className="flex items-center gap-2 text-gray-400">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            ) : (
-              <Button variant="ghost" onClick={loadMore} className="text-gray-400 hover:text-white">
-                <ChevronDown className="w-4 h-4 mr-2" />
-                Load More
-              </Button>
-            )}
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
           </div>
         )}
 

@@ -31,6 +31,10 @@ const Goals = () => {
     setShowProgressModal(true);
   };
 
+  const handleHabitComplete = (habitId: string) => {
+    completeHabit({ habitId });
+  };
+
   const createStatCard = (
     icon: React.ReactNode,
     title: string,
@@ -166,7 +170,7 @@ const Goals = () => {
                 <div key={habit.id} className="animate-fade-in">
                   <HabitCard
                     habit={habit}
-                    onComplete={completeHabit}
+                    onComplete={handleHabitComplete}
                     isCompleting={isCompleting}
                     isCompletedToday={todayCompletions.includes(habit.id)}
                     onClick={handleHabitClick}
@@ -183,11 +187,13 @@ const Goals = () => {
           onOpenChange={setShowCreateDialog}
         />
         
-        <HabitProgressModal
-          habit={selectedHabit}
-          open={showProgressModal}
-          onOpenChange={setShowProgressModal}
-        />
+        {selectedHabit && (
+          <HabitProgressModal
+            habit={selectedHabit}
+            open={showProgressModal}
+            onOpenChange={setShowProgressModal}
+          />
+        )}
       </div>
     </ResponsiveLayout>
   );
