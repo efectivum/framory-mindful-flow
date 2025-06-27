@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { CreateJournalDialog } from '@/components/CreateJournalDialog';
 import { JournalSearchModal } from '@/components/JournalSearchModal';
 import { JournalFilterDropdown } from '@/components/JournalFilterDropdown';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
+import { SmartSearch } from '@/components/ui/SmartSearch';
+import { LoadingCardSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalFiltering } from '@/hooks/useJournalFiltering';
 import { useJournalSearch } from '@/hooks/useJournalSearch';
@@ -49,6 +50,11 @@ const Journal = () => {
   const handleVoiceComplete = (transcript: string) => {
     setShowVoiceModal(false);
     setShowCreateDialog(true);
+  };
+
+  const handleSmartSearch = (query: string, searchFilters: any[]) => {
+    setSearchQuery(query);
+    // Apply smart filters here if needed
   };
 
   if (entries.length === 0 && !isLoading) {
@@ -136,23 +142,6 @@ const Journal = () => {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setShowSearchModal(true)}
-                className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4"
-              >
-                <Search className="w-5 h-5" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4 ${activeFilterCount > 0 ? 'glow-warm' : ''}`}
-              >
-                <Filter className="w-5 h-5" />
-                {activeFilterCount > 0 && <span className="ml-1 text-xs">•</span>}
-              </Button>
-              
-              <Button
-                variant="outline"
                 onClick={() => setShowVoiceModal(true)}
                 className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4"
               >
@@ -161,6 +150,15 @@ const Journal = () => {
             </div>
           </div>
         </ButtonErrorBoundary>
+
+        {/* Enhanced Smart Search */}
+        <SmartSearch
+          onSearch={handleSmartSearch}
+          onClear={clearSearch}
+          availableTags={availableTags}
+          availableEmotions={availableEmotions}
+          className="mb-6"
+        />
 
         {/* Enhanced Filter Section */}
         {showFilters && (
@@ -194,13 +192,21 @@ const Journal = () => {
           </Card>
         )}
 
-        {/* Enhanced Entries Grid */}
+        {/* Enhanced Entries Grid with Loading States */}
         <div className="space-y-4">
-          {displayEntries.map(entry => (
-            <div key={entry.id} className="animate-fade-in">
-              <JournalEntryCard entry={entry} />
-            </div>
-          ))}
+          {isLoading ? (
+            <>
+              <LoadingCardSkeleton />
+              <LoadingCardSkeleton />
+              <LoadingCardSkeleton />
+            </>
+          ) : (
+            displayEntries.map(entry => (
+              <div key={entry.id} className="animate-fade-in">
+                <JournalEntryCard entry={entry} />
+              </div>
+            ))
+          )}
         </div>
 
         {/* Enhanced Load More */}

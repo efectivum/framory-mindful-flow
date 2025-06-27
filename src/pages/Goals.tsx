@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Target, Plus, TrendingUp, Calendar, BarChart3, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { HabitCard } from '@/components/HabitCard';
 import { CreateHabitDialog } from '@/components/CreateHabitDialog';
 import { HabitProgressModal } from '@/components/HabitProgressModal';
+import { HabitStreakRing, ProgressRing } from '@/components/ui/ProgressRing';
+import { LoadingCardSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useHabits } from '@/hooks/useHabits';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
@@ -47,13 +50,17 @@ const Goals = () => {
     title: string,
     value: string | number,
     description: string,
-    gradient: string
+    gradient: string,
+    progress?: number
   ) => {
     const front = (
       <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm app-card-organic`}
            style={{ background: gradient }}>
         <div className="flex items-center justify-between">
           <div className="text-white/80">{icon}</div>
+          {progress !== undefined && (
+            <ProgressRing progress={progress} size="sm" color="#ffffff80" />
+          )}
         </div>
         <div>
           <div className="text-3xl font-light text-white mb-2 animate-gentle-pulse">{value}</div>
@@ -85,7 +92,8 @@ const Goals = () => {
     "Completed Today",
     completedTodayCount,
     "Every completion is a step forward in your personal growth journey.",
-    "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+    "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+    activeHabits.length > 0 ? (completedTodayCount / activeHabits.length) * 100 : 0
   );
 
   const averageStreakCard = createStatCard(
@@ -99,13 +107,15 @@ const Goals = () => {
   if (isLoading) {
     return (
       <ResponsiveLayout title="Habits" subtitle="Building your daily practices">
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-            <div className="text-lg text-gray-400 font-medium ml-2">Loading your habits...</div>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <LoadingCardSkeleton />
+            <LoadingCardSkeleton />
+            <LoadingCardSkeleton />
           </div>
+          <LoadingCardSkeleton />
+          <LoadingCardSkeleton />
+          <LoadingCardSkeleton />
         </div>
       </ResponsiveLayout>
     );
@@ -115,7 +125,7 @@ const Goals = () => {
     <ResponsiveLayout title="Habits" subtitle="Building your daily practices">
       <NetworkStatusIndicator />
       <div className="app-content-flow">
-        {/* Enhanced Statistics */}
+        {/* Enhanced Statistics with Progress Rings */}
         <ButtonErrorBoundary fallbackMessage="Statistics are not available">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
             <FlippableCard
@@ -171,7 +181,19 @@ const Goals = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <h3 className="text-white font-semibold text-xl gradient-text mb-6">Your Active Habits</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-semibold text-xl gradient-text">Your Active Habits</h3>
+              <div className="flex items-center gap-4">
+                {activeHabits.slice(0, 3).map(habit => (
+                  <HabitStreakRing
+                    key={habit.id}
+                    streak={habit.current_streak}
+                    target={habit.target_days}
+                    size="sm"
+                  />
+                ))}
+              </div>
+            </div>
             <div className="space-y-4">
               {activeHabits.map(habit => (
                 <div key={habit.id} className="animate-fade-in">
