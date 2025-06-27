@@ -15,7 +15,7 @@ import { AutoSaveIndicator } from '@/components/ui/AutoSaveIndicator';
 import { useAutoSave } from '@/hooks/useAutoSave';
 
 const Goals = () => {
-  const { habits, loading, createHabit, updateHabit, deleteHabit, recordCompletion } = useHabits();
+  const { habits, isLoading, createHabit, updateHabit, deleteHabit, completeHabit, todayCompletions, isCompleting, isUpdating, isDeleting } = useHabits();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingHabit, setEditingHabit] = useState<any>(null);
   const [localHabits, setLocalHabits] = useState(habits);
@@ -37,30 +37,28 @@ const Goals = () => {
   }, [habits]);
 
   const handleCreateHabit = async (habitData: any) => {
-    await createHabit(habitData);
+    createHabit(habitData);
     setShowCreateDialog(false);
   };
 
   const handleUpdateHabit = async (habitData: any) => {
-    await updateHabit(editingHabit.id, habitData);
+    updateHabit({ id: editingHabit.id, updates: habitData });
     setEditingHabit(null);
   };
 
   const handleDeleteHabit = async (habitId: string) => {
-    await deleteHabit(habitId);
+    deleteHabit(habitId);
     setEditingHabit(null);
   };
 
   const activeHabits = habits.filter(habit => habit.is_active);
   const completedToday = activeHabits.filter(habit => 
-    habit.habit_completions?.some(completion => 
-      new Date(completion.completed_at).toDateString() === new Date().toDateString()
-    )
+    todayCompletions.includes(habit.id)
   );
 
   const overallProgress = activeHabits.length > 0 ? (completedToday.length / activeHabits.length) * 100 : 0;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <ResponsiveLayout title="Habits" subtitle="Build better habits, one day at a time">
         <div className="space-y-6">
@@ -83,11 +81,13 @@ const Goals = () => {
               <Plus className="w-4 h-4 mr-2" />
               Create Habit
             </Button>
-            <AutoSaveIndicator 
-              status={autoSaveStatus} 
-              lastSaved={lastSaved}
-              className="text-xs"
-            />
+            {autoSaveStatus !== 'idle' && (
+              <AutoSaveIndicator 
+                status={autoSaveStatus as 'saving' | 'saved' | 'error'} 
+                lastSaved={lastSaved}
+                className="text-xs"
+              />
+            )}
           </div>
         </div>
 
@@ -157,8 +157,12 @@ const Goals = () => {
               <HabitCard
                 key={habit.id}
                 habit={habit}
+                isCompleted={todayCompletions.includes(habit.id)}
                 onEdit={() => setEditingHabit(habit)}
-                onComplete={() => recordCompletion(habit.id)}
+                onComplete={(habitId) => completeHabit({ habitId })}
+                onDelete={handleDeleteHabit}
+                isCompleting={isCompleting}
+                isDeleting={isDeleting}
               />
             ))}
           </div>
@@ -168,7 +172,6 @@ const Goals = () => {
         <CreateHabitDialog
           open={showCreateDialog}
           onOpenChange={setShowCreateDialog}
-          onCreateHabit={handleCreateHabit}
         />
 
         {editingHabit && (
@@ -176,8 +179,8 @@ const Goals = () => {
             open={!!editingHabit}
             onOpenChange={(open) => !open && setEditingHabit(null)}
             habit={editingHabit}
-            onUpdateHabit={handleUpdateHabit}
-            onDeleteHabit={handleDeleteHabit}
+            onSave={handleUpdateHabit}
+            isUpdating={isUpdating}
           />
         )}
       </div>
