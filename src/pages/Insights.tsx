@@ -10,19 +10,20 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { MoodTrendChart } from '@/components/MoodTrendChart';
 import { PersonalityRadarChart } from '@/components/PersonalityRadarChart';
+import { EmotionBubbleChart } from '@/components/EmotionBubbleChart';
 import { RecurringTopics } from '@/components/RecurringTopics';
 import { MiniCalendar } from '@/components/MiniCalendar';
 import { PremiumGate } from '@/components/PremiumGate';
 import { FlippableCard } from '@/components/ui/FlippableCard';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
-import { PersonalityInsight } from '@/components/PersonalityInsight';
 
 const Insights = () => {
   const { entries, stats } = useJournalEntries();
   const { habits } = useHabits();
   const { 
     moodTrends, 
-    personalityInsights, 
+    personalityInsights,
+    emotionAnalysis,
     totalEntries, 
     currentStreak 
   } = useAnalytics(30);
@@ -30,6 +31,12 @@ const Insights = () => {
   const activeHabits = habits.filter(habit => habit.is_active);
   const totalWords = entries.reduce((sum, entry) => sum + (entry.content?.split(' ').length || 0), 0);
   const averageWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
+
+  // Transform emotion analysis data for the bubble chart
+  const emotionData = emotionAnalysis.reduce((acc, { emotion, frequency }) => {
+    acc[emotion] = frequency;
+    return acc;
+  }, {} as Record<string, number>);
 
   const createInsightCard = (
     icon: React.ReactNode,
@@ -150,6 +157,12 @@ const Insights = () => {
             <div className="xl:col-span-2 space-y-6">
               <MoodTrendChart data={moodTrends} timeRange={30} />
 
+              {Object.keys(emotionData).length > 0 && (
+                <EmotionBubbleChart 
+                  emotions={emotionData}
+                />
+              )}
+
               <PremiumGate 
                 feature="Advanced Analytics" 
                 description="Get deeper insights into your emotional patterns and growth trends."
@@ -166,8 +179,6 @@ const Insights = () => {
                   <MiniCalendar />
                 </CardContent>
               </Card>
-
-              <PersonalityInsight />
 
               <RecurringTopics />
 
