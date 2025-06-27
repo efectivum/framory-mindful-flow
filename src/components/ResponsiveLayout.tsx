@@ -13,7 +13,7 @@ interface ResponsiveLayoutProps {
 }
 
 /**
- * Mobile-first layout with consistent spacing and navigation
+ * Enhanced mobile-first layout with organic styling and consistent spacing
  */
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   children,
@@ -24,7 +24,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
 }) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-x-hidden font-inter">
+      <div className="min-h-screen flex w-full overflow-x-hidden font-inter" style={{ background: 'var(--app-bg-primary)' }}>
         {/* Desktop Sidebar */}
         <div className="hidden md:block">
           <AppSidebar />
@@ -32,39 +32,39 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
 
         {/* Main area */}
         <main className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header */}
+          {/* Enhanced Mobile Header */}
           {showHeader && (title || subtitle) && (
-            <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50 md:hidden">
-              <div className="flex items-center justify-center p-4">
+            <header className="app-card-organic border-b border-gray-700/30 md:hidden animate-fade-in">
+              <div className="flex items-center justify-center p-6">
                 <div className="text-center">
-                  {title && <h1 className="text-mobile-lg font-semibold text-white text-premium-bold">{title}</h1>}
-                  {subtitle && <p className="text-gray-400 text-mobile-xs text-premium mt-1">{subtitle}</p>}
+                  {title && <h1 className="text-hero">{title}</h1>}
+                  {subtitle && <p className="text-subhero mt-2">{subtitle}</p>}
                 </div>
               </div>
             </header>
           )}
 
-          {/* Desktop Header */}
+          {/* Enhanced Desktop Header */}
           {showHeader && (title || subtitle) && (
-            <header className="hidden md:block bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50">
-              <div className="flex items-center justify-between p-6">
+            <header className="hidden md:block app-card-organic border-b border-gray-700/30 animate-fade-in">
+              <div className="flex items-center justify-between p-8">
                 <div>
-                  {title && <h1 className="text-2xl font-semibold text-white text-premium-bold">{title}</h1>}
-                  {subtitle && <p className="text-gray-400 text-sm mt-1 text-premium">{subtitle}</p>}
+                  {title && <h1 className="text-3xl font-semibold text-white gradient-text">{title}</h1>}
+                  {subtitle && <p className="text-gray-400 text-lg mt-2 text-premium">{subtitle}</p>}
                 </div>
               </div>
             </header>
           )}
 
-          {/* Content with consistent mobile spacing */}
-          <div className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-            <div className="max-w-4xl mx-auto">
+          {/* Enhanced Content with organic mobile spacing */}
+          <div className="flex-1 app-mobile-page md:p-8 pb-24 md:pb-8">
+            <div className="max-w-6xl mx-auto">
               {children}
             </div>
           </div>
         </main>
 
-        {/* Bottom navigation (mobile only) */}
+        {/* Enhanced Bottom navigation (mobile only) */}
         {!hideBottomNav && <BottomNavigation />}
       </div>
     </SidebarProvider>

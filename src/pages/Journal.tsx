@@ -1,395 +1,268 @@
-import React, { useState } from 'react';
-import { Plus, Search, Mic, Lightbulb } from 'lucide-react';
+
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { JournalEntryCard } from '@/components/JournalEntryCard';
+import { CreateJournalDialog } from '@/components/CreateJournalDialog';
+import { JournalSearchModal } from '@/components/JournalSearchModal';
+import { JournalFilterDropdown } from '@/components/JournalFilterDropdown';
+import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useJournalFiltering } from '@/hooks/useJournalFiltering';
 import { useJournalSearch } from '@/hooks/useJournalSearch';
-import { useMobileModal } from '@/hooks/useMobileModal';
-import { FocusedWritingMode } from '@/components/FocusedWritingMode';
-import { MoodCaptureStep } from '@/components/MoodCaptureStep';
-import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
-import { JournalEntryCard } from '@/components/JournalEntryCard';
-import { JournalFilterDropdown } from '@/components/JournalFilterDropdown';
-import { JournalSearchBar } from '@/components/JournalSearchBar';
-import { AnalysisStatusButton } from '@/components/AnalysisStatusButton';
-import { LoadingCard } from '@/components/ui/loading-card';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-
-type FlowState = 'writing' | 'mood-capture' | 'closed';
+import { QuickAI } from '@/components/QuickAI';
+import { useTimeOfDay } from '@/hooks/useTimeOfDay';
+import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
+import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 
 const Journal = () => {
-  const navigate = useNavigate();
-  const { entries, createEntry, isCreating, isLoading, stats, triggerMissingAnalysis } = useJournalEntries();
-  const { isModalOpen, openModal, closeModal } = useMobileModal();
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [flowState, setFlowState] = useState<FlowState>('closed');
-  const [initialContent, setInitialContent] = useState('');
-  const [entryContent, setEntryContent] = useState('');
-  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const { greeting } = useTimeOfDay();
 
+  const { entries, isLoading, hasMore, loadMore } = useJournalEntries();
   const {
-    filters,
     filteredEntries,
-    availableTags,
-    availableEmotions,
-    updateFilter,
-    clearAllFilters,
-    activeFilterCount,
+    selectedMoods,
+    selectedDateRange,
+    selectedTags,
+    setSelectedMoods,
+    setSelectedDateRange,
+    setSelectedTags,
+    clearFilters,
+    hasActiveFilters
   } = useJournalFiltering(entries);
 
   const {
     searchQuery,
-    setSearchQuery,
     searchResults,
-    clearSearch,
-    resultCount,
-  } = useJournalSearch(filteredEntries);
+    isSearching,
+    setSearchQuery,
+    clearSearch
+  } = useJournalSearch(entries);
 
-  // Calculate entries needing analysis
-  const entriesNeedingAnalysis = entries.filter(entry => {
-    const wordCount = entry.content.trim().split(' ').length;
-    return wordCount >= 50 && !entry.ai_detected_emotions && !entry.ai_detected_mood;
-  }).length;
+  const displayEntries = searchQuery ? searchResults : filteredEntries;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Determine which entries to display
-  const displayEntries = searchQuery.trim() ? searchResults : filteredEntries;
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  const prompts = [
-    "What am I grateful for today?",
-    "How am I feeling right now?",
-    "What did I learn today?",
-    "What challenged me today?",
-  ];
-
-  const handleSaveEntry = async (content: string, mood?: number) => {
-    try {
-      const result = await new Promise<any>((resolve, reject) => {
-        createEntry(
-          { content, mood_after: mood },
-          {
-            onSuccess: (data) => resolve(data),
-            onError: (error) => reject(error)
-          }
-        );
-      });
-      
-      setFlowState('closed');
-      closeModal();
-      // Navigate to the new entry
-      navigate(`/journal/entry/${result.id}`);
-    } catch (error) {
-      console.error('Failed to save entry:', error);
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
     }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, loadMore]);
+
+  const handleVoiceComplete = (transcript: string) => {
+    setShowVoiceModal(false);
+    setShowCreateDialog(true);
   };
 
-  const handleVoiceTranscription = (text: string) => {
-    console.log('Voice transcription received:', text);
-    setIsVoiceMode(false);
-    setInitialContent(text);
-    setFlowState('writing');
-    openModal();
-  };
-
-  const handlePromptClick = (prompt: string) => {
-    setInitialContent(prompt + '\n\n');
-    setFlowState('writing');
-    openModal();
-  };
-
-  const handleStartWriting = () => {
-    setInitialContent('');
-    setFlowState('writing');
-    openModal();
-  };
-
-  const handleFinish = (content: string) => {
-    setEntryContent(content);
-    setFlowState('mood-capture');
-  };
-
-  const handleMoodSelect = (mood?: number) => {
-    handleSaveEntry(entryContent, mood);
-  };
-
-  const handleMoodSkip = () => {
-    handleSaveEntry(entryContent);
-  };
-
-  const handleCloseAll = () => {
-    setFlowState('closed');
-    closeModal();
-    setInitialContent('');
-    setEntryContent('');
-  };
-
-  const handleSearchOpen = () => {
-    setIsSearchActive(true);
-  };
-
-  const handleSearchClose = () => {
-    setIsSearchActive(false);
-    clearSearch();
-  };
-
-  const getSubtitle = () => {
-    const totalCount = entries.length;
-    
-    if (searchQuery.trim()) {
-      return `${resultCount} search results`;
-    }
-    
-    const filteredCount = filteredEntries.length;
-    
-    if (activeFilterCount === 0) {
-      return `${totalCount} entries total`;
-    } else {
-      return `${filteredCount} of ${totalCount} entries`;
-    }
-  };
-
-  if (isLoading) {
+  if (entries.length === 0 && !isLoading) {
     return (
-      <ResponsiveLayout title="My Journal" subtitle="Loading your entries...">
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <LoadingCard key={i} className="h-48" />
-          ))}
+      <ResponsiveLayout title="Journal" subtitle="Your personal sanctuary for reflection">
+        <NetworkStatusIndicator />
+        <div className="app-content-flow">
+          {/* Enhanced Welcome Section */}
+          <div className="text-center space-y-6 pt-6">
+            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
+                 style={{ background: 'var(--app-accent-primary)' }}>
+              <BookOpen className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-hero mb-4">
+                {greeting}
+              </h1>
+              <p className="text-subhero max-w-2xl mx-auto">
+                Welcome to your personal sanctuary. Start your journey of self-discovery by writing your first entry.
+              </p>
+            </div>
+          </div>
+
+          {/* Enhanced Action Buttons */}
+          <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
+            <div className="space-y-4">
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="btn-organic w-full h-16 text-lg font-semibold glow-primary"
+              >
+                <Plus className="w-6 h-6 mr-3" />
+                Write Your First Entry
+              </Button>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  onClick={() => setShowVoiceModal(true)}
+                  className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white h-14 rounded-2xl border border-gray-600/30 hover:border-gray-500/40 shadow-lg hover:shadow-xl transition-all duration-300 card-hover"
+                >
+                  <Mic className="w-5 h-5 mr-2" />
+                  Voice Recording
+                </Button>
+                
+                <Button
+                  onClick={() => window.location.href = '/coach'}
+                  className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white h-14 rounded-2xl border border-gray-600/30 hover:border-gray-500/40 shadow-lg hover:shadow-xl transition-all duration-300 card-hover"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Talk to Coach
+                </Button>
+              </div>
+            </div>
+          </ButtonErrorBoundary>
+
+          <CreateJournalDialog 
+            open={showCreateDialog} 
+            onOpenChange={setShowCreateDialog}
+          />
+          
+          <VoiceRecordingModal
+            open={showVoiceModal}
+            onOpenChange={setShowVoiceModal}
+            onTranscriptComplete={handleVoiceComplete}
+          />
         </div>
       </ResponsiveLayout>
     );
   }
 
   return (
-    <ResponsiveLayout 
-      title="My Journal" 
-      subtitle={getSubtitle()}
-      hideBottomNav={isModalOpen}
-    >
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Mobile Search Bar */}
-        {isSearchActive && (
-          <div className="md:hidden -mx-4 mb-6">
-            <JournalSearchBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              onClose={handleSearchClose}
-              resultCount={resultCount}
-            />
-          </div>
-        )}
-
-        {/* Hero Section - New Entry */}
-        {!isSearchActive && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            {/* Quick Stats */}
-            <Card className="bg-gray-800/40 border-gray-700/50 backdrop-blur-sm shadow-lg rounded-2xl">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-white">{stats.totalEntries}</div>
-                    <div className="text-gray-400 text-xs">Total Entries</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-white">{stats.currentStreak}</div>
-                    <div className="text-gray-400 text-xs">Day Streak</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-white">{stats.thisWeekEntries}</div>
-                    <div className="text-gray-400 text-xs">This Week</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Primary Action - New Entry */}
+    <ResponsiveLayout title="Journal" subtitle={`${entries.length} entries in your sanctuary`}>
+      <NetworkStatusIndicator />
+      <div className="app-content-flow">
+        {/* Enhanced Header Actions */}
+        <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <Button 
-              onClick={handleStartWriting}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-16 text-lg font-medium rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] mb-6"
-              disabled={isCreating}
+              onClick={() => setShowCreateDialog(true)}
+              className="btn-organic flex-1 h-12 glow-primary"
             >
-              <Plus className="w-6 h-6 mr-3" />
-              Write New Entry
+              <Plus className="w-5 h-5 mr-2" />
+              New Entry
             </Button>
-
-            {/* Voice Recording Button */}
-            <div className="flex justify-center">
-              <Button
-                onClick={() => setIsVoiceMode(true)}
-                variant="outline"
-                className="bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/50 text-gray-300 px-6 py-3 rounded-xl"
-                disabled={isCreating}
-              >
-                <Mic className="w-5 h-5 mr-2" />
-                Voice Note
-              </Button>
-            </div>
-
-            {/* Writing Prompts */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-center gap-2 text-gray-400">
-                <Lightbulb className="w-4 h-4" />
-                <span className="text-sm">Need inspiration?</span>
-              </div>
-              
-              <div className="grid gap-2">
-                {prompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handlePromptClick(prompt)}
-                    className="text-left p-3 bg-gray-800/20 hover:bg-gray-800/40 rounded-lg border border-gray-700/50 hover:border-gray-600 transition-all group min-h-[44px] touch-manipulation"
-                  >
-                    <span className="text-gray-300 group-hover:text-white text-sm">
-                      {prompt}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Search and Filter Controls */}
-        {!isSearchActive && (
-          <div className="flex items-center justify-between">
-            <AnalysisStatusButton
-              onTriggerAnalysis={triggerMissingAnalysis}
-              isAnalyzing={false}
-              hasAnalysisError={false}
-              entriesNeedingAnalysis={entriesNeedingAnalysis}
-            />
             
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={handleSearchOpen}
-                className="bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/50 text-gray-300"
+                onClick={() => setShowSearchModal(true)}
+                className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-5 h-5" />
               </Button>
               
-              <JournalFilterDropdown
-                filters={filters}
-                availableTags={availableTags}
-                availableEmotions={availableEmotions}
-                activeFilterCount={activeFilterCount}
-                onFilterChange={updateFilter}
-                onClearAll={clearAllFilters}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Active Filters Summary */}
-        {activeFilterCount > 0 && !isSearchActive && (
-          <div className="p-3 bg-gray-800/20 border border-gray-700/30 rounded-lg">
-            <div className="flex flex-wrap gap-2 text-sm text-gray-300">
-              <span className="text-gray-400">Active filters:</span>
-              {filters.status !== 'all' && (
-                <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs">
-                  Status: {filters.status}
-                </span>
-              )}
-              {filters.dateFilter !== 'all' && (
-                <span className="px-2 py-1 bg-green-600/20 text-green-300 rounded-full text-xs">
-                  Date: {filters.dateFilter}
-                </span>
-              )}
-              {filters.selectedTags.length > 0 && (
-                <span className="px-2 py-1 bg-purple-600/20 text-purple-300 rounded-full text-xs">
-                  {filters.selectedTags.length} tag{filters.selectedTags.length > 1 ? 's' : ''}
-                </span>
-              )}
-              {filters.selectedEmotions.length > 0 && (
-                <span className="px-2 py-1 bg-orange-600/20 text-orange-300 rounded-full text-xs">
-                  {filters.selectedEmotions.length} emotion{filters.selectedEmotions.length > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Search Results Info */}
-        {searchQuery.trim() && (
-          <div className="p-3 bg-blue-600/10 border border-blue-600/20 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-blue-300">
-                Searching for: <strong>"{searchQuery}"</strong>
-              </span>
-              <button
-                onClick={clearSearch}
-                className="text-xs text-blue-400 hover:text-blue-300 underline"
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4 ${hasActiveFilters ? 'glow-warm' : ''}`}
               >
-                Clear search
-              </button>
+                <Filter className="w-5 h-5" />
+                {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => setShowVoiceModal(true)}
+                className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4"
+              >
+                <Mic className="w-5 h-5" />
+              </Button>
             </div>
           </div>
+        </ButtonErrorBoundary>
+
+        {/* Enhanced Filter Section */}
+        {showFilters && (
+          <Card className="app-card-organic mb-6 animate-fade-in">
+            <CardContent className="p-6">
+              <JournalFilterDropdown
+                selectedMoods={selectedMoods}
+                selectedDateRange={selectedDateRange}
+                selectedTags={selectedTags}
+                onMoodsChange={setSelectedMoods}
+                onDateRangeChange={setSelectedDateRange}
+                onTagsChange={setSelectedTags}
+                onClearFilters={clearFilters}
+              />
+            </CardContent>
+          </Card>
         )}
 
-        {/* Entries List */}
-        {displayEntries.length === 0 ? (
-          <div className="text-center py-12">
-            {searchQuery.trim() ? (
-              <>
-                <h3 className="text-lg font-semibold text-white mb-2">No search results</h3>
-                <p className="text-gray-400">Try different keywords or check your spelling.</p>
-              </>
-            ) : entries.length === 0 ? (
-              <>
-                <h3 className="text-lg font-semibold text-white mb-2">Start your journaling journey</h3>
-                <p className="text-gray-400 mb-6">Write your first entry to begin tracking your thoughts and growth.</p>
-                <Button 
-                  onClick={handleStartWriting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl"
-                  disabled={isCreating}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Write First Entry
+        {/* Enhanced Search Results */}
+        {searchQuery && (
+          <Card className="app-card-organic mb-6 animate-fade-in">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-gray-300 text-sm">
+                  {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+                </p>
+                <Button variant="ghost" size="sm" onClick={clearSearch} className="text-gray-400 hover:text-white">
+                  Clear
                 </Button>
-              </>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Enhanced Entries Grid */}
+        <div className="space-y-4">
+          {displayEntries.map(entry => (
+            <div key={entry.id} className="animate-fade-in">
+              <JournalEntryCard entry={entry} />
+            </div>
+          ))}
+        </div>
+
+        {/* Enhanced Load More */}
+        {hasMore && (
+          <div ref={loadMoreRef} className="flex justify-center py-8">
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-gray-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
             ) : (
-              <>
-                <h3 className="text-lg font-semibold text-white mb-2">No entries match your filters</h3>
-                <p className="text-gray-400">Try adjusting your filters to see more entries.</p>
-              </>
+              <Button variant="ghost" onClick={loadMore} className="text-gray-400 hover:text-white">
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Load More
+              </Button>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {displayEntries.map((entry) => (
-              <JournalEntryCard key={entry.id} entry={entry} />
-            ))}
-          </div>
         )}
 
-        {/* Focused Writing Mode */}
-        <FocusedWritingMode
-          isOpen={flowState === 'writing'}
-          onClose={handleCloseAll}
-          onFinish={handleFinish}
-          onGoDeeper={handleFinish} // Simplified to just finish for now
-          initialContent={initialContent}
-        />
+        {/* Enhanced Quick AI */}
+        <QuickAI />
 
-        {/* Mood Capture Step */}
-        <MoodCaptureStep
-          isVisible={flowState === 'mood-capture'}
-          onMoodSelect={handleMoodSelect}
-          onSkip={handleMoodSkip}
+        {/* Enhanced Modals */}
+        <CreateJournalDialog 
+          open={showCreateDialog} 
+          onOpenChange={setShowCreateDialog}
         />
-
-        {/* Voice Recording Modal */}
+        
+        <JournalSearchModal
+          open={showSearchModal}
+          onOpenChange={setShowSearchModal}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchResults={searchResults}
+          isSearching={isSearching}
+        />
+        
         <VoiceRecordingModal
-          open={isVoiceMode}
-          onClose={() => setIsVoiceMode(false)}
-          onTranscriptionComplete={handleVoiceTranscription}
+          open={showVoiceModal}
+          onOpenChange={setShowVoiceModal}
+          onTranscriptComplete={handleVoiceComplete}
         />
       </div>
     </ResponsiveLayout>

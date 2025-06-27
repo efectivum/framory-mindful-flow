@@ -1,267 +1,213 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { PersonalityInsightCard } from '@/components/insights/PersonalityInsightCard';
-import { MoodInsightCard } from '@/components/insights/MoodInsightCard';
-import { EmotionBubbleCard } from '@/components/insights/EmotionBubbleCard';
-import { RecurringTopicsCard } from '@/components/insights/RecurringTopicsCard';
-import { SuggestionCard } from '@/components/insights/SuggestionCard';
-import { TalkToJournalCard } from '@/components/insights/TalkToJournalCard';
-import { MoodTrendChart } from '@/components/MoodTrendChart';
-import { PersonalityRadarChart } from '@/components/PersonalityRadarChart';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { TrendingUp, Brain, Calendar, Target, Sparkles, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
-import { useFeatureTracking } from '@/hooks/useFeatureTracking';
-import { useSubscription } from '@/hooks/useSubscription';
-import { Filter, Calendar, Brain, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useHabits } from '@/hooks/useHabits';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
+import { MoodTrendChart } from '@/components/MoodTrendChart';
+import { PersonalityInsight } from '@/components/PersonalityInsight';
+import { RecurringTopics } from '@/components/RecurringTopics';
+import { MiniCalendar } from '@/components/MiniCalendar';
+import { PremiumGate } from '@/components/PremiumGate';
+import { FlippableCard } from '@/components/ui/FlippableCard';
+import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 
 const Insights = () => {
-  const navigate = useNavigate();
-  const { entries } = useJournalEntries();
-  const { trackFeatureUsage } = useFeatureTracking();
-  const { isPremium } = useSubscription();
-  const [timeRange, setTimeRange] = React.useState<30 | 90 | 365>(30);
-  
-  const {
-    moodTrends,
-    emotionAnalysis,
-    personalityInsights,
-    totalEntries,
-    currentStreak
-  } = useAnalytics(timeRange);
+  const { entries, stats } = useJournalEntries();
+  const { habits } = useHabits();
 
-  // Track insights page view
-  React.useEffect(() => {
-    trackFeatureUsage('insights_view', 'analytics', {
-      metadata: { page: 'insights', entryCount: entries.length }
-    });
-  }, [trackFeatureUsage, entries.length]);
+  const activeHabits = habits.filter(habit => habit.is_active);
+  const totalWords = entries.reduce((sum, entry) => sum + (entry.content?.split(' ').length || 0), 0);
+  const averageWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
 
-  // Create mood data for the mood card
-  const moodData = moodTrends.map(trend => ({
-    date: new Date(trend.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    mood: trend.mood || 0
-  }));
+  const createInsightCard = (
+    icon: React.ReactNode,
+    title: string,
+    value: string | number,
+    description: string,
+    gradient: string,
+    details: string
+  ) => {
+    const front = (
+      <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm app-card-organic`}
+           style={{ background: gradient }}>
+        <div className="flex items-center justify-between">
+          <div className="text-white/80">{icon}</div>
+          <Badge variant="outline" className="text-white/80 border-white/20">
+            Insight
+          </Badge>
+        </div>
+        <div>
+          <div className="text-3xl font-light text-white mb-2 animate-gentle-pulse">{value}</div>
+          <div className="text-white/80 text-sm font-medium">{title}</div>
+          <div className="text-white/60 text-xs mt-1">{description}</div>
+        </div>
+      </div>
+    );
 
-  const averageMood = moodData.reduce((sum, data) => sum + data.mood, 0) / moodData.length || 0;
-  
-  // Determine mood trend
-  const moodTrend = moodData.length > 1 ? 
-    (moodData[moodData.length - 1].mood > moodData[0].mood ? 'up' : 
-     moodData[moodData.length - 1].mood < moodData[0].mood ? 'down' : 'stable') : 'stable';
+    const back = (
+      <div className={`h-full w-full rounded-3xl p-6 flex items-center justify-center shadow-xl border border-white/10 backdrop-blur-sm`}
+           style={{ background: gradient }}>
+        <div className="text-center space-y-3">
+          <div className="text-white/80 text-lg font-medium">{title}</div>
+          <p className="text-white/90 text-sm leading-relaxed">{details}</p>
+        </div>
+      </div>
+    );
 
-  const timeRangeOptions = [
-    { value: 30, label: '30 days' },
-    { value: 90, label: '3 months' },
-    { value: 365, label: '1 year' }
-  ];
-
-  const handleViewEntries = (emotion: string) => {
-    trackFeatureUsage('emotion_filter', 'navigation', {
-      metadata: { emotion, source: 'insights' }
-    });
-    navigate(`/journal-history?emotion=${encodeURIComponent(emotion)}`);
+    return { front, back };
   };
 
-  const handleAskQuestions = (emotion: string) => {
-    trackFeatureUsage('ai_chat', 'interaction', {
-      metadata: { emotion, source: 'insights' }
-    });
-    navigate(`/chat?emotion=${encodeURIComponent(emotion)}`);
-  };
+  const streakCard = createInsightCard(
+    <Calendar className="w-6 h-6" />,
+    "Writing Streak",
+    `${stats.currentStreak} days`,
+    "Consistency builds momentum",
+    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+    "Your writing streak shows your commitment to self-reflection. Each day you write, you're building a stronger connection with yourself."
+  );
 
-  // Convert emotion analysis to emotions object
-  const emotionsData = emotionAnalysis.reduce((acc, item) => {
-    acc[item.emotion] = item.frequency;
-    return acc;
-  }, {} as Record<string, number>);
+  const wordsCard = createInsightCard(
+    <Brain className="w-6 h-6" />,
+    "Average Words",
+    averageWordsPerEntry,
+    "Per journal entry",
+    "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+    "The depth of your entries reflects your willingness to explore your thoughts. Longer entries often lead to deeper insights."
+  );
 
-  // Sample suggestions - in real app, these would come from AI analysis
-  const suggestions = [
-    {
-      title: "Morning Reflection Practice",
-      description: "Start your day with 5 minutes of mindful reflection",
-      detailedContent: "Based on your entries, morning reflection could help you set intentions and improve your daily emotional awareness. Try spending 5 minutes each morning writing about your current state of mind, what you're grateful for, and your intentions for the day.",
-      category: "Habit",
-      actionText: "Start Morning Practice"
-    },
-    {
-      title: "Stress Management Techniques",
-      description: "Your entries show elevated stress levels on certain days",
-      detailedContent: "I notice patterns of stress in your recent entries, particularly around work deadlines. Consider implementing breathing exercises, short walks, or the 5-4-3-2-1 grounding technique when you feel overwhelmed. These can help regulate your nervous system in real-time.",
-      category: "Wellness",
-      actionText: "Learn Techniques"
-    },
-    {
-      title: "Gratitude Integration",
-      description: "Enhance your entries with structured gratitude practice",
-      detailedContent: "Your writing shows appreciation for relationships and experiences. Formalizing a gratitude practice by ending each entry with 3 things you're grateful for can boost your overall well-being and help you maintain perspective during challenging times.",
-      category: "Growth",
-      actionText: "Try Gratitude Practice"
-    },
-    {
-      title: "Sleep-Mood Connection",
-      description: "Track how sleep quality affects your emotional state",
-      detailedContent: "Your mood patterns suggest a correlation with sleep quality. Consider adding a brief note about your sleep to each entry. This awareness can help you identify how rest impacts your emotional regulation and make more informed decisions about your evening routine.",
-      category: "Health",
-      actionText: "Track Sleep Impact"
-    }
-  ];
+  const habitsCard = createInsightCard(
+    <Target className="w-6 h-6" />,
+    "Active Habits",
+    activeHabits.length,
+    "Building consistency",
+    "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
+    "Your habits are the foundation of personal growth. Each habit represents a commitment to becoming your best self."
+  );
 
   return (
-    <ResponsiveLayout 
-      title="Insights" 
-      subtitle="Discover patterns in your personal growth journey"
-    >
-      <div className="space-y-8 max-w-7xl mx-auto">
-        {/* Header with Time Range Selector */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-light text-white tracking-tight">Your Insights</h1>
-            <p className="text-gray-400 font-light">Deep insights from your journaling data</p>
+    <ResponsiveLayout title="Insights" subtitle="Discover patterns in your journey">
+      <NetworkStatusIndicator />
+      <div className="app-content-flow">
+        {/* Enhanced Overview Stats */}
+        <ButtonErrorBoundary fallbackMessage="Overview statistics are not available">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+            <FlippableCard
+              frontContent={streakCard.front}
+              backContent={streakCard.back}
+              height="h-44"
+              className="card-hover"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+            <FlippableCard
+              frontContent={wordsCard.front}
+              backContent={wordsCard.back}
+              height="h-44"
+              className="card-hover"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+            <FlippableCard
+              frontContent={habitsCard.front}
+              backContent={habitsCard.back}
+              height="h-44"
+              className="card-hover"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <div className="flex gap-1">
-              {timeRangeOptions.map((option) => (
-                <Button
-                  key={option.value}
-                  variant={timeRange === option.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTimeRange(option.value as 30 | 90 | 365)}
-                  className={`rounded-full ${timeRange === option.value ? 
-                    "bg-blue-600 hover:bg-blue-700 text-white" : 
-                    "text-gray-400 border-gray-600/50 hover:bg-gray-700/50"
-                  }`}
-                >
-                  {option.label}
-                </Button>
-              ))}
+        </ButtonErrorBoundary>
+
+        {entries.length === 0 ? (
+          <div className="text-center space-y-6 pt-12">
+            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
+                 style={{ background: 'var(--app-accent-primary)' }}>
+              <TrendingUp className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <h3 className="text-hero mb-4">Start Your Journey</h3>
+              <p className="text-subhero max-w-2xl mx-auto">
+                Your insights will appear here as you write more journal entries and build habits. Start by creating your first entry.
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-600/10 border border-gray-700/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-blue-400" />
-              <div>
-                <div className="text-2xl font-light text-white">{totalEntries}</div>
-                <div className="text-xs text-gray-400">Total Entries</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-500/10 to-emerald-600/10 border border-gray-700/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-6 h-6 text-green-400" />
-              <div>
-                <div className="text-2xl font-light text-white">{currentStreak}</div>
-                <div className="text-xs text-gray-400">Day Streak</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-500/10 to-violet-600/10 border border-gray-700/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <Brain className="w-6 h-6 text-purple-400" />
-              <div>
-                <div className="text-2xl font-light text-white">{averageMood.toFixed(1)}</div>
-                <div className="text-xs text-gray-400">Avg Mood</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-orange-500/10 to-red-600/10 border border-gray-700/50 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-orange-400" />
-              <div>
-                <div className="text-2xl font-light text-white">
-                  {moodTrend === 'up' ? '↗' : moodTrend === 'down' ? '↘' : '→'}
-                </div>
-                <div className="text-xs text-gray-400">Mood Trend</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Emotional Landscape */}
-        <EmotionBubbleCard 
-          emotions={emotionsData}
-          onViewEntries={handleViewEntries}
-          onAskQuestions={handleAskQuestions}
-        />
-
-        {/* Main Insight Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <PersonalityInsightCard insights={personalityInsights} />
-          <MoodInsightCard 
-            moodData={moodData}
-            averageMood={averageMood}
-            trend={moodTrend}
-          />
-        </div>
-
-        {/* Advanced Charts for Premium Users */}
-        {isPremium && (
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <MoodTrendChart data={moodTrends} timeRange={timeRange} />
-            <PersonalityRadarChart insights={personalityInsights} />
-          </div>
-        )}
+            {/* Enhanced Charts and Analytics */}
+            <div className="space-y-6">
+              <Card className="app-card-organic animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-purple-300" />
+                    Mood Trends
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MoodTrendChart />
+                </CardContent>
+              </Card>
 
-        {/* Recurring Topics */}
-        <RecurringTopicsCard />
+              <PremiumGate 
+                feature="Advanced Analytics" 
+                description="Get deeper insights into your emotional patterns and growth trends."
+                showPreview={true}
+              >
+                <Card className="app-card-organic animate-fade-in">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-yellow-300" />
+                      Personality Insights
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PersonalityInsight />
+                  </CardContent>
+                </Card>
+              </PremiumGate>
+            </div>
 
-        {/* AI Suggestions Grid */}
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-light text-white tracking-tight mb-2">Personalized Suggestions</h2>
-            <p className="text-gray-400 font-light">AI-powered recommendations based on your journal patterns</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {suggestions.map((suggestion, index) => (
-              <SuggestionCard
-                key={index}
-                title={suggestion.title}
-                description={suggestion.description}
-                detailedContent={suggestion.detailedContent}
-                category={suggestion.category}
-                actionText={suggestion.actionText}
-                onAction={() => {
-                  trackFeatureUsage('suggestion_action', 'interaction', {
-                    metadata: { suggestion: suggestion.title }
-                  });
-                  // Handle action based on suggestion type
-                  navigate('/coach', { 
-                    state: { 
-                      initialMessage: `I'd like to explore: ${suggestion.title}`,
-                      contextType: 'suggestion' 
-                    } 
-                  });
-                }}
-              />
-            ))}
-          </div>
-        </div>
+            {/* Enhanced Sidebar Insights */}
+            <div className="space-y-6">
+              <Card className="app-card-organic animate-fade-in">
+                <CardContent className="p-0">
+                  <MiniCalendar />
+                </CardContent>
+              </Card>
 
-        {/* Talk to Journal Section */}
-        <TalkToJournalCard />
+              <Card className="app-card-organic animate-fade-in">
+                <CardContent className="p-0">
+                  <RecurringTopics />
+                </CardContent>
+              </Card>
 
-        {/* Premium upgrade section for non-premium users */}
-        {!isPremium && (
-          <div className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 border border-blue-500/20 rounded-2xl p-8 text-center backdrop-blur-sm">
-            <h3 className="text-xl font-medium text-white mb-4">Unlock Advanced Insights</h3>
-            <p className="text-gray-400 mb-6">
-              Get deeper personality analysis, advanced mood charts, emotion correlations, and personalized coaching recommendations with Premium.
-            </p>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8">
-              Upgrade to Premium
-            </Button>
+              <Card className="app-card-organic animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-blue-300" />
+                    Growth Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gray-700/30 rounded-2xl border border-gray-600/30">
+                      <div className="text-2xl font-bold text-white mb-1">{entries.length}</div>
+                      <div className="text-gray-400 text-sm">Total Entries</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-700/30 rounded-2xl border border-gray-600/30">
+                      <div className="text-2xl font-bold text-white mb-1">{totalWords.toLocaleString()}</div>
+                      <div className="text-gray-400 text-sm">Words Written</div>
+                    </div>
+                  </div>
+                  <div className="text-center text-gray-300 text-sm">
+                    You've been on this journey for <span className="font-semibold text-purple-300">{stats.totalDaysActive}</span> days
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>

@@ -1,123 +1,191 @@
 
-import React from 'react';
-import { ChatInterface } from '@/components/ChatInterface';
-import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Sparkles, MessageCircle, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Crown, Sparkles, LogIn, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChatMessage } from '@/components/ChatMessage';
+import { MessageList } from '@/components/MessageList';
+import { ChatInput } from '@/components/ChatInput';
+import { ChatHeader } from '@/components/ChatHeader';
+import { useChatMessages } from '@/hooks/useChatMessages';
+import { useAuth } from '@/hooks/useAuth';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
+import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
+import { PremiumGate } from '@/components/PremiumGate';
 
 const Coach = () => {
-  const { user, isPremium, isBeta, isAdmin, refreshSubscription, createCheckout, loading } = useAuth();
-  const navigate = useNavigate();
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const { user } = useAuth();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    messages,
+    isDetectingIntent,
+    isGeneratingResponse,
+    sendMessage,
+    clearMessages,
+    isLoading: isChatLoading
+  } = useChatMessages();
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isDetectingIntent || isGeneratingResponse) return;
+    
+    const message = inputValue.trim();
+    setInputValue('');
+    setIsTyping(true);
+    
     try {
-      await refreshSubscription();
+      await sendMessage(message);
+    } catch (error) {
+      console.error('Failed to send message:', error);
     } finally {
-      setIsRefreshing(false);
+      setIsTyping(false);
     }
   };
 
-  // Show loading state while auth is being determined
-  if (loading) {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const suggestedPrompts = [
+    {
+      icon: <Sparkles className="w-5 h-5" />,
+      text: "Help me reflect on my recent experiences",
+      gradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+    },
+    {
+      icon: <MessageCircle className="w-5 h-5" />,
+      text: "I'm feeling overwhelmed lately",
+      gradient: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
+    },
+    {
+      icon: <Zap className="w-5 h-5" />,
+      text: "Help me build better habits",
+      gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+    }
+  ];
+
+  if (isChatLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26]">
-        <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm">
-          <CardContent className="p-8 text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <h3 className="text-white font-medium mb-2">Loading AI Coach</h3>
-            <p className="text-gray-400 text-sm">
-              Setting up your coaching session...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <ResponsiveLayout title="AI Coach" subtitle="Your personal growth companion">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+            <div className="text-lg text-gray-300 font-medium">Initializing your coach...</div>
+          </div>
+        </div>
+      </ResponsiveLayout>
     );
   }
 
-  // If user is not authenticated, show login prompt
-  if (!user) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26] p-4">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 border-blue-500/30 max-w-md w-full">
-          <CardContent className="p-6 space-y-4 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <LogIn className="w-8 h-8 text-blue-400" />
-            </div>
-            <h2 className="text-white text-xl font-semibold">AI Coach</h2>
-            <p className="text-gray-300 text-sm">Please sign in to access your personal AI coach.</p>
-            
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full"
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Allow access for admin users, premium users, and beta users
-  if (isAdmin || isPremium || isBeta) {
-    return <ChatInterface />;
-  }
-
-  // Show premium gate as overlay for free users
   return (
-    <div className="h-screen w-screen relative bg-[#171c26]">
-      {/* Blurred chat preview */}
-      <div className="absolute inset-0 blur-sm opacity-30">
-        <ChatInterface />
-      </div>
+    <ResponsiveLayout title="AI Coach" subtitle="Your personal growth companion" hideBottomNav>
+      <NetworkStatusIndicator />
       
-      {/* Premium gate overlay */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/50">
-        <Card className="bg-gradient-to-br from-purple-500/10 to-blue-600/10 border-purple-500/30 max-w-md w-full">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Crown className="w-6 h-6 text-yellow-400" />
-                <h2 className="text-white text-xl font-semibold">AI Coach</h2>
+      <PremiumGate 
+        feature="AI Coach" 
+        description="Get personalized guidance, reflective questions, and emotional support from your AI coach."
+        className="mb-6"
+      >
+        <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-160px)]">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-8">
+              {/* Enhanced Welcome Section */}
+              <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
+                   style={{ background: 'var(--app-accent-primary)' }}>
+                <Sparkles className="w-10 h-10 text-white" />
               </div>
-              <Button
-                onClick={handleRefresh}
-                variant="ghost"
-                size="sm"
-                disabled={isRefreshing}
-                className="text-gray-400 hover:text-white"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </Button>
+              
+              <div className="space-y-4">
+                <h2 className="text-hero">
+                  Hello {user?.email?.split('@')[0] || 'there'}! ✨
+                </h2>
+                <p className="text-subhero max-w-2xl">
+                  I'm your AI coach, here to support your personal growth journey. Share what's on your mind, and I'll help you explore your thoughts and feelings.
+                </p>
+              </div>
+
+              {/* Enhanced Suggested Prompts */}
+              <ButtonErrorBoundary fallbackMessage="Suggested prompts are not available">
+                <div className="w-full max-w-2xl space-y-4">
+                  <h3 className="text-white font-medium text-lg gradient-text">Try asking me about:</h3>
+                  <div className="space-y-3">
+                    {suggestedPrompts.map((prompt, index) => (
+                      <Card 
+                        key={index}
+                        className="app-card-organic cursor-pointer card-hover"
+                        onClick={() => setInputValue(prompt.text)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg"
+                                 style={{ background: prompt.gradient }}>
+                              {prompt.icon}
+                            </div>
+                            <span className="text-gray-200 font-medium">{prompt.text}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </ButtonErrorBoundary>
             </div>
-            
-            <div className="text-center space-y-4">
-              <p className="text-gray-300 text-sm">
-                Get personalized coaching and insights through our intelligent coach. Ask questions, log activities, and receive real-time guidance on your personal growth journey.
-              </p>
-              
-              <Button 
-                onClick={createCheckout}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Upgrade to Premium - $9.99/month
-              </Button>
-              
-              <div className="text-xs text-gray-400">
-                ✨ AI-powered insights • 📊 Advanced analytics • 🎯 Unlimited habits
+          ) : (
+            <>
+              <ChatHeader onClearMessages={clearMessages} />
+              <MessageList
+                messages={messages}
+                isDetectingIntent={isDetectingIntent}
+                isGeneratingResponse={isGeneratingResponse}
+                messagesEndRef={messagesEndRef}
+              />
+            </>
+          )}
+
+          {/* Enhanced Chat Input */}
+          <ButtonErrorBoundary fallbackMessage="Chat input is not available">
+            <div className="border-t border-gray-700/50 bg-gray-800/50 backdrop-blur-sm p-4">
+              <div className="flex gap-3 items-end max-w-4xl mx-auto">
+                <div className="flex-1 relative">
+                  <Textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Share what's on your mind..."
+                    className="min-h-[44px] max-h-32 resize-none bg-gray-700/50 border-gray-600/50 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500/20 rounded-2xl pr-12"
+                    disabled={isDetectingIntent || isGeneratingResponse}
+                  />
+                  {(isDetectingIntent || isGeneratingResponse || isTyping) && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isDetectingIntent || isGeneratingResponse}
+                  className="btn-organic h-12 px-6 glow-primary"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </ButtonErrorBoundary>
+        </div>
+      </PremiumGate>
+    </ResponsiveLayout>
   );
 };
 
