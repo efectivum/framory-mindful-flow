@@ -2,7 +2,6 @@
 import React from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { BreadcrumbNavigation } from "@/components/ui/BreadcrumbNavigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface ResponsiveLayoutProps {
@@ -11,7 +10,6 @@ interface ResponsiveLayoutProps {
   subtitle?: string;
   showHeader?: boolean;
   hideBottomNav?: boolean;
-  showBreadcrumbs?: boolean;
 }
 
 /**
@@ -23,7 +21,6 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   subtitle,
   showHeader = true,
   hideBottomNav = false,
-  showBreadcrumbs = true,
 }) => {
   return (
     <SidebarProvider>
@@ -62,8 +59,6 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
           {/* Enhanced Content with organic mobile spacing */}
           <div className="flex-1 app-mobile-page md:p-8 pb-24 md:pb-8">
             <div className="max-w-6xl mx-auto">
-              {/* Breadcrumb Navigation */}
-              {showBreadcrumbs && <BreadcrumbNavigation />}
               {children}
             </div>
           </div>

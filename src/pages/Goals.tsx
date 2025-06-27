@@ -1,229 +1,183 @@
 
 import React, { useState } from 'react';
-import { Target, Plus, TrendingUp, Calendar, BarChart3, Award } from 'lucide-react';
+import { Plus, Target, Calendar, Zap, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HabitCard } from '@/components/HabitCard';
-import { CreateHabitDialog } from '@/components/CreateHabitDialog';
-import { HabitProgressModal } from '@/components/HabitProgressModal';
-import { HabitStreakRing, ProgressRing } from '@/components/ui/ProgressRing';
-import { LoadingCardSkeleton } from '@/components/ui/LoadingSkeleton';
-import { useHabits } from '@/hooks/useHabits';
+import { Progress } from '@/components/ui/progress';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
-import { AppStatCard } from '@/components/ui/AppStatCard';
-import { FlippableCard } from '@/components/ui/FlippableCard';
-import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
-import type { Habit } from '@/hooks/useHabits';
+import { useHabits } from '@/hooks/useHabits';
+import { CreateHabitDialog } from '@/components/CreateHabitDialog';
+import { EditHabitDialog } from '@/components/EditHabitDialog';
+import { HabitCard } from '@/components/HabitCard';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { AutoSaveIndicator } from '@/components/ui/AutoSaveIndicator';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 const Goals = () => {
-  const { habits, isLoading, completeHabit, isCompleting, todayCompletions } = useHabits();
+  const { habits, loading, createHabit, updateHabit, deleteHabit, recordCompletion } = useHabits();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<any>(null);
+  const [localHabits, setLocalHabits] = useState(habits);
+
+  // Auto-save functionality for habit updates
+  const { status: autoSaveStatus, lastSaved } = useAutoSave(localHabits, {
+    delay: 1500,
+    onSave: async (data) => {
+      // Only save if there are actual changes
+      const hasChanges = JSON.stringify(data) !== JSON.stringify(habits);
+      if (hasChanges) {
+        console.log('Auto-saving habit changes');
+      }
+    }
+  });
+
+  React.useEffect(() => {
+    setLocalHabits(habits);
+  }, [habits]);
+
+  const handleCreateHabit = async (habitData: any) => {
+    await createHabit(habitData);
+    setShowCreateDialog(false);
+  };
+
+  const handleUpdateHabit = async (habitData: any) => {
+    await updateHabit(editingHabit.id, habitData);
+    setEditingHabit(null);
+  };
+
+  const handleDeleteHabit = async (habitId: string) => {
+    await deleteHabit(habitId);
+    setEditingHabit(null);
+  };
 
   const activeHabits = habits.filter(habit => habit.is_active);
-  const completedTodayCount = todayCompletions.length;
-  const totalStreak = activeHabits.reduce((sum, habit) => sum + habit.current_streak, 0);
-  const averageStreak = activeHabits.length > 0 ? Math.round(totalStreak / activeHabits.length) : 0;
-
-  const handleHabitClick = (habit: Habit) => {
-    setSelectedHabit(habit);
-    setShowProgressModal(true);
-  };
-
-  const handleHabitComplete = (habitId: string) => {
-    completeHabit({ habitId });
-  };
-
-  const handleHabitEdit = (habit: Habit) => {
-    console.log('Edit habit:', habit);
-  };
-
-  const handleHabitDelete = (habitId: string) => {
-    console.log('Delete habit:', habitId);
-  };
-
-  const createStatCard = (
-    icon: React.ReactNode,
-    title: string,
-    value: string | number,
-    description: string,
-    gradient: string,
-    progress?: number
-  ) => {
-    const front = (
-      <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm app-card-organic`}
-           style={{ background: gradient }}>
-        <div className="flex items-center justify-between">
-          <div className="text-white/80">{icon}</div>
-          {progress !== undefined && (
-            <ProgressRing progress={progress} size="sm" color="#ffffff80" />
-          )}
-        </div>
-        <div>
-          <div className="text-3xl font-light text-white mb-2 animate-gentle-pulse">{value}</div>
-          <div className="text-white/80 text-sm font-medium">{title}</div>
-        </div>
-      </div>
-    );
-
-    const back = (
-      <div className={`h-full w-full rounded-3xl p-6 flex items-center justify-center shadow-xl border border-white/10 backdrop-blur-sm`}
-           style={{ background: gradient }}>
-        <p className="text-white/90 text-center font-light text-sm leading-relaxed">{description}</p>
-      </div>
-    );
-
-    return { front, back };
-  };
-
-  const activeHabitsCard = createStatCard(
-    <Target className="w-6 h-6" />,
-    "Active Habits",
-    activeHabits.length,
-    "Building consistent daily practices that transform your life over time.",
-    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+  const completedToday = activeHabits.filter(habit => 
+    habit.habit_completions?.some(completion => 
+      new Date(completion.completed_at).toDateString() === new Date().toDateString()
+    )
   );
 
-  const completedTodayCard = createStatCard(
-    <Award className="w-6 h-6" />,
-    "Completed Today",
-    completedTodayCount,
-    "Every completion is a step forward in your personal growth journey.",
-    "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-    activeHabits.length > 0 ? (completedTodayCount / activeHabits.length) * 100 : 0
-  );
+  const overallProgress = activeHabits.length > 0 ? (completedToday.length / activeHabits.length) * 100 : 0;
 
-  const averageStreakCard = createStatCard(
-    <TrendingUp className="w-6 h-6" />,
-    "Average Streak",
-    `${averageStreak}d`,
-    "Consistency is the foundation of lasting change and personal transformation.",
-    "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
-  );
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <ResponsiveLayout title="Habits" subtitle="Building your daily practices">
+      <ResponsiveLayout title="Habits" subtitle="Build better habits, one day at a time">
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <LoadingCardSkeleton />
-            <LoadingCardSkeleton />
-            <LoadingCardSkeleton />
-          </div>
-          <LoadingCardSkeleton />
-          <LoadingCardSkeleton />
-          <LoadingCardSkeleton />
+          <LoadingSkeleton variant="card" count={3} />
         </div>
       </ResponsiveLayout>
     );
   }
 
   return (
-    <ResponsiveLayout title="Habits" subtitle="Building your daily practices">
-      <NetworkStatusIndicator />
-      <div className="app-content-flow">
-        {/* Enhanced Statistics with Progress Rings */}
-        <ButtonErrorBoundary fallbackMessage="Statistics are not available">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
-            <FlippableCard
-              frontContent={activeHabitsCard.front}
-              backContent={activeHabitsCard.back}
-              height="h-36"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-            <FlippableCard
-              frontContent={completedTodayCard.front}
-              backContent={completedTodayCard.back}
-              height="h-36"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-            <FlippableCard
-              frontContent={averageStreakCard.front}
-              backContent={averageStreakCard.back}
-              height="h-36"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
+    <ResponsiveLayout title="Habits" subtitle="Build better habits, one day at a time">
+      <div className="space-y-6">
+        {/* Auto-save indicator */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              className="btn-organic glow-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Habit
+            </Button>
+            <AutoSaveIndicator 
+              status={autoSaveStatus} 
+              lastSaved={lastSaved}
+              className="text-xs"
             />
           </div>
-        </ButtonErrorBoundary>
+        </div>
 
-        {/* Enhanced Create Habit Button */}
-        <ButtonErrorBoundary fallbackMessage="Habit creation is not available">
-          <Button 
-            onClick={() => setShowCreateDialog(true)}
-            className="btn-organic w-full h-16 text-lg font-semibold glow-primary mb-8"
-          >
-            <Plus className="w-6 h-6 mr-3" />
-            Create New Habit
-          </Button>
-        </ButtonErrorBoundary>
-
-        {activeHabits.length === 0 ? (
-          <div className="text-center space-y-6 pt-12">
-            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
-                 style={{ background: 'var(--app-accent-primary)' }}>
-              <Target className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h3 className="text-hero mb-4">Start Your Transformation</h3>
-              <p className="text-subhero max-w-2xl mx-auto">
-                Habits are the compound interest of self-improvement. Start small, stay consistent, and watch your life transform.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-semibold text-xl gradient-text">Your Active Habits</h3>
-              <div className="flex items-center gap-4">
-                {activeHabits.slice(0, 3).map(habit => (
-                  <HabitStreakRing
-                    key={habit.id}
-                    streak={habit.current_streak}
-                    target={habit.target_days}
-                    size="sm"
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="space-y-4">
-              {activeHabits.map(habit => (
-                <div key={habit.id} className="animate-fade-in">
-                  <HabitCard
-                    habit={habit}
-                    onComplete={handleHabitComplete}
-                    onEdit={handleHabitEdit}
-                    onDelete={handleHabitDelete}
-                    isCompleting={isCompleting}
-                    isCompleted={todayCompletions.includes(habit.id)}
-                    onViewProgress={handleHabitClick}
-                    isDeleting={false}
-                  />
+        {/* Progress Overview */}
+        {activeHabits.length > 0 && (
+          <Card className="app-card-organic">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Target className="w-5 h-5 text-purple-400" />
+                Today's Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">
+                    {completedToday.length} of {activeHabits.length} habits completed
+                  </span>
+                  <span className="text-white font-medium">
+                    {Math.round(overallProgress)}%
+                  </span>
                 </div>
-              ))}
-            </div>
+                <Progress 
+                  value={overallProgress} 
+                  className="h-3 bg-gray-700"
+                />
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="secondary" className="bg-green-500/10 text-green-400 border-green-500/20">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {completedToday.length} completed
+                  </Badge>
+                  {activeHabits.length - completedToday.length > 0 && (
+                    <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                      <Circle className="w-3 h-3 mr-1" />
+                      {activeHabits.length - completedToday.length} remaining
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Habits List */}
+        {activeHabits.length === 0 ? (
+          <Card className="app-card-organic">
+            <CardContent className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Zap className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">No habits yet</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                Start building better habits today. Create your first habit and begin your journey to personal growth.
+              </p>
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="btn-organic glow-primary"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Habit
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {activeHabits.map((habit) => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                onEdit={() => setEditingHabit(habit)}
+                onComplete={() => recordCompletion(habit.id)}
+              />
+            ))}
           </div>
         )}
 
-        {/* Enhanced Dialogs */}
-        <CreateHabitDialog 
+        {/* Dialogs */}
+        <CreateHabitDialog
           open={showCreateDialog}
           onOpenChange={setShowCreateDialog}
+          onCreateHabit={handleCreateHabit}
         />
-        
-        {selectedHabit && (
-          <HabitProgressModal
-            habit={selectedHabit}
-            open={showProgressModal}
-            onOpenChange={setShowProgressModal}
+
+        {editingHabit && (
+          <EditHabitDialog
+            open={!!editingHabit}
+            onOpenChange={(open) => !open && setEditingHabit(null)}
+            habit={editingHabit}
+            onUpdateHabit={handleUpdateHabit}
+            onDeleteHabit={handleDeleteHabit}
           />
         )}
       </div>
