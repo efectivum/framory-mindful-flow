@@ -28,6 +28,8 @@ const Journal = () => {
   const {
     filters,
     filteredEntries,
+    availableTags,
+    availableEmotions,
     updateFilter,
     clearAllFilters,
     activeFilterCount
@@ -101,18 +103,16 @@ const Journal = () => {
             </div>
           </ButtonErrorBoundary>
 
-          {showCreateDialog && (
-            <CreateJournalDialog 
-              onClose={() => setShowCreateDialog(false)}
-            />
-          )}
+          <CreateJournalDialog 
+            open={showCreateDialog}
+            onOpenChange={setShowCreateDialog}
+          />
           
-          {showVoiceModal && (
-            <VoiceRecordingModal
-              onClose={() => setShowVoiceModal(false)}
-              onTranscriptComplete={handleVoiceComplete}
-            />
-          )}
+          <VoiceRecordingModal
+            open={showVoiceModal}
+            onClose={() => setShowVoiceModal(false)}
+            onTranscriptionComplete={handleVoiceComplete}
+          />
         </div>
       </ResponsiveLayout>
     );
@@ -167,13 +167,12 @@ const Journal = () => {
           <Card className="app-card-organic mb-6 animate-fade-in">
             <CardContent className="p-6">
               <JournalFilterDropdown
-                selectedMoods={filters.moods || []}
-                selectedDateRange={filters.dateRange}
-                selectedTags={filters.tags || []}
-                onMoodsChange={(moods) => updateFilter('moods', moods)}
-                onDateRangeChange={(dateRange) => updateFilter('dateRange', dateRange)}
-                onTagsChange={(tags) => updateFilter('tags', tags)}
-                onClearFilters={clearAllFilters}
+                filters={filters}
+                availableTags={availableTags}
+                availableEmotions={availableEmotions}
+                activeFilterCount={activeFilterCount}
+                onFilterChange={updateFilter}
+                onClearAll={clearAllFilters}
               />
             </CardContent>
           </Card>
@@ -219,28 +218,25 @@ const Journal = () => {
         <QuickAI />
 
         {/* Enhanced Modals */}
-        {showCreateDialog && (
-          <CreateJournalDialog 
-            onClose={() => setShowCreateDialog(false)}
-          />
-        )}
+        <CreateJournalDialog 
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+        />
         
-        {showSearchModal && (
-          <JournalSearchModal
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            searchResults={searchResults}
-            isSearching={isSearchActive}
-            onClose={() => setShowSearchModal(false)}
-          />
-        )}
+        <JournalSearchModal
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          entries={entries}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchResults={searchResults}
+        />
         
-        {showVoiceModal && (
-          <VoiceRecordingModal
-            onClose={() => setShowVoiceModal(false)}
-            onTranscriptComplete={handleVoiceComplete}
-          />
-        )}
+        <VoiceRecordingModal
+          open={showVoiceModal}
+          onClose={() => setShowVoiceModal(false)}
+          onTranscriptionComplete={handleVoiceComplete}
+        />
       </div>
     </ResponsiveLayout>
   );

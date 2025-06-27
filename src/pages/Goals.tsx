@@ -35,12 +35,10 @@ const Goals = () => {
   };
 
   const handleHabitEdit = (habit: Habit) => {
-    // Edit functionality would go here
     console.log('Edit habit:', habit);
   };
 
   const handleHabitDelete = (habitId: string) => {
-    // Delete functionality would go here
     console.log('Delete habit:', habitId);
   };
 
@@ -194,11 +192,10 @@ const Goals = () => {
         )}
 
         {/* Enhanced Dialogs */}
-        {showCreateDialog && (
-          <CreateHabitDialog 
-            onClose={() => setShowCreateDialog(false)}
-          />
-        )}
+        <CreateHabitDialog 
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+        />
         
         {selectedHabit && (
           <HabitProgressModal
