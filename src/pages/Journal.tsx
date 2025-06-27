@@ -36,7 +36,7 @@ const Journal = () => {
   const {
     searchQuery,
     searchResults,
-    isSearching,
+    isSearchActive,
     setSearchQuery,
     clearSearch
   } = useJournalSearch(entries);
@@ -101,16 +101,18 @@ const Journal = () => {
             </div>
           </ButtonErrorBoundary>
 
-          <CreateJournalDialog 
-            open={showCreateDialog} 
-            onOpenChange={setShowCreateDialog}
-          />
+          {showCreateDialog && (
+            <CreateJournalDialog 
+              onClose={() => setShowCreateDialog(false)}
+            />
+          )}
           
-          <VoiceRecordingModal
-            open={showVoiceModal}
-            onOpenChange={setShowVoiceModal}
-            onTranscriptComplete={handleVoiceComplete}
-          />
+          {showVoiceModal && (
+            <VoiceRecordingModal
+              onClose={() => setShowVoiceModal(false)}
+              onTranscriptComplete={handleVoiceComplete}
+            />
+          )}
         </div>
       </ResponsiveLayout>
     );
@@ -217,25 +219,28 @@ const Journal = () => {
         <QuickAI />
 
         {/* Enhanced Modals */}
-        <CreateJournalDialog 
-          open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog}
-        />
+        {showCreateDialog && (
+          <CreateJournalDialog 
+            onClose={() => setShowCreateDialog(false)}
+          />
+        )}
         
-        <JournalSearchModal
-          open={showSearchModal}
-          onOpenChange={setShowSearchModal}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchResults={searchResults}
-          isSearching={isSearching}
-        />
+        {showSearchModal && (
+          <JournalSearchModal
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchResults={searchResults}
+            isSearching={isSearchActive}
+            onClose={() => setShowSearchModal(false)}
+          />
+        )}
         
-        <VoiceRecordingModal
-          open={showVoiceModal}
-          onOpenChange={setShowVoiceModal}
-          onTranscriptComplete={handleVoiceComplete}
-        />
+        {showVoiceModal && (
+          <VoiceRecordingModal
+            onClose={() => setShowVoiceModal(false)}
+            onTranscriptComplete={handleVoiceComplete}
+          />
+        )}
       </div>
     </ResponsiveLayout>
   );

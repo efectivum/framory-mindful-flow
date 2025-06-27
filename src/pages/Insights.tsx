@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TrendingUp, Brain, Calendar, Target, Sparkles, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,12 +87,13 @@ const Insights = () => {
     "Your habits are the foundation of personal growth. Each habit represents a commitment to becoming your best self."
   );
 
-  // Create mock data for MoodTrendChart
+  // Create mock data for MoodTrendChart with proper types
   const mockMoodData = entries.slice(0, 7).map((entry, index) => ({
     date: new Date(Date.now() - (6 - index) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     mood: Math.floor(Math.random() * 5) + 1,
     energy: Math.floor(Math.random() * 5) + 1,
-    stress: Math.floor(Math.random() * 5) + 1
+    stress: Math.floor(Math.random() * 5) + 1,
+    count: 1
   }));
 
   return (
@@ -155,7 +155,7 @@ const Insights = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <MoodTrendChart data={mockMoodData} timeRange="week" />
+                  <MoodTrendChart data={mockMoodData} timeRange={30} />
                 </CardContent>
               </Card>
 

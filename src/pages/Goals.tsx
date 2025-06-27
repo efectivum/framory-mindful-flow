@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Target, Plus, TrendingUp, Calendar, BarChart3, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,16 @@ const Goals = () => {
 
   const handleHabitComplete = (habitId: string) => {
     completeHabit({ habitId });
+  };
+
+  const handleHabitEdit = (habit: Habit) => {
+    // Edit functionality would go here
+    console.log('Edit habit:', habit);
+  };
+
+  const handleHabitDelete = (habitId: string) => {
+    // Delete functionality would go here
+    console.log('Delete habit:', habitId);
   };
 
   const createStatCard = (
@@ -171,9 +180,12 @@ const Goals = () => {
                   <HabitCard
                     habit={habit}
                     onComplete={handleHabitComplete}
+                    onEdit={handleHabitEdit}
+                    onDelete={handleHabitDelete}
                     isCompleting={isCompleting}
-                    isCompletedToday={todayCompletions.includes(habit.id)}
-                    onClick={handleHabitClick}
+                    isCompleted={todayCompletions.includes(habit.id)}
+                    onViewProgress={handleHabitClick}
+                    isDeleting={false}
                   />
                 </div>
               ))}
@@ -182,10 +194,11 @@ const Goals = () => {
         )}
 
         {/* Enhanced Dialogs */}
-        <CreateHabitDialog 
-          open={showCreateDialog} 
-          onOpenChange={setShowCreateDialog}
-        />
+        {showCreateDialog && (
+          <CreateHabitDialog 
+            onClose={() => setShowCreateDialog(false)}
+          />
+        )}
         
         {selectedHabit && (
           <HabitProgressModal
