@@ -1,13 +1,15 @@
+
 import React from 'react';
 import { TrendingUp, Brain, Calendar, Target, Sparkles, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { MoodTrendChart } from '@/components/MoodTrendChart';
-import { PersonalityInsight } from '@/components/PersonalityInsight';
+import { PersonalityRadarChart } from '@/components/PersonalityRadarChart';
 import { RecurringTopics } from '@/components/RecurringTopics';
 import { MiniCalendar } from '@/components/MiniCalendar';
 import { PremiumGate } from '@/components/PremiumGate';
@@ -17,6 +19,12 @@ import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 const Insights = () => {
   const { entries, stats } = useJournalEntries();
   const { habits } = useHabits();
+  const { 
+    moodTrends, 
+    personalityInsights, 
+    totalEntries, 
+    currentStreak 
+  } = useAnalytics(30);
 
   const activeHabits = habits.filter(habit => habit.is_active);
   const totalWords = entries.reduce((sum, entry) => sum + (entry.content?.split(' ').length || 0), 0);
@@ -63,7 +71,7 @@ const Insights = () => {
   const streakCard = createInsightCard(
     <Calendar className="w-6 h-6" />,
     "Writing Streak",
-    `${stats.currentStreak} days`,
+    `${currentStreak} days`,
     "Consistency builds momentum",
     "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
     "Your writing streak shows your commitment to self-reflection. Each day you write, you're building a stronger connection with yourself."
@@ -86,15 +94,6 @@ const Insights = () => {
     "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
     "Your habits are the foundation of personal growth. Each habit represents a commitment to becoming your best self."
   );
-
-  // Create mock data for MoodTrendChart with proper types
-  const mockMoodData = entries.slice(0, 7).map((entry, index) => ({
-    date: new Date(Date.now() - (6 - index) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    mood: Math.floor(Math.random() * 5) + 1,
-    energy: Math.floor(Math.random() * 5) + 1,
-    stress: Math.floor(Math.random() * 5) + 1,
-    count: 1
-  }));
 
   return (
     <ResponsiveLayout title="Insights" subtitle="Discover patterns in your journey">
@@ -147,34 +146,14 @@ const Insights = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Enhanced Charts and Analytics */}
             <div className="space-y-6">
-              <Card className="app-card-organic animate-fade-in">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-purple-300" />
-                    Mood Trends
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MoodTrendChart data={mockMoodData} timeRange={30} />
-                </CardContent>
-              </Card>
+              <MoodTrendChart data={moodTrends} timeRange={30} />
 
               <PremiumGate 
                 feature="Advanced Analytics" 
                 description="Get deeper insights into your emotional patterns and growth trends."
                 showPreview={true}
               >
-                <Card className="app-card-organic animate-fade-in">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-yellow-300" />
-                      Personality Insights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PersonalityInsight />
-                  </CardContent>
-                </Card>
+                <PersonalityRadarChart insights={personalityInsights} />
               </PremiumGate>
             </div>
 
@@ -186,11 +165,7 @@ const Insights = () => {
                 </CardContent>
               </Card>
 
-              <Card className="app-card-organic animate-fade-in">
-                <CardContent className="p-0">
-                  <RecurringTopics />
-                </CardContent>
-              </Card>
+              <RecurringTopics />
 
               <Card className="app-card-organic animate-fade-in">
                 <CardHeader>
@@ -202,7 +177,7 @@ const Insights = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-gray-700/30 rounded-2xl border border-gray-600/30">
-                      <div className="text-2xl font-bold text-white mb-1">{entries.length}</div>
+                      <div className="text-2xl font-bold text-white mb-1">{totalEntries}</div>
                       <div className="text-gray-400 text-sm">Total Entries</div>
                     </div>
                     <div className="text-center p-4 bg-gray-700/30 rounded-2xl border border-gray-600/30">
@@ -211,7 +186,7 @@ const Insights = () => {
                     </div>
                   </div>
                   <div className="text-center text-gray-300 text-sm">
-                    You've been on this journey for <span className="font-semibold text-purple-300">{Math.max(1, Math.floor(Math.random() * 30) + 1)}</span> days
+                    You've been on this journey for <span className="font-semibold text-purple-300">{Math.max(1, currentStreak)}</span> days
                   </div>
                 </CardContent>
               </Card>
