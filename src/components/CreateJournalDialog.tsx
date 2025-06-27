@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -10,8 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { VoiceButton } from '@/components/VoiceButton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 
-export const CreateJournalDialog = () => {
-  const [open, setOpen] = useState(false);
+interface CreateJournalDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const CreateJournalDialog = ({ open, onOpenChange }: CreateJournalDialogProps) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [moodBefore, setMoodBefore] = useState<number | undefined>();
@@ -40,7 +44,7 @@ export const CreateJournalDialog = () => {
     setMoodBefore(undefined);
     setMoodAfter(undefined);
     setTags('');
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const handleVoiceTranscription = (text: string) => {
@@ -60,13 +64,7 @@ export const CreateJournalDialog = () => {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
-          <Plus className="w-4 h-4 mr-2" />
-          New Entry
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create Journal Entry</DialogTitle>
@@ -145,7 +143,7 @@ export const CreateJournalDialog = () => {
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isCreating || !content.trim()}>
