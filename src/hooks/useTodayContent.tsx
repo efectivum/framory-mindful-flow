@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useTimeOfDay, TimeOfDayMode } from "./useTimeOfDay";
+import { useSmartPrompts } from "./useSmartPrompts";
 
 /**
  * For now: intention is localStorage. Later, store in Supabase per user.
@@ -15,6 +16,7 @@ const INTENTION_KEY = "lumatori_daily_intention_";
 
 export function useTodayContent() {
   const { mode } = useTimeOfDay();
+  const { smartPrompt, smartSuggestion, hasPersonalizedData } = useSmartPrompts();
 
   // Intention management
   const [intention, setIntention] = useState<string>("");
@@ -32,7 +34,7 @@ export function useTodayContent() {
 
   // Context-appropriate prompt and components
   let prompt: string;
-  let suggestion: string | undefined;
+  let suggestion: string;
   let showIntentionBox = false;
   let showReflectionSummary = false;
   let showHabits = false;
@@ -41,26 +43,29 @@ export function useTodayContent() {
   switch (mode) {
     case "morning":
       prompt = intention
-        ? "Stay mindful of your intention for today:"
-        : "What's your one intention for today?";
+        ? hasPersonalizedData 
+          ? "Stay mindful of your intention as you move through today:"
+          : "Stay mindful of your intention for today:"
+        : smartPrompt;
       showIntentionBox = true;
-      suggestion = "Set a simple intention and kickstart your day!";
+      suggestion = smartSuggestion;
       break;
     case "midday":
-      prompt = "Take a breath. How is your day unfolding?";
+      prompt = smartPrompt;
       showReflectionSummary = true;
       showMoodCheck = true;
-      suggestion = "You can log a quick reflection or update your habits.";
+      suggestion = smartSuggestion;
       break;
     case "evening":
-      prompt = "Let's wind down and reflect on your day.";
+      prompt = smartPrompt;
       showReflectionSummary = true;
       showHabits = true;
       showMoodCheck = true;
-      suggestion = "You can write a short journal or log your mood.";
+      suggestion = smartSuggestion;
       break;
     default:
-      prompt = "Rest and recharge. Ready for tomorrow?";
+      prompt = smartPrompt;
+      suggestion = smartSuggestion;
       break;
   }
 
@@ -74,5 +79,6 @@ export function useTodayContent() {
     showReflectionSummary,
     showMoodCheck,
     setIntention: saveIntention,
+    hasPersonalizedData,
   };
 }
