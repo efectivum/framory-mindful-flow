@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, Sparkles, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumGate } from '@/components/PremiumGate';
 
 const RECOMMENDED_PROMPTS = [
   {
@@ -34,6 +35,17 @@ const RECOMMENDED_PROMPTS = [
 ];
 
 export const TalkToJournalCard: React.FC = () => {
+  const { isPremium, isBeta } = useSubscription();
+
+  if (!isPremium && !isBeta) {
+    return (
+      <PremiumGate
+        feature="Talk to Your Journal"
+        description="Ask questions about your entries and get AI-powered insights and guidance."
+      />
+    );
+  }
+
   const [question, setQuestion] = useState('');
   const navigate = useNavigate();
 

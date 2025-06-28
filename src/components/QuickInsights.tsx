@@ -18,13 +18,10 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
   const [showDeepReflection, setShowDeepReflection] = useState(false);
   const { getQuickAnalysis } = useQuickAnalysis();
   const { data: analysis, isLoading } = getQuickAnalysis(entry.id);
-  const { isPremium } = useSubscription();
+  const { isPremium, isBeta } = useSubscription();
 
-  // Content length check for smart analysis
-  const wordCount = entry.content.trim().split(' ').length;
-  const shouldShowAnalysis = wordCount >= 50; // Minimum threshold for meaningful analysis
-
-  if (!isPremium) {
+  // AI insights are premium-only
+  if (!isPremium && !isBeta) {
     return (
       <PremiumGate
         feature="AI Analysis"
@@ -33,6 +30,10 @@ export const QuickInsights = ({ entry }: QuickInsightsProps) => {
       />
     );
   }
+
+  // Content length check for smart analysis
+  const wordCount = entry.content.trim().split(' ').length;
+  const shouldShowAnalysis = wordCount >= 50; // Minimum threshold for meaningful analysis
 
   if (!shouldShowAnalysis) {
     return (

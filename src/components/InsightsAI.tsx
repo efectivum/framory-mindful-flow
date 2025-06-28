@@ -5,8 +5,21 @@ import { MessageCircle, Send } from 'lucide-react';
 import { InlineLoading } from '@/components/ui/inline-loading';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PremiumGate } from '@/components/PremiumGate';
 
 export const InsightsAI: React.FC = () => {
+  const { isPremium, isBeta } = useSubscription();
+
+  if (!isPremium && !isBeta) {
+    return (
+      <PremiumGate
+        feature="AI Insights"
+        description="Ask your AI assistant questions about your journal patterns and get personalized insights."
+      />
+    );
+  }
+
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
