@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -15,6 +14,7 @@ import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
 import { BehavioralInsights } from '@/components/BehavioralInsights';
+import { MilestoneManager } from '@/components/MilestoneManager';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -275,6 +275,11 @@ const Index = () => {
               flipOnClick={true}
             />
           </div>
+        </ButtonErrorBoundary>
+
+        {/* Milestone Celebration System */}
+        <ButtonErrorBoundary fallbackMessage="Milestone system is not available">
+          <MilestoneManager />
         </ButtonErrorBoundary>
 
         {/* Behavioral Insights Section */}
