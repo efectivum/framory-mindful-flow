@@ -55,8 +55,7 @@ export const useErrorTracking = () => {
     
     setErrors(prev => [fullErrorLog, ...prev.slice(0, 49)]); // Keep last 50 errors
 
-    // Instead of using ai_insights table, just log to console for now
-    // This prevents the database constraint violations
+    // Just log to console - no database operations to prevent constraint violations
     console.error('Error logged:', {
       severity,
       message: errorLog.message,
@@ -88,7 +87,7 @@ export const useErrorTracking = () => {
     setErrors([]);
   }, []);
 
-  // Set up global error handlers
+  // Set up global error handlers only once
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       logError(event.error || event.message, 'high', {

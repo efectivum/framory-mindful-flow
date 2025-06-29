@@ -10,11 +10,10 @@ export const StatsCardsSection: React.FC = () => {
   const { habits } = useHabits();
   const { entries, stats } = useJournalEntries();
 
-  // Debug the streak value before using it
-  const currentStreak = stats.currentStreak || 0;
-  console.log('Using streak value:', currentStreak);
-
-  const activeHabits = habits.filter(habit => habit.is_active);
+  // Ensure currentStreak is a valid number
+  const currentStreak = typeof stats?.currentStreak === 'number' ? stats.currentStreak : 0;
+  const activeHabits = habits?.filter(habit => habit.is_active) || [];
+  const totalEntries = entries?.length || 0;
 
   // Create enhanced stat cards with organic design
   const createStatCard = (
@@ -58,7 +57,7 @@ export const StatsCardsSection: React.FC = () => {
   const entriesCard = createStatCard(
     <BookOpen className="w-6 h-6" />,
     "Total Entries",
-    entries.length,
+    totalEntries,
     "Each entry is a step forward in your personal growth journey.",
     "linear-gradient(135deg, #10b981 0%, #059669 100%)"
   );

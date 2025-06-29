@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = React.useState<Session | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [isAdmin, setIsAdmin] = React.useState(false);
-  const [initialized, setInitialized] = React.useState(false);
   
   // Subscription state
   const [isPremium, setIsPremium] = React.useState(false);
@@ -185,10 +184,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user]);
 
-  // Single initialization effect to prevent loops
+  // Single initialization effect - FIXED to prevent loops
   React.useEffect(() => {
-    if (initialized) return;
-    
     console.log('Auth: Initializing auth state listener');
     
     // Set up auth state listener
@@ -201,16 +198,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Handle user session changes
         if (session?.user) {
+          // Use setTimeout to prevent blocking
           setTimeout(async () => {
-            const adminStatus = await checkAdminStatus();
-            
-            if (adminStatus) {
-              setSubscriptionTier('premium');
-              setIsPremium(true);
-              setIsBeta(false);
-              setSubscriptionEnd(null);
-            } else {
-              await checkSubscriptionStatus();
+            try {
+              const adminStatus = await checkAdminStatus();
+              
+              if (adminStatus) {
+                setSubscriptionTier('premium');
+                setIsPremium(true);
+                setIsBeta(false);
+                setSubscriptionEnd(null);
+              } else {
+                await checkSubscriptionStatus();
+              }
+            } catch (error) {
+              console.error('Auth: Error in subscription check:', error);
             }
           }, 0);
         } else {
@@ -244,25 +246,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (session?.user) {
         setTimeout(async () => {
-          const adminStatus = await checkAdminStatus();
-          if (adminStatus) {
-            setSubscriptionTier('premium');
-            setIsPremium(true);
-            setIsBeta(false);
-            setSubscriptionEnd(null);
-          } else {
-            await checkSubscriptionStatus();
+          try {
+            const adminStatus = await checkAdminStatus();
+            if (adminStatus) {
+              setSubscriptionTier('premium');
+              setIsPremium(true);
+              setIsBeta(false);
+              setSubscriptionEnd(null);
+            } else {
+              await checkSubscriptionStatus();
+            }
+          } catch (error) {
+            console.error('Auth: Error in initial subscription check:', error);
           }
         }, 0);
       }
     });
 
-    setInitialized(true);
-
     return () => {
       subscription.unsubscribe();
     };
-  }, [initialized, checkAdminStatus, checkSubscriptionStatus]);
+  }, []); // Empty dependency array to prevent re-initialization
 
   const signUp = async (email: string, password: string, userData: UserData = {}) => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
