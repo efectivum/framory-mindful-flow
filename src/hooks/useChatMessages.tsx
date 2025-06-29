@@ -57,26 +57,29 @@ export const useChatMessages = () => {
 
       if (error) {
         console.error('Messages: Error saving message:', error);
-        // Retry once after a brief delay with a new ID if UUID conflict
-        setTimeout(async () => {
-          const retryMessage = { ...message, id: generateMessageId() };
-          const { error: retryError } = await supabase
-            .from('chat_messages')
-            .insert({
-              id: retryMessage.id,
-              session_id: sessionId,
-              user_id: user.id,
-              type: retryMessage.type,
-              content: retryMessage.content,
-              metadata: metadata as any
-            });
-          
-          if (retryError) {
-            console.error('Messages: Retry failed:', retryError);
-          } else {
-            console.log('Messages: Message saved on retry');
-          }
-        }, 1000);
+        // Don't retry if it's a unique constraint violation (message already exists)
+        if (!error.message?.includes('duplicate key') && !error.message?.includes('unique constraint')) {
+          // Retry once after a brief delay with a new ID
+          setTimeout(async () => {
+            const retryMessage = { ...message, id: generateMessageId() };
+            const { error: retryError } = await supabase
+              .from('chat_messages')
+              .insert({
+                id: retryMessage.id,
+                session_id: sessionId,
+                user_id: user.id,
+                type: retryMessage.type,
+                content: retryMessage.content,
+                metadata: metadata as any
+              });
+            
+            if (retryError) {
+              console.error('Messages: Retry failed:', retryError);
+            } else {
+              console.log('Messages: Message saved on retry');
+            }
+          }, 1000);
+        }
       } else {
         console.log('Messages: Message saved successfully');
       }
@@ -93,12 +96,20 @@ export const useChatMessages = () => {
 
     try {
       console.log('Messages: Loading messages for session:', sessionId);
-      const { data, error } = await supabase
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Messages loading timeout')), 8000)
+      );
+      
+      const queryPromise = supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('Messages: Error loading messages:', error);
@@ -135,11 +146,16 @@ export const useChatMessages = () => {
       }
     } catch (error) {
       console.error('Messages: Failed to load messages:', error);
-      toast({
-        title: "Message Load Error",
-        description: "Failed to load conversation history.",
-        variant: "destructive"
-      });
+      
+      // Don't show toast for timeout errors, just use fallback
+      if (!error.message?.includes('timeout')) {
+        toast({
+          title: "Message Load Error",
+          description: "Failed to load conversation history. Starting fresh.",
+          variant: "destructive"
+        });
+      }
+      
       // Set welcome message as fallback
       const welcomeMessage = createWelcomeMessage();
       setMessages([welcomeMessage]);
@@ -157,8 +173,10 @@ export const useChatMessages = () => {
     // Add to local state immediately for instant UI update
     setMessages(prev => [...prev, message]);
 
-    // Save to database
-    await saveMessageToDatabase(message, currentSessionId);
+    // Save to database (non-blocking)
+    saveMessageToDatabase(message, currentSessionId).catch(error => {
+      console.warn('Messages: Background save failed:', error);
+    });
   }, [saveMessageToDatabase]);
 
   const setWelcomeMessage = useCallback(() => {
