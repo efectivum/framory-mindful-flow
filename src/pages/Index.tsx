@@ -14,6 +14,7 @@ import { FlippableCard } from '@/components/ui/FlippableCard';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
+import { BehavioralInsights } from '@/components/BehavioralInsights';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -274,6 +275,11 @@ const Index = () => {
               flipOnClick={true}
             />
           </div>
+        </ButtonErrorBoundary>
+
+        {/* Behavioral Insights Section */}
+        <ButtonErrorBoundary fallbackMessage="Behavioral insights are not available">
+          <BehavioralInsights />
         </ButtonErrorBoundary>
 
         {/* Dynamic Homepage Features - Time-aware content */}
