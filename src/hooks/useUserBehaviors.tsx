@@ -2,7 +2,10 @@
 import { useMemo } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
-import { format, getHours, differenceInDays, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { format, getHours, differenceInDays, startOfWeek, endOfWeek, isWithinInterval, subDays } from 'date-fns';
 
 export interface UserBehaviorInsights {
   // Writing patterns
@@ -42,7 +45,29 @@ const SELF_AWARENESS_KEYWORDS = [
 
 export const useUserBehaviors = () => {
   const { entries, stats } = useJournalEntries();
-  const { habits, completions } = useHabits();
+  const { habits, todayCompletions } = useHabits();
+  const { user } = useAuth();
+
+  // Get habit completions for behavioral analysis
+  const { data: habitCompletions = [] } = useQuery({
+    queryKey: ['habit-completions-behavior', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const thirtyDaysAgo = subDays(new Date(), 30);
+      
+      const { data, error } = await supabase
+        .from('habit_completions')
+        .select('habit_id, completed_at')
+        .eq('user_id', user.id)
+        .gte('completed_at', thirtyDaysAgo.toISOString())
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
   const behaviorInsights: UserBehaviorInsights = useMemo(() => {
     // Early return for insufficient data
@@ -151,8 +176,8 @@ export const useUserBehaviors = () => {
     let habitCompletionTiming: 'morning' | 'evening' | 'varied' | 'none' = 'none';
     let habitConsistency = 0;
 
-    if (completions.length > 0) {
-      const completionTimes = completions.map(completion => {
+    if (habitCompletions.length > 0) {
+      const completionTimes = habitCompletions.map(completion => {
         const hour = getHours(new Date(completion.completed_at));
         return hour < 12 ? 'morning' : 'evening';
       });
@@ -171,7 +196,7 @@ export const useUserBehaviors = () => {
       // Calculate habit consistency (completions per active habit per week)
       const activeHabits = habits.filter(h => h.is_active);
       if (activeHabits.length > 0) {
-        const weeklyCompletions = completions.filter(c => 
+        const weeklyCompletions = habitCompletions.filter(c => 
           isWithinInterval(new Date(c.completed_at), {
             start: startOfWeek(new Date()),
             end: endOfWeek(new Date())
@@ -231,7 +256,7 @@ export const useUserBehaviors = () => {
       respondsToPrompts,
       dataRichness
     };
-  }, [entries, stats, habits, completions]);
+  }, [entries, stats, habits, habitCompletions]);
 
   // Helper functions to get specific insights
   const getOptimalPromptTime = () => {
