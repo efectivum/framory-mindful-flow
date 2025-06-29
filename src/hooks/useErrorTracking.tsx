@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ErrorLog {
   id: string;
@@ -56,45 +55,26 @@ export const useErrorTracking = () => {
     
     setErrors(prev => [fullErrorLog, ...prev.slice(0, 49)]); // Keep last 50 errors
 
-    // Send to backend for persistent storage
-    try {
-      const { error: dbError } = await supabase
-        .from('ai_insights') // Use existing table for now
-        .insert([{
-          user_id: user?.id,
-          source_type: 'error_tracking',
-          insight_type: severity,
-          content: errorLog.message,
-          metadata: {
-            stack: errorLog.stack,
-            url: errorLog.url,
-            user_agent: errorLog.userAgent,
-            context: errorLog.context || {},
-            timestamp: errorLog.timestamp,
-            resolved: false
-          },
-          confidence_score: severity === 'critical' ? 1.0 : 0.8
-        }]);
-
-      if (dbError) {
-        console.error('Failed to log error to database:', dbError);
-      }
-    } catch (e) {
-      console.error('Error tracking system failed:', e);
-    }
+    // Instead of using ai_insights table, just log to console for now
+    // This prevents the database constraint violations
+    console.error('Error logged:', {
+      severity,
+      message: errorLog.message,
+      context: errorLog.context,
+      timestamp: new Date(errorLog.timestamp).toISOString()
+    });
 
     // Update stats
     setStats(prev => ({
       totalErrors: prev.totalErrors + 1,
       criticalErrors: prev.criticalErrors + (severity === 'critical' ? 1 : 0),
-      errorRate: prev.errorRate, // Would need time-based calculation
-      topErrors: prev.topErrors, // Would need aggregation
+      errorRate: prev.errorRate,
+      topErrors: prev.topErrors,
     }));
 
     // Auto-report critical errors
     if (severity === 'critical') {
       console.error('CRITICAL ERROR:', errorLog);
-      // Could integrate with external monitoring service here
     }
   }, [user]);
 
@@ -102,9 +82,6 @@ export const useErrorTracking = () => {
     setErrors(prev => prev.map(error => 
       error.id === errorId ? { ...error, resolved: true } : error
     ));
-
-    // For now, we'll skip the database update since we're using ai_insights table
-    // In production, you'd update the actual error_logs table once types are regenerated
   }, []);
 
   const clearErrors = useCallback(() => {
