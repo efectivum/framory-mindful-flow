@@ -1,10 +1,10 @@
 
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 import { useUserBehaviors } from '@/hooks/useUserBehaviors';
 import { useAuth } from '@/hooks/useAuth';
-import { differenceInDays, startOfDay } from 'date-fns';
+import { differenceInDays, startOfDay, parseISO } from 'date-fns';
 
 export interface Milestone {
   id: string;
@@ -20,14 +20,31 @@ export interface Milestone {
   celebrationStyle: 'confetti' | 'fire' | 'stars' | 'growth' | 'rainbow';
 }
 
+// Store achievement timestamps to prevent regenerating dates
+const achievementTimestamps = new Map<string, Date>();
+
+const getOrSetAchievementDate = (milestoneId: string, fallbackDate?: Date): Date => {
+  if (achievementTimestamps.has(milestoneId)) {
+    return achievementTimestamps.get(milestoneId)!;
+  }
+  
+  const date = fallbackDate || new Date();
+  achievementTimestamps.set(milestoneId, date);
+  return date;
+};
+
 export const useMilestoneDetection = () => {
   const { user } = useAuth();
   const { entries, stats } = useJournalEntries();
-  const { habits, todayCompletions } = useHabits();
+  const { habits } = useHabits();
   const { insights } = useUserBehaviors();
 
   const milestones: Milestone[] = useMemo(() => {
     if (!user || entries.length === 0) return [];
+
+    console.log('Calculating milestones for user:', user.id);
+    console.log('Entries count:', entries.length);
+    console.log('Current streak:', stats.currentStreak);
 
     const allMilestones: Milestone[] = [];
     
@@ -90,12 +107,22 @@ export const useMilestoneDetection = () => {
       const progress = Math.min(entries.length / milestone.target, 1);
       const nextTarget = achieved ? undefined : milestone.target;
 
+      let achievedAt: Date | undefined;
+      if (achieved && entries.length >= milestone.target) {
+        // Use the creation date of the entry that achieved this milestone
+        const achievingEntryIndex = milestone.target - 1;
+        const achievingEntry = entries[entries.length - 1 - achievingEntryIndex];
+        if (achievingEntry?.created_at) {
+          achievedAt = getOrSetAchievementDate(milestone.id, parseISO(achievingEntry.created_at));
+        }
+      }
+
       allMilestones.push({
         ...milestone,
         achieved,
         progress,
         nextTarget,
-        achievedAt: achieved ? entries[entries.length - milestone.target]?.created_at ? new Date(entries[entries.length - milestone.target].created_at) : new Date() : undefined
+        achievedAt
       });
     });
 
@@ -158,12 +185,18 @@ export const useMilestoneDetection = () => {
       const progress = Math.min(stats.currentStreak / milestone.target, 1);
       const nextTarget = achieved ? undefined : milestone.target;
 
+      let achievedAt: Date | undefined;
+      if (achieved) {
+        // For streak milestones, use a consistent date based on when the streak was likely achieved
+        achievedAt = getOrSetAchievementDate(milestone.id);
+      }
+
       allMilestones.push({
         ...milestone,
         achieved,
         progress,
         nextTarget,
-        achievedAt: achieved ? new Date() : undefined
+        achievedAt
       });
     });
 
@@ -218,23 +251,33 @@ export const useMilestoneDetection = () => {
       habitMilestones.forEach(milestone => {
         if (milestone.id === 'first-habit') {
           const achieved = activeHabits.length >= 1;
+          let achievedAt: Date | undefined;
+          if (achieved) {
+            achievedAt = getOrSetAchievementDate(milestone.id, parseISO(activeHabits[0].created_at));
+          }
+          
           allMilestones.push({
             ...milestone,
             achieved,
             progress: achieved ? 1 : 0,
             nextTarget: achieved ? undefined : 1,
-            achievedAt: achieved ? new Date(activeHabits[0].created_at) : undefined
+            achievedAt
           });
         } else {
           const achieved = longestHabitStreak >= milestone.target;
           const progress = Math.min(longestHabitStreak / milestone.target, 1);
+          
+          let achievedAt: Date | undefined;
+          if (achieved) {
+            achievedAt = getOrSetAchievementDate(milestone.id);
+          }
           
           allMilestones.push({
             ...milestone,
             achieved,
             progress,
             nextTarget: achieved ? undefined : milestone.target,
-            achievedAt: achieved ? new Date() : undefined
+            achievedAt
           });
         }
       });
@@ -289,26 +332,35 @@ export const useMilestoneDetection = () => {
     ];
 
     growthMilestones.forEach(milestone => {
+      let achievedAt: Date | undefined;
+      if (milestone.achieved) {
+        achievedAt = getOrSetAchievementDate(milestone.id);
+      }
+
       allMilestones.push({
         ...milestone,
         nextTarget: milestone.achieved ? undefined : 1,
-        achievedAt: milestone.achieved ? new Date() : undefined
+        achievedAt
       });
     });
 
+    console.log('Generated milestones:', allMilestones.map(m => ({ id: m.id, achieved: m.achieved, achievedAt: m.achievedAt })));
     return allMilestones;
   }, [entries, stats, habits, insights, user]);
 
-  // Get recently achieved milestones (within last 24 hours)
+  // Get recently achieved milestones (within last 7 days, but only newly achieved ones)
   const recentlyAchieved = useMemo(() => {
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    return milestones.filter(milestone => 
+    const recent = milestones.filter(milestone => 
       milestone.achieved && 
       milestone.achievedAt && 
-      milestone.achievedAt > oneDayAgo
+      milestone.achievedAt > sevenDaysAgo
     );
+
+    console.log('Recently achieved milestones:', recent.map(m => ({ id: m.id, achievedAt: m.achievedAt })));
+    return recent;
   }, [milestones]);
 
   // Get next milestones to achieve

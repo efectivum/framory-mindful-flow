@@ -17,6 +17,8 @@ export interface Achievement {
   category: string;
 }
 
+const DB_ACHIEVEMENTS_SHOWN_KEY = 'lumatori_db_achievements_shown';
+
 export const useAchievements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -73,20 +75,54 @@ export const useAchievements = () => {
   const unseenAchievements = achievements.filter(achievement => !achievement.is_seen);
   const recentAchievements = achievements.slice(0, 5);
 
-  // Show toast for new achievements
+  // Get shown database achievements from localStorage
+  const getShownDbAchievements = (): string[] => {
+    try {
+      const stored = localStorage.getItem(DB_ACHIEVEMENTS_SHOWN_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading shown DB achievements:', error);
+      return [];
+    }
+  };
+
+  // Save shown database achievement to localStorage
+  const saveShownDbAchievement = (achievementId: string) => {
+    try {
+      const shown = getShownDbAchievements();
+      if (!shown.includes(achievementId)) {
+        shown.push(achievementId);
+        localStorage.setItem(DB_ACHIEVEMENTS_SHOWN_KEY, JSON.stringify(shown));
+        console.log(`DB Achievement ${achievementId} marked as shown`);
+      }
+    } catch (error) {
+      console.error('Error saving shown DB achievement:', error);
+    }
+  };
+
+  // Show toast for new achievements (with deduplication)
   React.useEffect(() => {
-    if (unseenAchievements.length > 0) {
-      const latestAchievement = unseenAchievements[0];
+    const shownDbAchievements = getShownDbAchievements();
+    
+    const newAchievements = unseenAchievements.filter(achievement => 
+      !shownDbAchievements.includes(achievement.id)
+    );
+
+    if (newAchievements.length > 0) {
+      const latestAchievement = newAchievements[0];
+      console.log('Showing DB achievement toast for:', latestAchievement.id);
+      
       toast({
         title: `🎉 Achievement Unlocked!`,
         description: `${latestAchievement.icon} ${latestAchievement.title} - ${latestAchievement.description}`,
         duration: 5000,
       });
       
-      // Mark as seen after showing toast
+      // Mark as seen in both localStorage and database
+      saveShownDbAchievement(latestAchievement.id);
       markAsSeenMutation.mutate(latestAchievement.id);
     }
-  }, [unseenAchievements.length]);
+  }, [unseenAchievements.length, markAsSeenMutation, toast]);
 
   return {
     achievements,
