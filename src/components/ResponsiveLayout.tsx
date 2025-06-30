@@ -22,6 +22,14 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   showHeader = true,
   hideBottomNav = false,
 }) => {
+  // Debug logging for navigation visibility
+  console.log('ResponsiveLayout props:', {
+    showHeader,
+    hideBottomNav,
+    hasTitle: !!title,
+    hasSubtitle: !!subtitle
+  });
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full overflow-x-hidden font-inter" style={{ background: 'var(--app-bg-primary)' }}>
@@ -56,16 +64,21 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
             </header>
           )}
 
-          {/* Enhanced Content with proper mobile constraints */}
-          <div className="flex-1 w-full max-w-full overflow-x-hidden px-4 md:px-8 py-4 md:py-8 pb-24 md:pb-8">
+          {/* Enhanced Content with proper mobile constraints and bottom nav spacing */}
+          <div className="flex-1 w-full max-w-full overflow-x-hidden px-4 md:px-8 py-4 md:py-8" 
+               style={{ paddingBottom: hideBottomNav ? '2rem' : 'calc(var(--bottom-nav-height) + 1rem)' }}>
             <div className="max-w-6xl mx-auto w-full">
               {children}
             </div>
           </div>
         </main>
 
-        {/* Enhanced Bottom navigation (mobile only) */}
-        {!hideBottomNav && <BottomNavigation />}
+        {/* Enhanced Bottom navigation (mobile only) - ALWAYS render unless explicitly hidden */}
+        {!hideBottomNav && (
+          <div className="md:hidden">
+            <BottomNavigation />
+          </div>
+        )}
       </div>
     </SidebarProvider>
   );
