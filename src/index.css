@@ -1,4 +1,3 @@
-
 /* Import Design System Modules - moved to top */
 @import './styles/foundations/variables.css';
 @import './styles/layout/base.css';
@@ -11,6 +10,7 @@
 @import './styles/animations/keyframes.css';
 @import './styles/utilities/spacing.css';
 @import './styles/utilities/states.css';
+@import './styles/mobile.css';
 
 @tailwind base;
 @tailwind components;
