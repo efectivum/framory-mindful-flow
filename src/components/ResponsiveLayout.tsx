@@ -31,7 +31,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
         </div>
 
         {/* Main area */}
-        <main className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0 w-full max-w-full overflow-x-hidden">
           {/* Enhanced Mobile Header */}
           {showHeader && (title || subtitle) && (
             <header className="app-card-organic border-b border-gray-700/30 md:hidden animate-fade-in">
@@ -56,9 +56,9 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
             </header>
           )}
 
-          {/* Enhanced Content with organic mobile spacing */}
-          <div className="flex-1 app-mobile-page md:p-8 pb-24 md:pb-8">
-            <div className="max-w-6xl mx-auto">
+          {/* Enhanced Content with proper mobile constraints */}
+          <div className="flex-1 w-full max-w-full overflow-x-hidden px-4 md:px-8 py-4 md:py-8 pb-24 md:pb-8">
+            <div className="max-w-6xl mx-auto w-full">
               {children}
             </div>
           </div>
