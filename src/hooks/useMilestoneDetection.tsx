@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
@@ -20,17 +19,116 @@ export interface Milestone {
   celebrationStyle: 'confetti' | 'fire' | 'stars' | 'growth' | 'rainbow';
 }
 
-// Store achievement timestamps to prevent regenerating dates
-const achievementTimestamps = new Map<string, Date>();
+const ACHIEVEMENT_TIMESTAMPS_KEY = 'lumatori_achievement_timestamps';
 
-const getOrSetAchievementDate = (milestoneId: string, fallbackDate?: Date): Date => {
-  if (achievementTimestamps.has(milestoneId)) {
-    return achievementTimestamps.get(milestoneId)!;
+// Load achievement timestamps from localStorage
+const getStoredAchievementTimestamps = (): Record<string, string> => {
+  try {
+    const stored = localStorage.getItem(ACHIEVEMENT_TIMESTAMPS_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error('Error loading achievement timestamps:', error);
+    return {};
   }
+};
+
+// Save achievement timestamp to localStorage
+const saveAchievementTimestamp = (milestoneId: string, date: Date) => {
+  try {
+    const timestamps = getStoredAchievementTimestamps();
+    const dateString = date.toISOString();
+    
+    // Only save if not already stored (preserve original achievement date)
+    if (!timestamps[milestoneId]) {
+      timestamps[milestoneId] = dateString;
+      localStorage.setItem(ACHIEVEMENT_TIMESTAMPS_KEY, JSON.stringify(timestamps));
+      console.log(`Achievement timestamp saved for ${milestoneId}:`, dateString);
+    } else {
+      console.log(`Achievement timestamp already exists for ${milestoneId}:`, timestamps[milestoneId]);
+    }
+  } catch (error) {
+    console.error('Error saving achievement timestamp:', error);
+  }
+};
+
+// Get or calculate achievement date
+const getAchievementDate = (milestoneId: string, entries: any[], stats: any, habits: any[], milestone: any): Date | undefined => {
+  const storedTimestamps = getStoredAchievementTimestamps();
   
-  const date = fallbackDate || new Date();
-  achievementTimestamps.set(milestoneId, date);
-  return date;
+  // Return stored date if it exists
+  if (storedTimestamps[milestoneId]) {
+    try {
+      const storedDate = new Date(storedTimestamps[milestoneId]);
+      console.log(`Using stored achievement date for ${milestoneId}:`, storedDate);
+      return storedDate;
+    } catch (error) {
+      console.error(`Invalid stored date for ${milestoneId}:`, storedTimestamps[milestoneId]);
+    }
+  }
+
+  // Calculate achievement date based on milestone type
+  let calculatedDate: Date | undefined;
+
+  if (milestone.type === 'journal' && milestoneId.startsWith('entries-')) {
+    // For journal entry milestones, use the creation date of the achieving entry
+    const targetCount = milestone.target;
+    if (entries.length >= targetCount) {
+      const achievingEntryIndex = entries.length - targetCount;
+      const achievingEntry = entries[achievingEntryIndex];
+      if (achievingEntry?.created_at) {
+        calculatedDate = parseISO(achievingEntry.created_at);
+        console.log(`Calculated journal milestone date for ${milestoneId} from entry:`, calculatedDate);
+      }
+    }
+  } else if (milestone.type === 'journal' && milestoneId.startsWith('streak-')) {
+    // For streak milestones, calculate based on current streak
+    if (stats.currentStreak >= milestone.target) {
+      const streakStartDate = new Date();
+      streakStartDate.setDate(streakStartDate.getDate() - stats.currentStreak + milestone.target);
+      calculatedDate = streakStartDate;
+      console.log(`Calculated streak milestone date for ${milestoneId}:`, calculatedDate);
+    }
+  } else if (milestone.type === 'habit') {
+    // For habit milestones, use habit creation date or calculate streak date
+    if (milestoneId === 'first-habit' && habits.length > 0) {
+      calculatedDate = parseISO(habits[0].created_at);
+      console.log(`Calculated first habit milestone date for ${milestoneId}:`, calculatedDate);
+    } else {
+      // For habit streak milestones, estimate based on longest streak
+      const longestHabitStreak = Math.max(...habits.map(h => h.current_streak), 0);
+      if (longestHabitStreak >= milestone.target) {
+        const streakDate = new Date();
+        streakDate.setDate(streakDate.getDate() - longestHabitStreak + milestone.target);
+        calculatedDate = streakDate;
+        console.log(`Calculated habit streak milestone date for ${milestoneId}:`, calculatedDate);
+      }
+    }
+  } else if (milestone.type === 'growth') {
+    // For growth milestones, use a recent date (these are based on current analysis)
+    calculatedDate = new Date();
+    calculatedDate.setHours(calculatedDate.getHours() - 1); // Set to 1 hour ago to avoid immediate re-triggering
+    console.log(`Calculated growth milestone date for ${milestoneId}:`, calculatedDate);
+  }
+
+  // Validate calculated date (not in future, not too old)
+  if (calculatedDate) {
+    const now = new Date();
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    
+    if (calculatedDate > now) {
+      console.warn(`Achievement date for ${milestoneId} is in the future, using current time`);
+      calculatedDate = new Date();
+    } else if (calculatedDate < oneYearAgo) {
+      console.warn(`Achievement date for ${milestoneId} is too old, using one year ago`);
+      calculatedDate = oneYearAgo;
+    }
+    
+    // Save the calculated date
+    saveAchievementTimestamp(milestoneId, calculatedDate);
+  }
+
+  return calculatedDate;
 };
 
 export const useMilestoneDetection = () => {
@@ -108,13 +206,8 @@ export const useMilestoneDetection = () => {
       const nextTarget = achieved ? undefined : milestone.target;
 
       let achievedAt: Date | undefined;
-      if (achieved && entries.length >= milestone.target) {
-        // Use the creation date of the entry that achieved this milestone
-        const achievingEntryIndex = milestone.target - 1;
-        const achievingEntry = entries[entries.length - 1 - achievingEntryIndex];
-        if (achievingEntry?.created_at) {
-          achievedAt = getOrSetAchievementDate(milestone.id, parseISO(achievingEntry.created_at));
-        }
+      if (achieved) {
+        achievedAt = getAchievementDate(milestone.id, entries, stats, habits, milestone);
       }
 
       allMilestones.push({
@@ -187,8 +280,7 @@ export const useMilestoneDetection = () => {
 
       let achievedAt: Date | undefined;
       if (achieved) {
-        // For streak milestones, use a consistent date based on when the streak was likely achieved
-        achievedAt = getOrSetAchievementDate(milestone.id);
+        achievedAt = getAchievementDate(milestone.id, entries, stats, habits, milestone);
       }
 
       allMilestones.push({
@@ -253,7 +345,7 @@ export const useMilestoneDetection = () => {
           const achieved = activeHabits.length >= 1;
           let achievedAt: Date | undefined;
           if (achieved) {
-            achievedAt = getOrSetAchievementDate(milestone.id, parseISO(activeHabits[0].created_at));
+            achievedAt = getAchievementDate(milestone.id, entries, stats, habits, milestone);
           }
           
           allMilestones.push({
@@ -269,7 +361,7 @@ export const useMilestoneDetection = () => {
           
           let achievedAt: Date | undefined;
           if (achieved) {
-            achievedAt = getOrSetAchievementDate(milestone.id);
+            achievedAt = getAchievementDate(milestone.id, entries, stats, habits, milestone);
           }
           
           allMilestones.push({
@@ -334,7 +426,7 @@ export const useMilestoneDetection = () => {
     growthMilestones.forEach(milestone => {
       let achievedAt: Date | undefined;
       if (milestone.achieved) {
-        achievedAt = getOrSetAchievementDate(milestone.id);
+        achievedAt = getAchievementDate(milestone.id, entries, stats, habits, milestone);
       }
 
       allMilestones.push({
@@ -348,22 +440,30 @@ export const useMilestoneDetection = () => {
     return allMilestones;
   }, [entries, stats, habits, insights, user]);
 
-  // Get recently achieved milestones (within last 7 days, but only newly achieved ones)
+  // Get recently achieved milestones (within last 7 days, only newly achieved ones)
   const recentlyAchieved = useMemo(() => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
+    // Add minimum age requirement (at least 2 minutes old) to prevent immediate re-triggering
+    const twoMinutesAgo = new Date();
+    twoMinutesAgo.setMinutes(twoMinutesAgo.getMinutes() - 2);
+    
     const recent = milestones.filter(milestone => 
       milestone.achieved && 
       milestone.achievedAt && 
-      milestone.achievedAt > sevenDaysAgo
+      milestone.achievedAt > sevenDaysAgo &&
+      milestone.achievedAt < twoMinutesAgo // Ensure milestone is at least 2 minutes old
     );
 
-    console.log('Recently achieved milestones:', recent.map(m => ({ id: m.id, achievedAt: m.achievedAt })));
+    console.log('Recently achieved milestones (filtered):', recent.map(m => ({ 
+      id: m.id, 
+      achievedAt: m.achievedAt,
+      minutesAgo: milestone.achievedAt ? Math.round((Date.now() - milestone.achievedAt.getTime()) / (1000 * 60)) : 'unknown'
+    })));
     return recent;
   }, [milestones]);
 
-  // Get next milestones to achieve
   const nextMilestones = useMemo(() => {
     return milestones
       .filter(milestone => !milestone.achieved && milestone.progress > 0)
@@ -371,7 +471,6 @@ export const useMilestoneDetection = () => {
       .slice(0, 3);
   }, [milestones]);
 
-  // Get achieved milestones by category
   const achievedByCategory = useMemo(() => {
     return milestones
       .filter(milestone => milestone.achieved)
