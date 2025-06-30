@@ -1,6 +1,5 @@
 
 /* Mobile-first CSS utilities */
-@import url('./index.css');
 
 /* Safe area padding for iOS devices */
 .safe-area-pb {
