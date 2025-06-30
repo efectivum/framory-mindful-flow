@@ -166,8 +166,14 @@ export const useVoiceRecording = ({
         throw new Error('Failed to extract base64 data');
       }
       
-      console.log('Calling speech-to-text function...');
+      console.log('Calling speech-to-text function with language:', language);
+      console.log('Base64 data length:', base64Data.length);
       const apiStartTime = Date.now();
+      
+      // Add network connectivity check
+      if (!navigator.onLine) {
+        throw new Error('No internet connection. Please check your network.');
+      }
       
       const { data, error } = await supabase.functions.invoke('speech-to-text', {
         body: { 
@@ -177,31 +183,55 @@ export const useVoiceRecording = ({
       });
 
       console.log('API call took:', Date.now() - apiStartTime, 'ms');
+      console.log('Supabase function response:', { data, error });
 
       if (error) {
-        console.error('Speech-to-text error:', error);
-        throw new Error(error.message || 'Transcription failed');
+        console.error('Speech-to-text Supabase error:', error);
+        throw new Error(`Transcription service error: ${error.message || 'Unknown error'}`);
+      }
+
+      if (!data) {
+        console.error('No data returned from speech-to-text function');
+        throw new Error('No response from transcription service');
       }
 
       console.log('Transcription result:', data);
       console.log('Total processing time:', Date.now() - processingStartTime, 'ms');
       
-      if (data?.text) {
+      if (data?.text && data.text.trim()) {
+        console.log('Transcription successful:', data.text);
         onTranscriptionComplete(data.text);
-        onSuccess();
+        onSuccess(); // Only call onSuccess after actual transcription success
         setStatus('idle');
       } else {
-        throw new Error('No transcription received');
+        console.warn('Empty transcription received');
+        throw new Error('No speech detected in the recording. Please try speaking more clearly.');
       }
       
     } catch (error) {
-      console.error('Transcription error:', error);
+      console.error('Transcription error details:', error);
       setStatus('error');
-      setErrorMessage(`Transcription failed: ${error.message}`);
+      
+      // Provide more specific error messages
+      let userFriendlyMessage = 'Transcription failed. ';
+      
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
+        userFriendlyMessage += 'Please check your internet connection and try again.';
+      } else if (error.message?.includes('timeout')) {
+        userFriendlyMessage += 'The request timed out. Please try with a shorter recording.';
+      } else if (error.message?.includes('No speech detected')) {
+        userFriendlyMessage = error.message;
+      } else if (error.message?.includes('service error')) {
+        userFriendlyMessage += 'There was an issue with the transcription service. Please try again.';
+      } else {
+        userFriendlyMessage += `${error.message || 'Please try again.'}`;
+      }
+      
+      setErrorMessage(userFriendlyMessage);
     }
   }, [onTranscriptionComplete, onSuccess]);
 
-  const startRecording = useCallback(async (language: string) => {
+  const startRecording = useCallback(async (language: string = 'en') => {
     if (!streamRef.current) {
       console.error('No stream available for recording');
       setStatus('error');

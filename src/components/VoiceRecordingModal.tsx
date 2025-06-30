@@ -13,7 +13,7 @@ interface VoiceRecordingModalProps {
 }
 
 export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: VoiceRecordingModalProps) => {
-  const [language, setLanguage] = useState('et');
+  const [language, setLanguage] = useState('en'); // Changed default from 'et' to 'en'
   const { toast } = useToast();
 
   const {
@@ -33,7 +33,7 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
       onTranscriptionComplete(text);
     },
     onSuccess: () => {
-      console.log('Voice recording successful');
+      console.log('Voice recording and transcription successful');
       onClose();
       toast({
         title: "Success!",
@@ -56,6 +56,18 @@ export const VoiceRecordingModal = ({ open, onClose, onTranscriptionComplete }: 
       cleanup();
     }
   }, [open]);
+
+  // Show error toast when errorMessage changes
+  useEffect(() => {
+    if (errorMessage) {
+      console.error('Voice recording error:', errorMessage);
+      toast({
+        title: "Recording Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [errorMessage, toast]);
 
   // Handle modal close cleanup
   useEffect(() => {
