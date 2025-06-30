@@ -41,16 +41,11 @@ export const useChatInitialization = () => {
     setIsInitializing(true);
     
     try {
-      // Load all user sessions with timeout
-      const loadSessionsPromise = loadSessions();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Session loading timeout')), 10000)
-      );
+      // Load all user sessions
+      await loadSessions();
       
-      await Promise.race([loadSessionsPromise, timeoutPromise]);
-      
-      // Try to find the most recent active session with timeout
-      const sessionQueryPromise = supabase
+      // Try to find the most recent active session
+      const { data: recentSession, error } = await supabase
         .from('chat_sessions')
         .select('id, title, created_at, updated_at')
         .eq('user_id', user.id)
@@ -58,17 +53,8 @@ export const useChatInitialization = () => {
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-        
-      const sessionTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Session query timeout')), 5000)
-      );
 
-      const { data: recentSession, error } = await Promise.race([
-        sessionQueryPromise,
-        sessionTimeoutPromise
-      ]) as any;
-
-      if (error && !error.message?.includes('timeout')) {
+      if (error) {
         console.error('Chat initialization: Error loading recent session:', error);
       }
 
@@ -76,25 +62,13 @@ export const useChatInitialization = () => {
         console.log('Chat initialization: Restoring recent session:', recentSession.id);
         setCurrentSessionId(recentSession.id);
         localStorage.setItem('current-chat-session', recentSession.id);
-        
-        // Load messages with timeout
-        const loadMessagesPromise = loadMessagesForSession(recentSession.id);
-        const messagesTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Messages loading timeout')), 8000)
-        );
-        
-        try {
-          await Promise.race([loadMessagesPromise, messagesTimeoutPromise]);
-        } catch (messagesError) {
-          console.warn('Chat initialization: Messages loading failed, using fallback:', messagesError);
-          setWelcomeMessage();
-        }
+        await loadMessagesForSession(recentSession.id);
       } else {
         console.log('Chat initialization: No sessions found, creating new one');
         const newSession = await createNewSession('New Conversation');
         if (newSession) {
           console.log('Chat initialization: New session created:', newSession.id);
-          setWelcomeMessage();
+          // Welcome message will be added by loadMessagesForSession for empty sessions
         } else {
           throw new Error('Failed to create initial session');
         }
@@ -103,44 +77,20 @@ export const useChatInitialization = () => {
       setHasInitialized(true);
     } catch (error) {
       console.error('Chat initialization: Failed:', error);
-      
-      // Fallback: create basic session state
-      try {
-        console.log('Chat initialization: Using fallback initialization');
-        const fallbackSession = await createNewSession('Fallback Session');
-        if (fallbackSession) {
-          setWelcomeMessage();
-          setHasInitialized(true);
-        } else {
-          // Ultimate fallback - just show welcome message
-          setWelcomeMessage();
-          setHasInitialized(true);
-        }
-      } catch (fallbackError) {
-        console.error('Chat initialization: Fallback failed:', fallbackError);
-        setWelcomeMessage();
-        setHasInitialized(true);
-        
-        toast({
-          title: "Chat Setup Warning",
-          description: "Chat initialized with limited functionality. Some features may not work properly.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Chat Setup Error",
+        description: "Failed to set up chat. Please refresh the page.",
+        variant: "destructive"
+      });
     } finally {
       setIsInitializing(false);
     }
-  }, [user, hasInitialized, isInitializing, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, setWelcomeMessage, toast]);
+  }, [user, hasInitialized, isInitializing, loadSessions, setCurrentSessionId, loadMessagesForSession, createNewSession, toast]);
 
   // Initialize when user is available and we haven't initialized yet
   useEffect(() => {
     if (user && !hasInitialized && !isLoadingSessions && !isInitializing) {
-      // Add small delay to ensure everything is ready
-      const timer = setTimeout(() => {
-        initializeChatState();
-      }, 100);
-      
-      return () => clearTimeout(timer);
+      initializeChatState();
     }
   }, [user, hasInitialized, isLoadingSessions, isInitializing, initializeChatState]);
 
@@ -166,14 +116,8 @@ export const useChatInitialization = () => {
   const handleSwitchToSession = useCallback(async (sessionId: string) => {
     console.log('Chat: Switching to session:', sessionId);
     await switchToSession(sessionId);
-    
-    try {
-      await loadMessagesForSession(sessionId);
-    } catch (error) {
-      console.warn('Chat: Failed to load messages for session:', error);
-      setWelcomeMessage();
-    }
-  }, [switchToSession, loadMessagesForSession, setWelcomeMessage]);
+    await loadMessagesForSession(sessionId);
+  }, [switchToSession, loadMessagesForSession]);
 
   return {
     messages,

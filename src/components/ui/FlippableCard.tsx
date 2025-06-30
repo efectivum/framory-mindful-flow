@@ -61,13 +61,11 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
 
   return (
     <div 
-      className={cn("relative cursor-pointer", height, className)}
+      className={cn("relative w-full cursor-pointer", height, className)}
       style={{ 
         perspective: '1000px',
         WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation',
-        width: '100%',
-        maxWidth: '100%'
+        touchAction: 'manipulation'
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -85,11 +83,7 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
     >
       <motion.div
         className="relative w-full h-full"
-        style={{ 
-          transformStyle: 'preserve-3d',
-          width: '100%',
-          maxWidth: '100%'
-        }}
+        style={{ transformStyle: 'preserve-3d' }}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
@@ -99,9 +93,7 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(0deg)',
-            WebkitBackfaceVisibility: 'hidden',
-            width: '100%',
-            maxWidth: '100%'
+            WebkitBackfaceVisibility: 'hidden'
           }}
         >
           {frontContent}
@@ -113,9 +105,7 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
-            WebkitBackfaceVisibility: 'hidden',
-            width: '100%',
-            maxWidth: '100%'
+            WebkitBackfaceVisibility: 'hidden'
           }}
         >
           {backContent}

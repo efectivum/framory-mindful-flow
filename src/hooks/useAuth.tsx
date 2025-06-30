@@ -44,11 +44,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAdminStatus = React.useCallback(async (): Promise<boolean> => {
     if (!user) {
+      console.log('Auth: checkAdminStatus - no user');
       setIsAdmin(false);
       return false;
     }
 
     try {
+      console.log('Auth: Checking admin status for user:', user.email);
       const { data, error } = await supabase.rpc('is_admin', {
         user_id_param: user.id
       });
@@ -59,6 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       const adminStatus = data || false;
+      console.log('Auth: Admin status result:', adminStatus);
       setIsAdmin(adminStatus);
       return adminStatus;
     } catch (error) {
@@ -70,6 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkSubscriptionStatus = React.useCallback(async () => {
     if (!user?.email) {
+      console.log('Auth: No user email, setting to free tier');
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
@@ -78,6 +82,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
+      console.log('Auth: Checking subscription status for:', user.email);
+      
+      // Check database first for subscription info
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
         .select('*')
@@ -94,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (!subscriberData) {
+        console.log('Auth: No subscription record found - user is free tier');
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -101,8 +109,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // Check for beta users FIRST
+      console.log('Auth: Subscriber data found:', {
+        tier: subscriberData.subscription_tier,
+        subscribed: subscriberData.subscribed,
+        endDate: subscriberData.subscription_end
+      });
+
+      // Check for beta users FIRST - beta users get access regardless of subscription status
       if (subscriberData.subscription_tier === 'beta') {
+        console.log('Auth: Beta user detected, granting beta access');
         setSubscriptionTier('beta');
         setIsBeta(true);
         setIsPremium(false);
@@ -116,11 +131,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const isSubscriptionActive = subscriberData.subscribed && (!endDate || endDate > now);
       
       if (isSubscriptionActive && subscriberData.subscription_tier === 'premium') {
+        console.log('Auth: Premium subscription active');
         setSubscriptionTier('premium');
         setIsPremium(true);
         setIsBeta(false);
         setSubscriptionEnd(subscriberData.subscription_end);
       } else {
+        console.log('Auth: No active subscription, setting to free tier');
         setSubscriptionTier('free');
         setIsPremium(false);
         setIsBeta(false);
@@ -129,6 +146,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
     } catch (error) {
       console.error('Auth: Error checking subscription:', error);
+      // Default to free on any error
       setSubscriptionTier('free');
       setIsPremium(false);
       setIsBeta(false);
@@ -140,9 +158,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user?.email) return;
     
     try {
+      console.log('Auth: Refreshing subscription status');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error) throw error;
       
+      // Refresh subscription status from database after Stripe sync
       await checkSubscriptionStatus();
     } catch (error) {
       console.error('Auth: Error refreshing subscription:', error);
@@ -184,38 +204,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user]);
 
-  // Single initialization effect - FIXED to prevent loops
   React.useEffect(() => {
-    console.log('Auth: Initializing auth state listener');
+    console.log('Auth: Setting up auth state listener');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth: State change event:', event);
+        console.log('Auth: State change event:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Handle user session changes
+        // Check admin status and subscription when user signs in
         if (session?.user) {
-          // Use setTimeout to prevent blocking
-          setTimeout(async () => {
-            try {
-              const adminStatus = await checkAdminStatus();
-              
-              if (adminStatus) {
-                setSubscriptionTier('premium');
-                setIsPremium(true);
-                setIsBeta(false);
-                setSubscriptionEnd(null);
-              } else {
-                await checkSubscriptionStatus();
-              }
-            } catch (error) {
-              console.error('Auth: Error in subscription check:', error);
-            }
-          }, 0);
+          console.log('Auth: User session found, checking admin status');
+          const adminStatus = await checkAdminStatus();
+          
+          // If admin, grant premium access immediately without DB check
+          if (adminStatus) {
+            console.log('Auth: Admin user detected, granting premium access');
+            setSubscriptionTier('premium');
+            setIsPremium(true);
+            setIsBeta(false);
+            setSubscriptionEnd(null);
+          } else {
+            console.log('Auth: Non-admin user, checking subscription');
+            // Check subscription status for non-admin users
+            setTimeout(() => {
+              checkSubscriptionStatus();
+            }, 0);
+          }
         } else {
+          console.log('Auth: User logged out, resetting subscription state');
           setIsAdmin(false);
           setSubscriptionTier('free');
           setIsPremium(false);
@@ -240,35 +260,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Auth: Existing session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
       if (session?.user) {
-        setTimeout(async () => {
-          try {
-            const adminStatus = await checkAdminStatus();
-            if (adminStatus) {
-              setSubscriptionTier('premium');
-              setIsPremium(true);
-              setIsBeta(false);
-              setSubscriptionEnd(null);
-            } else {
-              await checkSubscriptionStatus();
-            }
-          } catch (error) {
-            console.error('Auth: Error in initial subscription check:', error);
+        checkAdminStatus().then(adminStatus => {
+          console.log('Auth: Existing session admin check:', adminStatus);
+          if (adminStatus) {
+            console.log('Auth: Existing admin session detected');
+            setSubscriptionTier('premium');
+            setIsPremium(true);
+            setIsBeta(false);
+            setSubscriptionEnd(null);
+          } else {
+            checkSubscriptionStatus();
           }
-        }, 0);
+        });
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []); // Empty dependency array to prevent re-initialization
+    return () => subscription.unsubscribe();
+  }, [checkAdminStatus, checkSubscriptionStatus]);
 
   const signUp = async (email: string, password: string, userData: UserData = {}) => {
+    // Automatically detect timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const redirectUrl = `${window.location.origin}/auth/confirm`;
     
@@ -284,6 +301,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
+    // Send welcome email with better template
     if (data.user && !error) {
       try {
         await supabase.functions.invoke('send-auth-email', {
@@ -296,6 +314,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
+        // Don't fail the signup process if email fails
       }
     }
     
@@ -322,6 +341,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       redirectTo: redirectUrl
     });
     
+    // Send password reset email with better template
     if (!error) {
       try {
         await supabase.functions.invoke('send-auth-email', {
@@ -333,6 +353,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       } catch (emailError) {
         console.error('Failed to send password reset email:', emailError);
+        // Don't fail the process if email fails
       }
     }
     
@@ -354,8 +375,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOutFromAllDevices = async () => {
+    // Sign out from all devices by refreshing the session
     const { error } = await supabase.auth.admin.signOut(user?.id || '', 'global');
     if (error) {
+      // Fallback: just sign out from current device
       await supabase.auth.signOut();
     }
   };

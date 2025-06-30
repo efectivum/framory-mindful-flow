@@ -1,8 +1,8 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ReactNode } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -24,7 +24,7 @@ export class ChatErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: any) {
     console.error('Chat Error Boundary caught an error:', error, errorInfo);
   }
 
@@ -39,28 +39,26 @@ export class ChatErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Card className="w-full max-w-md mx-auto bg-gray-800/50 border-gray-700">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-blue-400" />
-            </div>
-            <CardTitle className="text-white">Chat temporarily unavailable</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-300 text-center text-sm">
-              The chat system encountered an error. You can try reloading or continue using other features.
-            </p>
-            <div className="flex gap-2">
+        <div className="flex items-center justify-center h-full p-8">
+          <Card className="max-w-md w-full bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="text-white font-semibold mb-2">Something went wrong</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                The chat interface encountered an error. This might be due to a connection issue.
+              </p>
               <Button 
                 onClick={this.handleReset}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try Again
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       );
     }
 

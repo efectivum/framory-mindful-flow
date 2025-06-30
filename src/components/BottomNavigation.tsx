@@ -38,19 +38,11 @@ export const BottomNavigation: React.FC = () => {
     }
   }, [navigate]);
 
-  // Debug logging
-  console.log('BottomNavigation rendering:', {
-    currentPath: location.pathname,
-    currentPageId,
-    mainNavItems: mainNavItems.length,
-    isVisible: true
-  });
-
   return (
-    <div className="bottom-navigation-fixed md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Glass morphism background with subtle gradient */}
-      <div className="bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/40 shadow-2xl">
-        <div className="flex items-center justify-around px-2 py-2" style={{ minHeight: '72px' }}>
+      <div className="bg-gray-900/90 backdrop-blur-xl border-t border-gray-700/30 shadow-2xl">
+        <div className="flex items-center justify-around px-1 py-1">
           {mainNavItems.map((item) => {
             const isActive = currentPageId === item.id;
             const Icon = item.icon;
@@ -60,13 +52,13 @@ export const BottomNavigation: React.FC = () => {
                 key={item.id}
                 onClick={() => handleNavigation(item.path, item.title)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-300 ease-out min-w-14 min-h-16 flex-1 max-w-20",
+                  "flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ease-out min-w-12 min-h-14 flex-1 max-w-16",
                   "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-gray-900",
-                  "active:scale-95 transform-gpu touch-manipulation",
+                  "active:scale-95 transform-gpu",
                   "relative overflow-hidden",
                   isActive 
-                    ? "text-blue-400 bg-blue-500/15 shadow-lg shadow-blue-500/25 scale-105" 
-                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 active:bg-gray-700/50"
+                    ? "text-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20" 
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 active:bg-gray-700/40"
                 )}
                 style={{
                   WebkitTapHighlightColor: 'transparent',
@@ -78,14 +70,14 @@ export const BottomNavigation: React.FC = () => {
               >
                 {/* Active indicator glow */}
                 {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent rounded-2xl animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent rounded-xl" />
                 )}
                 
                 <Icon 
                   className={cn(
-                    "w-5 h-5 mb-1 transition-all duration-300 flex-shrink-0",
+                    "w-4 h-4 mb-1 transition-all duration-300 flex-shrink-0",
                     isActive 
-                      ? "stroke-2 drop-shadow-sm scale-110" 
+                      ? "stroke-2 drop-shadow-sm" 
                       : "stroke-[1.5] group-hover:stroke-2"
                   )} 
                 />
@@ -93,7 +85,7 @@ export const BottomNavigation: React.FC = () => {
                   className={cn(
                     "text-xs font-medium leading-tight transition-all duration-300 text-center",
                     isActive 
-                      ? "text-blue-300 drop-shadow-sm font-semibold" 
+                      ? "text-blue-300 drop-shadow-sm" 
                       : "text-gray-500"
                   )}
                 >
@@ -105,7 +97,7 @@ export const BottomNavigation: React.FC = () => {
         </div>
         
         {/* Bottom safe area padding */}
-        <div className="h-safe-area-inset-bottom bg-gray-900/80" />
+        <div className="h-safe-area-inset-bottom bg-gray-900/50" />
       </div>
     </div>
   );
