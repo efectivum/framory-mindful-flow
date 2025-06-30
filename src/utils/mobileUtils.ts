@@ -98,9 +98,10 @@ export const optimizeForMobile = {
    */
   makeTouchFriendly: (element: HTMLElement) => {
     element.style.touchAction = 'manipulation';
-    element.style.webkitTapHighlightColor = 'transparent';
+    // Use setProperty for webkit-specific properties to avoid TypeScript errors
+    element.style.setProperty('-webkit-tap-highlight-color', 'transparent');
     element.style.userSelect = 'none';
-    element.style.webkitUserSelect = 'none';
+    element.style.setProperty('-webkit-user-select', 'none');
     
     // Ensure minimum touch target size
     const rect = element.getBoundingClientRect();
