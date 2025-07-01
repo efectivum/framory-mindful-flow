@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,6 +10,7 @@ import { NetworkStatusIndicator } from "@/components/NetworkStatusIndicator";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { AppRoutes } from "@/components/AppRoutes";
 import { OnboardingManager } from "@/components/OnboardingManager";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { useErrorTracking } from "@/hooks/useErrorTracking";
 
 const queryClient = new QueryClient({
@@ -66,6 +66,7 @@ const App = () => {
               <PWAInstallBanner />
               <OnboardingManager />
               <BrowserRouter>
+                <ScrollToTop />
                 <AppRoutes />
               </BrowserRouter>
             </TooltipProvider>
