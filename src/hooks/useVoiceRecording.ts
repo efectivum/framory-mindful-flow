@@ -149,7 +149,7 @@ export const useVoiceRecording = ({
     const processingStartTime = Date.now();
     
     try {
-      // Optimized blob creation - combine chunks more efficiently
+      // Create audio blob
       const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
       console.log('Audio blob created, size:', audioBlob.size, 'bytes');
       
@@ -157,7 +157,7 @@ export const useVoiceRecording = ({
         throw new Error('Audio blob is empty');
       }
       
-      // Use optimized base64 conversion
+      // Convert to base64
       const base64Audio = await optimizedBlobToBase64(audioBlob);
       console.log('Base64 conversion took:', Date.now() - processingStartTime, 'ms');
       
@@ -170,7 +170,7 @@ export const useVoiceRecording = ({
       console.log('Base64 data length:', base64Data.length);
       const apiStartTime = Date.now();
       
-      // Add network connectivity check
+      // Check network connectivity
       if (!navigator.onLine) {
         throw new Error('No internet connection. Please check your network.');
       }
@@ -201,7 +201,7 @@ export const useVoiceRecording = ({
       if (data?.text && data.text.trim()) {
         console.log('Transcription successful:', data.text);
         onTranscriptionComplete(data.text);
-        onSuccess(); // Only call onSuccess after actual transcription success
+        onSuccess();
         setStatus('idle');
       } else {
         console.warn('Empty transcription received');
@@ -212,7 +212,7 @@ export const useVoiceRecording = ({
       console.error('Transcription error details:', error);
       setStatus('error');
       
-      // Provide more specific error messages
+      // Provide specific error messages
       let userFriendlyMessage = 'Transcription failed. ';
       
       if (error.message?.includes('network') || error.message?.includes('connection')) {
@@ -245,10 +245,10 @@ export const useVoiceRecording = ({
       // Reset chunks array
       chunksRef.current = [];
       
-      // Create MediaRecorder with optimized settings
+      // Create MediaRecorder
       const mediaRecorder = new MediaRecorder(streamRef.current, {
         mimeType: 'audio/webm',
-        audioBitsPerSecond: 128000 // Optimize for faster processing
+        audioBitsPerSecond: 128000
       });
       mediaRecorderRef.current = mediaRecorder;
       
@@ -271,8 +271,8 @@ export const useVoiceRecording = ({
         setErrorMessage('Recording error occurred. Please try again.');
       };
       
-      // Start recording with larger time slices for better performance
-      mediaRecorder.start(500); // Collect data every 500ms instead of 100ms
+      // Start recording
+      mediaRecorder.start(500);
       setIsRecording(true);
       setStatus('recording');
       setRecordingTime(0);

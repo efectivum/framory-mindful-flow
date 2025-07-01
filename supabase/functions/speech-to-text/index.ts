@@ -16,46 +16,21 @@ function processBase64Optimized(base64String: string): Uint8Array {
   }
   
   try {
-    // Process in smaller, more efficient chunks
-    const chunkSize = 16384; // Reduced chunk size for faster processing
-    const chunks: Uint8Array[] = [];
-    let position = 0;
+    // Use built-in atob for better performance and memory efficiency
+    const binaryString = atob(base64String);
+    const bytes = new Uint8Array(binaryString.length);
     
-    while (position < base64String.length) {
-      const chunk = base64String.slice(position, position + chunkSize);
-      
-      try {
-        const binaryChunk = atob(chunk);
-        const bytes = new Uint8Array(binaryChunk.length);
-        
-        for (let i = 0; i < binaryChunk.length; i++) {
-          bytes[i] = binaryChunk.charCodeAt(i);
-        }
-        
-        chunks.push(bytes);
-        position += chunkSize;
-      } catch (error) {
-        console.error('Error processing base64 chunk at position', position, ':', error);
-        throw new Error('Invalid base64 data');
-      }
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
     }
-
-    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-    console.log('Total audio bytes:', totalLength);
     
-    if (totalLength === 0) {
+    console.log('Total audio bytes:', bytes.length);
+    
+    if (bytes.length === 0) {
       throw new Error('No audio data after processing');
     }
     
-    const result = new Uint8Array(totalLength);
-    let offset = 0;
-
-    for (const chunk of chunks) {
-      result.set(chunk, offset);
-      offset += chunk.length;
-    }
-
-    return result;
+    return bytes;
   } catch (error) {
     console.error('Base64 processing failed:', error);
     throw new Error(`Failed to process audio data: ${error.message}`);
@@ -102,7 +77,7 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, processing audio...');
 
-    // Optimized audio processing
+    // Process audio data
     let binaryAudio: Uint8Array;
     try {
       binaryAudio = processBase64Optimized(audio);
@@ -113,7 +88,7 @@ serve(async (req) => {
     
     console.log('Audio processing took:', Date.now() - startTime, 'ms');
     
-    // Prepare form data with optimized blob creation
+    // Prepare form data
     const formData = new FormData()
     const blob = new Blob([binaryAudio], { type: 'audio/webm' })
     formData.append('file', blob, 'audio.webm')
