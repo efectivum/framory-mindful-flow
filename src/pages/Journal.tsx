@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -141,24 +142,22 @@ const Journal = () => {
       <div className="app-content-flow">
         {/* Enhanced Header Actions */}
         <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex gap-3 mb-6">
             <Button 
               onClick={() => setShowCreateDialog(true)}
-              className="btn-organic flex-1 h-12 glow-primary"
+              className="btn-organic flex-1 h-10 glow-primary"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               New Entry
             </Button>
             
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowVoiceModal(true)}
-                className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-12 px-4"
-              >
-                <Mic className="w-5 h-5" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowVoiceModal(true)}
+              className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-10 px-4"
+            >
+              <Mic className="w-4 h-4" />
+            </Button>
           </div>
         </ButtonErrorBoundary>
 
