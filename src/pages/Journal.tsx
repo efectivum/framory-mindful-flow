@@ -23,6 +23,7 @@ const Journal = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [transcribedText, setTranscribedText] = useState('');
   const { greeting } = useTimeOfDay();
 
   const { entries, isLoading } = useJournalEntries();
@@ -48,8 +49,17 @@ const Journal = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const handleVoiceComplete = (transcript: string) => {
+    setTranscribedText(transcript);
     setShowVoiceModal(false);
     setShowCreateDialog(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setShowCreateDialog(open);
+    if (!open) {
+      // Clear transcribed text when dialog closes
+      setTranscribedText('');
+    }
   };
 
   const handleSmartSearch = (query: string, searchFilters: any[]) => {
@@ -111,7 +121,8 @@ const Journal = () => {
 
           <CreateJournalDialog 
             open={showCreateDialog}
-            onOpenChange={setShowCreateDialog}
+            onOpenChange={handleDialogClose}
+            initialContent={transcribedText}
           />
           
           <VoiceRecordingModal
@@ -226,7 +237,8 @@ const Journal = () => {
         {/* Enhanced Modals */}
         <CreateJournalDialog 
           open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
+          onOpenChange={handleDialogClose}
+          initialContent={transcribedText}
         />
         
         <JournalSearchModal

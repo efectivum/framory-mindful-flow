@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,9 +12,10 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 interface CreateJournalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialContent?: string;
 }
 
-export const CreateJournalDialog = ({ open, onOpenChange }: CreateJournalDialogProps) => {
+export const CreateJournalDialog = ({ open, onOpenChange, initialContent = '' }: CreateJournalDialogProps) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [moodBefore, setMoodBefore] = useState<number | undefined>();
@@ -23,6 +23,13 @@ export const CreateJournalDialog = ({ open, onOpenChange }: CreateJournalDialogP
   const [tags, setTags] = useState('');
 
   const { createEntry, isCreating } = useJournalEntries();
+
+  // Set initial content when dialog opens or initialContent changes
+  useEffect(() => {
+    if (open && initialContent) {
+      setContent(initialContent);
+    }
+  }, [open, initialContent]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
