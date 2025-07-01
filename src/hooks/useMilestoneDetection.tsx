@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
@@ -459,7 +460,7 @@ export const useMilestoneDetection = () => {
     console.log('Recently achieved milestones (filtered):', recent.map(m => ({ 
       id: m.id, 
       achievedAt: m.achievedAt,
-      minutesAgo: milestone.achievedAt ? Math.round((Date.now() - milestone.achievedAt.getTime()) / (1000 * 60)) : 'unknown'
+      minutesAgo: m.achievedAt ? Math.round((Date.now() - m.achievedAt.getTime()) / (1000 * 60)) : 'unknown'
     })));
     return recent;
   }, [milestones]);
