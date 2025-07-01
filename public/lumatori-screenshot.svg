@@ -1,0 +1,16 @@
+
+<svg width="390" height="844" viewBox="0 0 390 844" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="390" height="844" fill="#111827"/>
+  <rect x="20" y="100" width="350" height="60" rx="12" fill="url(#cardGradient)" opacity="0.8"/>
+  <text x="35" y="125" fill="white" font-family="Arial" font-size="14" opacity="0.9">Good morning! Set your intention for today</text>
+  <text x="35" y="145" fill="#A78BFA" font-family="Arial" font-size="12">Your personal sanctuary for growth</text>
+  <rect x="20" y="180" width="350" height="120" rx="12" fill="url(#cardGradient)" opacity="0.6"/>
+  <circle cx="60" cy="220" r="16" fill="#8B5CF6"/>
+  <text x="85" y="225" fill="white" font-family="Arial" font-size="12">Journal • Habits • Insights</text>
+  <defs>
+    <linearGradient id="cardGradient" x1="0" y1="0" x2="350" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6" opacity="0.3"/>
+      <stop offset="1" stop-color="#3B82F6" opacity="0.3"/>
+    </linearGradient>
+  </defs>
+</svg>
