@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, TrendingUp, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getEmotionColor, getEmotionAnalysis } from '@/utils/emotionUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface EmotionAnalysisViewProps {
   emotion: string;
@@ -21,6 +22,25 @@ export const EmotionAnalysisView = ({
   onAskQuestions 
 }: EmotionAnalysisViewProps) => {
   const analysis = getEmotionAnalysis(emotion, emotions);
+  const navigate = useNavigate();
+
+  const handleViewEntries = () => {
+    if (onViewEntries) {
+      onViewEntries(emotion);
+    } else {
+      // Default behavior: navigate to journal with emotion filter
+      navigate(`/journal?emotion=${encodeURIComponent(emotion)}`);
+    }
+  };
+
+  const handleAskQuestions = () => {
+    if (onAskQuestions) {
+      onAskQuestions(emotion);
+    } else {
+      // Default behavior: navigate to coach with emotion context
+      navigate(`/coach?topic=${encodeURIComponent(`Help me understand my ${emotion} feelings`)}`);
+    }
+  };
 
   return (
     <motion.div
@@ -86,13 +106,13 @@ export const EmotionAnalysisView = ({
         <Button 
           variant="outline" 
           className="min-h-[44px] bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50 touch-manipulation text-sm"
-          onClick={() => onViewEntries?.(emotion)}
+          onClick={handleViewEntries}
         >
           Show relevant journal items
         </Button>
         <Button 
           className="min-h-[44px] bg-indigo-600 hover:bg-indigo-700 touch-manipulation text-sm"
-          onClick={() => onAskQuestions?.(emotion)}
+          onClick={handleAskQuestions}
         >
           Ask questions
         </Button>
