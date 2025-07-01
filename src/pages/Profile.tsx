@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { User, Shield, Bell, Palette, Download } from 'lucide-react';
+import { User, Shield, Bell, Palette, Download, Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountInformation } from '@/components/AccountInformation';
 import { PrivacySettings } from '@/components/PrivacySettings';
 import { EmailPreferences } from '@/components/EmailPreferences';
 import { AdditionalSettings } from '@/components/AdditionalSettings';
+import { AchievementsSection } from '@/components/AchievementsSection';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { useAuth } from '@/hooks/useAuth';
@@ -96,6 +97,11 @@ const Profile = () => {
               Manage your account settings and customize your Lumatori experience
             </p>
           </div>
+        </div>
+
+        {/* Achievements Section */}
+        <div className="mb-8">
+          <AchievementsSection />
         </div>
 
         {/* Enhanced Settings Grid */}
