@@ -9,6 +9,7 @@ import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
 import { BehavioralInsights } from '@/components/BehavioralInsights';
 import { MilestoneManager } from '@/components/MilestoneManager';
+import { MilestoneErrorBoundary } from '@/components/MilestoneErrorBoundary';
 import { WelcomeSection } from '@/components/homepage/WelcomeSection';
 import { StatsCardsSection } from '@/components/homepage/StatsCardsSection';
 import { HabitsSection } from '@/components/homepage/HabitsSection';
@@ -66,10 +67,10 @@ const Index = () => {
         <WelcomeSection />
         <StatsCardsSection />
 
-        {/* Milestone Celebration System */}
-        <ButtonErrorBoundary fallbackMessage="Milestone system is not available">
+        {/* Milestone Celebration System with Error Boundary */}
+        <MilestoneErrorBoundary>
           <MilestoneManager />
-        </ButtonErrorBoundary>
+        </MilestoneErrorBoundary>
 
         {/* Behavioral Insights Section */}
         <ButtonErrorBoundary fallbackMessage="Behavioral insights are not available">
