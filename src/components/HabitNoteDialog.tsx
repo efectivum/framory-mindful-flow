@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { MessageSquare, Star } from 'lucide-react';
+import { MoodSelector } from './mood/MoodSelector';
 
 interface HabitNoteDialogProps {
   habitTitle: string;
@@ -50,22 +50,23 @@ export const HabitNoteDialog = ({ habitTitle, onSaveNote, disabled = false }: Ha
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="mood" className="text-gray-300 flex items-center gap-2">
+            <Label htmlFor="mood" className="text-gray-300 flex items-center gap-2 mb-3">
               <Star className="w-4 h-4" />
-              How are you feeling? ({moodRating[0]}/10)
+              How are you feeling?
             </Label>
-            <Slider
-              id="mood"
-              value={moodRating}
-              onValueChange={setMoodRating}
-              max={10}
-              min={1}
-              step={1}
-              className="mt-2"
-            />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>😞 Poor</span>
-              <span>😊 Great</span>
+            <div className="bg-gray-700/50 rounded-xl p-4">
+              <MoodSelector
+                initialMood={Math.round(((moodRating[0] - 1) / 9) * 6) + 1}
+                onMoodSelect={(mood) => {
+                  // Convert 7-point scale back to 10-point scale
+                  const mappedMood = Math.round(((mood - 1) / 6) * 9) + 1;
+                  setMoodRating([mappedMood]);
+                }}
+                title=""
+                subtitle=""
+                showSkip={false}
+                size="sm"
+              />
             </div>
           </div>
           
