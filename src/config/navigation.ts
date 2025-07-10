@@ -1,12 +1,9 @@
 
 import { 
-  Home, 
-  Target, 
+  Calendar, 
   BookOpen, 
   MessageSquare, 
-  TrendingUp, 
-  Library, 
-  User, 
+  MoreHorizontal, 
   Shield 
 } from 'lucide-react';
 
@@ -14,28 +11,16 @@ export interface NavigationItem {
   id: string;
   title: string;
   path: string;
-  icon: typeof Home;
+  icon: typeof Calendar;
   adminOnly?: boolean;
 }
 
 export const navigationItems: NavigationItem[] = [
   {
-    id: 'dashboard',
-    title: 'Home',
+    id: 'today',
+    title: 'Today',
     path: '/',
-    icon: Home,
-  },
-  {
-    id: 'goals',
-    title: 'Goals',
-    path: '/goals',
-    icon: Target,
-  },
-  {
-    id: 'journal',
-    title: 'Journal',
-    path: '/journal',
-    icon: BookOpen,
+    icon: Calendar,
   },
   {
     id: 'coach',
@@ -44,22 +29,16 @@ export const navigationItems: NavigationItem[] = [
     icon: MessageSquare,
   },
   {
-    id: 'insights',
-    title: 'Insights',
-    path: '/insights',
-    icon: TrendingUp,
+    id: 'journal',
+    title: 'Journal',
+    path: '/journal',
+    icon: BookOpen,
   },
   {
-    id: 'resources',
-    title: 'Resources',
-    path: '/resources',
-    icon: Library,
-  },
-  {
-    id: 'profile',
-    title: 'Profile',
+    id: 'more',
+    title: 'More',
     path: '/profile',
-    icon: User,
+    icon: MoreHorizontal,
   },
   {
     id: 'admin',

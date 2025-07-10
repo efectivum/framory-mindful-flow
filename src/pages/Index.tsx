@@ -4,16 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Calendar, Loader2 } from 'lucide-react';
 import React from 'react';
-import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
-import { DynamicHomepageFeatures } from '@/components/DynamicHomepageFeatures';
-import { BehavioralInsights } from '@/components/BehavioralInsights';
-import { MilestoneManager } from '@/components/MilestoneManager';
-import { MilestoneErrorBoundary } from '@/components/MilestoneErrorBoundary';
-import { WelcomeSection } from '@/components/homepage/WelcomeSection';
-import { StatsCardsSection } from '@/components/homepage/StatsCardsSection';
-import { HabitsSection } from '@/components/homepage/HabitsSection';
-import { MainActionsSection } from '@/components/homepage/MainActionsSection';
+import { TodayDashboard } from '@/components/today/TodayDashboard';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -45,46 +36,21 @@ const Index = () => {
               Your personal sanctuary for mindful growth and reflection
             </p>
           </div>
-          <ButtonErrorBoundary fallbackMessage="Authentication not available">
-            <Button 
-              size="lg" 
-              className="btn-organic w-full h-14 text-lg font-medium shadow-2xl glow-primary" 
-              asChild
-            >
-              <Link to="/auth">
-                Begin Your Journey
-              </Link>
-            </Button>
-          </ButtonErrorBoundary>
+          <Button 
+            size="lg" 
+            className="btn-organic w-full h-14 text-lg font-medium shadow-2xl glow-primary" 
+            asChild
+          >
+            <Link to="/auth">
+              Begin Your Journey
+            </Link>
+          </Button>
         </div>
       </div>
     );
   }
 
-  return (
-    <ResponsiveLayout showHeader={false}>
-      <div className="app-content-flow">
-        <WelcomeSection />
-        <StatsCardsSection />
-
-        {/* Milestone Celebration System with Error Boundary */}
-        <MilestoneErrorBoundary>
-          <MilestoneManager />
-        </MilestoneErrorBoundary>
-
-        {/* Behavioral Insights Section */}
-        <ButtonErrorBoundary fallbackMessage="Behavioral insights are not available">
-          <BehavioralInsights />
-        </ButtonErrorBoundary>
-
-        {/* Dynamic Homepage Features - Time-aware content */}
-        <DynamicHomepageFeatures />
-
-        <HabitsSection />
-        <MainActionsSection />
-      </div>
-    </ResponsiveLayout>
-  );
+  return <TodayDashboard />;
 };
 
 export default Index;

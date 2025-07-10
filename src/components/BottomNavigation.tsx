@@ -16,7 +16,7 @@ export const BottomNavigation: React.FC = () => {
   const getCurrentPageId = () => {
     const currentPath = location.pathname;
     const currentItem = mainNavItems.find(item => item.path === currentPath);
-    return currentItem?.id || 'dashboard';
+    return currentItem?.id || 'today';
   };
 
   const currentPageId = getCurrentPageId();
