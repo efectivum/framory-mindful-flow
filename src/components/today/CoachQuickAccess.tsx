@@ -36,31 +36,28 @@ export const CoachQuickAccess: React.FC = () => {
   };
 
   return (
-    <Card className="app-card-organic animate-fade-in">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex-shrink-0 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+    <Card className="app-card-organic animate-fade-in border-purple-500/20 mb-6">
+      <CardContent className="p-8 text-center">
+        <div className="mb-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 mx-auto mb-4 flex items-center justify-center animate-breathe shadow-xl shadow-purple-500/25">
+            <Sparkles className="w-10 h-10 text-white" />
           </div>
-          
-          <div className="flex-1">
-            <h3 className="text-white font-semibold mb-2">
-              {getCoachTitle()}
-            </h3>
-            <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-              {getCoachPrompt()}
-            </p>
-            
-            <Button
-              onClick={() => navigate('/coach')}
-              className="btn-organic glow-primary"
-              size="sm"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Start conversation
-            </Button>
-          </div>
+          <h3 className="text-white font-semibold text-xl mb-2">
+            {getCoachTitle()}
+          </h3>
+          <p className="text-gray-400 leading-relaxed">
+            {getCoachPrompt()}
+          </p>
         </div>
+        
+        <Button
+          onClick={() => navigate('/coach')}
+          className="btn-organic glow-primary w-full max-w-sm h-14 text-lg font-medium"
+          size="lg"
+        >
+          <MessageSquare className="w-5 h-5 mr-2" />
+          Start conversation
+        </Button>
       </CardContent>
     </Card>
   );
