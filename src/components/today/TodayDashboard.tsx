@@ -17,9 +17,9 @@ export const TodayDashboard: React.FC = () => {
   return (
     <ResponsiveLayout showHeader={false}>
       <ErrorBoundary>
-        <div className="app-content-flow max-w-2xl mx-auto">
+        <div className="space-y-6">
           {/* Simple Welcome */}
-          <div className="text-center pt-6 pb-8">
+          <div className="text-center">
             <h1 className="text-hero animate-fade-in">{greeting}</h1>
           </div>
 
