@@ -56,8 +56,8 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
             </header>
           )}
 
-          {/* Enhanced Content with organic mobile spacing */}
-          <div className="flex-1 app-mobile-page md:p-8 pb-24 md:pb-8">
+          {/* Content */}
+          <div className="flex-1 md:p-8">
             <div className="max-w-6xl mx-auto">
               {children}
             </div>

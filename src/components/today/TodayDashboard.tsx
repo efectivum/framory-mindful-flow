@@ -19,36 +19,32 @@ export const TodayDashboard: React.FC = () => {
 
   return (
     <ResponsiveLayout showHeader={false}>
-      <div className="app-content-flow max-w-2xl mx-auto">
-        {/* Gentle Welcome */}
-        <div className="text-center space-y-4 pt-6 pb-8">
-          <h1 className="text-hero animate-fade-in">{greeting}</h1>
-          <p className="text-subhero animate-fade-in">
+      <div className="max-w-2xl mx-auto space-y-6 p-4 pb-24 md:pb-8">
+        {/* Welcome */}
+        <div className="text-center space-y-3 pt-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-white animate-fade-in">{greeting}</h1>
+          <p className="text-gray-400 animate-fade-in">
             Let's take a moment to check in with yourself
           </p>
         </div>
 
-        {/* Milestone Celebration */}
+        {/* Components */}
         <MilestoneErrorBoundary>
           <MilestoneManager />
         </MilestoneErrorBoundary>
 
-        {/* Daily Mood Check - Primary Action */}
         <ButtonErrorBoundary fallbackMessage="Mood check is not available">
           <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
         </ButtonErrorBoundary>
 
-        {/* Today's Habits - Simple Focus */}
         <ButtonErrorBoundary fallbackMessage="Habits are not available">
           <TodayHabits />
         </ButtonErrorBoundary>
 
-        {/* Daily Progress Ring */}
         <ButtonErrorBoundary fallbackMessage="Progress tracking is not available">
           <DailyProgress />
         </ButtonErrorBoundary>
 
-        {/* Coach Quick Access - Always Available */}
         <ButtonErrorBoundary fallbackMessage="AI Coach is not available">
           <CoachQuickAccess />
         </ButtonErrorBoundary>
