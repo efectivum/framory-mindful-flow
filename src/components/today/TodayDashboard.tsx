@@ -5,7 +5,10 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { DailyMoodCheck } from './DailyMoodCheck';
 import { TodayHabits } from './TodayHabits';
 import { CoachQuickAccess } from './CoachQuickAccess';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { DailyProgress } from './DailyProgress';
+import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
+import { MilestoneManager } from '@/components/MilestoneManager';
+import { MilestoneErrorBoundary } from '@/components/MilestoneErrorBoundary';
 
 export const TodayDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -16,23 +19,40 @@ export const TodayDashboard: React.FC = () => {
 
   return (
     <ResponsiveLayout showHeader={false}>
-      <ErrorBoundary>
-        <div className="space-y-6">
-          {/* Simple Welcome */}
-          <div className="text-center">
-            <h1 className="text-hero animate-fade-in">{greeting}</h1>
-          </div>
-
-          {/* Daily Mood Check - Primary Action */}
-          <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
-
-          {/* Today's Habits - Simple Focus */}
-          <TodayHabits />
-
-          {/* Coach Quick Access - Always Available */}
-          <CoachQuickAccess />
+      <div className="app-content-flow max-w-2xl mx-auto">
+        {/* Gentle Welcome */}
+        <div className="text-center space-y-4 pt-6 pb-8">
+          <h1 className="text-hero animate-fade-in">{greeting}</h1>
+          <p className="text-subhero animate-fade-in">
+            Let's take a moment to check in with yourself
+          </p>
         </div>
-      </ErrorBoundary>
+
+        {/* Milestone Celebration */}
+        <MilestoneErrorBoundary>
+          <MilestoneManager />
+        </MilestoneErrorBoundary>
+
+        {/* Daily Mood Check - Primary Action */}
+        <ButtonErrorBoundary fallbackMessage="Mood check is not available">
+          <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
+        </ButtonErrorBoundary>
+
+        {/* Today's Habits - Simple Focus */}
+        <ButtonErrorBoundary fallbackMessage="Habits are not available">
+          <TodayHabits />
+        </ButtonErrorBoundary>
+
+        {/* Daily Progress Ring */}
+        <ButtonErrorBoundary fallbackMessage="Progress tracking is not available">
+          <DailyProgress />
+        </ButtonErrorBoundary>
+
+        {/* Coach Quick Access - Always Available */}
+        <ButtonErrorBoundary fallbackMessage="AI Coach is not available">
+          <CoachQuickAccess />
+        </ButtonErrorBoundary>
+      </div>
     </ResponsiveLayout>
   );
 };
