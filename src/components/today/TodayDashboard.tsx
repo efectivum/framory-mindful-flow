@@ -5,10 +5,7 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { DailyMoodCheck } from './DailyMoodCheck';
 import { TodayHabits } from './TodayHabits';
 import { CoachQuickAccess } from './CoachQuickAccess';
-import { DailyProgress } from './DailyProgress';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
-import { MilestoneManager } from '@/components/MilestoneManager';
-import { MilestoneErrorBoundary } from '@/components/MilestoneErrorBoundary';
 
 export const TodayDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -29,20 +26,12 @@ export const TodayDashboard: React.FC = () => {
         </div>
 
         {/* Components */}
-        <MilestoneErrorBoundary>
-          <MilestoneManager />
-        </MilestoneErrorBoundary>
-
         <ButtonErrorBoundary fallbackMessage="Mood check is not available">
           <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
         </ButtonErrorBoundary>
 
         <ButtonErrorBoundary fallbackMessage="Habits are not available">
           <TodayHabits />
-        </ButtonErrorBoundary>
-
-        <ButtonErrorBoundary fallbackMessage="Progress tracking is not available">
-          <DailyProgress />
         </ButtonErrorBoundary>
 
         <ButtonErrorBoundary fallbackMessage="AI Coach is not available">
