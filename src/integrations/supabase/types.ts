@@ -1924,9 +1924,37 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      safe_pending_signups: {
+        Row: {
+          completed: boolean | null
+          expires_at: string | null
+          id: string | null
+          token: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          expires_at?: string | null
+          id?: string | null
+          token?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          expires_at?: string | null
+          id?: string | null
+          token?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      audit_subscription_access: {
+        Args: {
+          access_type?: string
+          accessed_email: string
+          accessed_user_id: string
+        }
+        Returns: undefined
+      }
       check_achievements: {
         Args: { user_id_param: string }
         Returns: undefined
