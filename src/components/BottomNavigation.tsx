@@ -97,7 +97,7 @@ export const BottomNavigation: React.FC = () => {
         </div>
         
         {/* Bottom safe area padding */}
-        <div className="h-safe-area-inset-bottom bg-gray-900/50" />
+        <div className="h-4 bg-gray-900/50" />
       </div>
     </div>
   );
