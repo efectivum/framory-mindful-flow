@@ -1,6 +1,10 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8'
 import { corsHeaders } from '../_shared/cors.ts'
+
+// Rate limiting configuration
+const RATE_LIMIT_REQUESTS = 3; // Maximum requests per window
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+const MAX_EXPORT_SIZE = 100 * 1024 * 1024; // 100MB limit
 
 interface Database {
   public: {
@@ -11,6 +15,7 @@ interface Database {
       user_preferences: any
       profiles: any
       data_exports: any
+      rate_limits: any
     }
   }
 }
@@ -31,15 +36,88 @@ Deno.serve(async (req) => {
     
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     if (authError || !user) {
+      console.error('Export: Authentication failed:', authError)
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    const { export_type = 'full', format = 'json' } = await req.json()
+    // Parse and validate request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.error('Export: Invalid JSON in request body:', error);
+      return new Response(JSON.stringify({ error: 'Invalid request format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    console.log(`Starting data export for user ${user.id}, type: ${export_type}, format: ${format}`)
+    const { export_type = 'full', format = 'json' } = body;
+
+    // Validate input parameters
+    if (!['full', 'journal_only', 'habits_only'].includes(export_type)) {
+      return new Response(JSON.stringify({ error: 'Invalid export type' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!['json', 'csv'].includes(format)) {
+      return new Response(JSON.stringify({ error: 'Invalid format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Implement rate limiting
+    const currentWindow = new Date();
+    currentWindow.setMinutes(0, 0, 0); // Round to the hour
+
+    try {
+      // Check current rate limit
+      const { data: rateLimitData, error: rateLimitError } = await supabaseClient
+        .from('rate_limits')
+        .select('request_count, window_start')
+        .eq('user_id', user.id)
+        .eq('endpoint', 'export-user-data')
+        .eq('window_start', currentWindow.toISOString())
+        .maybeSingle();
+
+      if (rateLimitError && rateLimitError.code !== 'PGRST116') {
+        console.error('Export: Rate limit check failed:', rateLimitError);
+      }
+
+      if (rateLimitData && rateLimitData.request_count >= RATE_LIMIT_REQUESTS) {
+        return new Response(JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          retry_after: RATE_LIMIT_WINDOW / 1000
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Update rate limit
+      await supabaseClient
+        .from('rate_limits')
+        .upsert({
+          user_id: user.id,
+          endpoint: 'export-user-data',
+          window_start: currentWindow.toISOString(),
+          request_count: (rateLimitData?.request_count || 0) + 1
+        }, {
+          onConflict: 'user_id,endpoint,window_start'
+        });
+
+    } catch (error) {
+      console.error('Export: Rate limiting error:', error);
+      // Continue with export even if rate limiting fails
+    }
+
+    console.log(`Export: Starting ${export_type} export in ${format} format for user ${user.id}`)
 
     // Create export record
     const { data: exportRecord, error: exportError } = await supabaseClient
@@ -53,7 +131,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (exportError) {
-      console.error('Error creating export record:', exportError)
+      console.error('Export: Error creating export record:', exportError)
       return new Response(JSON.stringify({ error: 'Failed to create export record' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -135,7 +213,21 @@ Deno.serve(async (req) => {
       filename = `lumatori-data-${export_type}-${new Date().toISOString().split('T')[0]}.json`
     }
 
-    console.log(`Export completed for user ${user.id}`)
+    // Check export size limit
+    const exportSize = new TextEncoder().encode(responseData).length;
+    if (exportSize > MAX_EXPORT_SIZE) {
+      console.error(`Export: Export size ${exportSize} exceeds limit ${MAX_EXPORT_SIZE}`);
+      return new Response(JSON.stringify({ 
+        error: 'Export too large. Please contact support for assistance.',
+        size: exportSize,
+        limit: MAX_EXPORT_SIZE
+      }), {
+        status: 413,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`Export: Successfully generated ${export_type} export (${exportSize} bytes) for user ${user.id}`)
 
     return new Response(responseData, {
       status: 200,
@@ -147,8 +239,8 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Export error:', error)
-    return new Response(JSON.stringify({ error: 'Export failed' }), {
+    console.error('Export: Unexpected error:', error)
+    return new Response(JSON.stringify({ error: 'Export failed due to an internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

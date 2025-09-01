@@ -57,11 +57,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Auth: Admin check RPC error:', error);
+        // Log potential privilege escalation attempts
+        if (error.message?.includes('permission denied') || error.message?.includes('access')) {
+          console.warn('Auth: Potential privilege escalation attempt detected for user:', user.email);
+        }
         throw error;
       }
       
       const adminStatus = data || false;
       console.log('Auth: Admin status result:', adminStatus);
+      
+      // Additional validation - ensure admin status is boolean
+      if (typeof adminStatus !== 'boolean') {
+        console.error('Auth: Invalid admin status response type:', typeof adminStatus);
+        setIsAdmin(false);
+        return false;
+      }
+      
       setIsAdmin(adminStatus);
       return adminStatus;
     } catch (error) {
@@ -218,21 +230,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Check admin status and subscription when user signs in
         if (session?.user) {
           console.log('Auth: User session found, checking admin status');
-          const adminStatus = await checkAdminStatus();
           
-          // If admin, grant premium access immediately without DB check
-          if (adminStatus) {
-            console.log('Auth: Admin user detected, granting premium access');
-            setSubscriptionTier('premium');
-            setIsPremium(true);
-            setIsBeta(false);
-            setSubscriptionEnd(null);
-          } else {
-            console.log('Auth: Non-admin user, checking subscription');
-            // Check subscription status for non-admin users
-            setTimeout(() => {
-              checkSubscriptionStatus();
-            }, 0);
+          try {
+            const adminStatus = await checkAdminStatus();
+            
+            // If admin, grant premium access immediately without DB check
+            if (adminStatus) {
+              console.log('Auth: Admin user detected, granting premium access');
+              setSubscriptionTier('premium');
+              setIsPremium(true);
+              setIsBeta(false);
+              setSubscriptionEnd(null);
+            } else {
+              console.log('Auth: Non-admin user, checking subscription');
+              // Check subscription status for non-admin users
+              await checkSubscriptionStatus();
+            }
+          } catch (error) {
+            console.error('Auth: Failed to check admin status during sign in:', error);
+            // Default to checking subscription on admin check failure
+            await checkSubscriptionStatus();
           }
         } else {
           console.log('Auth: User logged out, resetting subscription state');

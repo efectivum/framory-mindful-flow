@@ -24,14 +24,69 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { confirmation_text } = await req.json()
+    // Parse and validate request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.error('Delete account: Invalid JSON in request body:', error);
+      return new Response(JSON.stringify({ error: 'Invalid request format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    // Verify confirmation text
-    if (confirmation_text !== 'DELETE MY ACCOUNT') {
+    const { confirmation_text } = body;
+
+    // Validate confirmation text (must be exact match)
+    if (!confirmation_text || typeof confirmation_text !== 'string') {
+      return new Response(JSON.stringify({ error: 'Confirmation text is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (confirmation_text.trim() !== 'DELETE MY ACCOUNT') {
+      console.warn(`Delete account: Invalid confirmation attempt for user ${user.id}:`, confirmation_text);
       return new Response(JSON.stringify({ error: 'Invalid confirmation text' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    // Rate limiting - prevent multiple deletion attempts
+    const currentWindow = new Date();
+    currentWindow.setMinutes(0, 0, 0);
+
+    try {
+      const { data: rateLimitData } = await supabaseClient
+        .from('rate_limits')
+        .select('request_count')
+        .eq('user_id', user.id)
+        .eq('endpoint', 'delete-account')
+        .eq('window_start', currentWindow.toISOString())
+        .maybeSingle();
+
+      if (rateLimitData && rateLimitData.request_count >= 1) {
+        return new Response(JSON.stringify({ 
+          error: 'Account deletion request already in progress' 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      await supabaseClient
+        .from('rate_limits')
+        .upsert({
+          user_id: user.id,
+          endpoint: 'delete-account',
+          window_start: currentWindow.toISOString(),
+          request_count: 1
+        });
+    } catch (error) {
+      console.error('Delete account: Rate limiting error:', error);
+      // Continue with deletion even if rate limiting fails
     }
 
     console.log(`Starting account deletion for user ${user.id}`)
