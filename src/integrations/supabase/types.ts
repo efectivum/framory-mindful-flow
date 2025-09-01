@@ -1924,27 +1924,7 @@ export type Database = {
       }
     }
     Views: {
-      safe_pending_signups: {
-        Row: {
-          completed: boolean | null
-          expires_at: string | null
-          id: string | null
-          token: string | null
-        }
-        Insert: {
-          completed?: boolean | null
-          expires_at?: string | null
-          id?: string | null
-          token?: string | null
-        }
-        Update: {
-          completed?: boolean | null
-          expires_at?: string | null
-          id?: string | null
-          token?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       audit_subscription_access: {
@@ -1994,6 +1974,10 @@ export type Database = {
       update_routine_streak: {
         Args: { user_routine_id_param: string }
         Returns: undefined
+      }
+      validate_signup_token: {
+        Args: { token_input: string }
+        Returns: boolean
       }
     }
     Enums: {
