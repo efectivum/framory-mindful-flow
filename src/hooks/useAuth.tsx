@@ -57,9 +57,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Auth: Admin check RPC error:', error);
-        // Log potential privilege escalation attempts
+        
+        // Enhanced security logging for privilege escalation attempts
         if (error.message?.includes('permission denied') || error.message?.includes('access')) {
           console.warn('Auth: Potential privilege escalation attempt detected for user:', user.email);
+          
+          // Log security event
+          try {
+            await supabase.rpc('log_security_event', {
+              event_type: 'privilege_escalation_attempt',
+              user_id_param: user.id,
+              details: {
+                error_message: error.message,
+                user_email: user.email,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent
+              }
+            });
+          } catch (logError) {
+            console.error('Auth: Failed to log security event:', logError);
+          }
         }
         throw error;
       }
@@ -70,14 +87,61 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Additional validation - ensure admin status is boolean
       if (typeof adminStatus !== 'boolean') {
         console.error('Auth: Invalid admin status response type:', typeof adminStatus);
+        
+        // Log suspicious response type
+        try {
+          await supabase.rpc('log_security_event', {
+            event_type: 'invalid_admin_response',
+            user_id_param: user.id,
+            details: {
+              response_type: typeof adminStatus,
+              response_value: adminStatus,
+              user_email: user.email
+            }
+          });
+        } catch (logError) {
+          console.error('Auth: Failed to log security event:', logError);
+        }
+        
         setIsAdmin(false);
         return false;
+      }
+      
+      // Log successful admin status checks for audit trail
+      if (adminStatus) {
+        try {
+          await supabase.rpc('log_security_event', {
+            event_type: 'admin_access_granted',
+            user_id_param: user.id,
+            details: {
+              user_email: user.email,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (logError) {
+          console.error('Auth: Failed to log admin access event:', logError);
+        }
       }
       
       setIsAdmin(adminStatus);
       return adminStatus;
     } catch (error) {
       console.error('Auth: Error checking admin status:', error);
+      
+      // Log general admin check failures for monitoring
+      try {
+        await supabase.rpc('log_security_event', {
+          event_type: 'admin_check_failure',
+          user_id_param: user?.id,
+          details: {
+            error: error instanceof Error ? error.message : String(error),
+            user_email: user?.email
+          }
+        });
+      } catch (logError) {
+        console.error('Auth: Failed to log security event:', logError);
+      }
+      
       setIsAdmin(false);
       return false;
     }

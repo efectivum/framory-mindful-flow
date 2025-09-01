@@ -1951,6 +1951,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      log_security_event: {
+        Args: { details?: Json; event_type: string; user_id_param?: string }
+        Returns: undefined
+      }
       reset_weekly_coaching_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
