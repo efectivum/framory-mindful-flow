@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { User, Shield, Bell, Palette, Download, Trophy } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
+import { MobileCard } from '@/components/ui/MobileCard';
 import { AccountInformation } from '@/components/AccountInformation';
 import { PrivacySettings } from '@/components/PrivacySettings';
 import { EmailPreferences } from '@/components/EmailPreferences';
@@ -80,69 +81,82 @@ const Profile = () => {
   );
 
   return (
-    <ResponsiveLayout title="Profile" subtitle="Manage your account and preferences">
-      <NetworkStatusIndicator />
-      <div className="app-content-flow">
-        {/* Enhanced Welcome Section */}
-        <div className="text-center space-y-6 mb-8">
-          <div className="w-24 h-24 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
-               style={{ background: 'var(--app-accent-primary)' }}>
-            <User className="w-12 h-12 text-white" />
-          </div>
-          <div>
-            <h2 className="text-hero mb-2">
-              Welcome, {user?.email?.split('@')[0] || 'User'}
-            </h2>
-            <p className="text-subhero">
-              Manage your account settings and customize your Lumatori experience
-            </p>
-          </div>
-        </div>
+    <MobilePage>
+      <MobileContent padded>
+        <NetworkStatusIndicator />
+        <div className="mobile-flow">
+          {/* Welcome Section */}
+          <MobileSection>
+            <div className="mobile-stack-center">
+              <div className="mobile-touch mobile-haptic" style={{ 
+                width: '96px', 
+                height: '96px', 
+                borderRadius: 'var(--app-radius-lg)', 
+                background: 'var(--app-gradient-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <User className="w-12 h-12 text-white" />
+              </div>
+              <div>
+                <h2 className="mobile-h1">
+                  Welcome, {user?.email?.split('@')[0] || 'User'}
+                </h2>
+                <p className="mobile-body" style={{ color: 'var(--app-text-secondary)' }}>
+                  Manage your account settings and customize your Lumatori experience
+                </p>
+              </div>
+            </div>
+          </MobileSection>
 
-        {/* Achievements Section */}
-        <div className="mb-8">
-          <AchievementsSection />
-        </div>
+          {/* Achievements Section */}
+          <MobileSection>
+            <AchievementsSection />
+          </MobileSection>
 
-        {/* Enhanced Settings Grid */}
-        <ButtonErrorBoundary fallbackMessage="Settings are not available">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-            <FlippableCard
-              frontContent={accountCard.front}
-              backContent={accountCard.back}
-              height="h-[500px]"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-            <FlippableCard
-              frontContent={privacyCard.front}
-              backContent={privacyCard.back}
-              height="h-[500px]"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-            <FlippableCard
-              frontContent={notificationsCard.front}
-              backContent={notificationsCard.back}
-              height="h-[500px]"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-            <FlippableCard
-              frontContent={preferencesCard.front}
-              backContent={preferencesCard.back}
-              height="h-[500px]"
-              className="card-hover"
-              flipOnHover={false}
-              flipOnClick={true}
-            />
-          </div>
-        </ButtonErrorBoundary>
-      </div>
-    </ResponsiveLayout>
+          {/* Settings Grid */}
+          <MobileSection>
+            <ButtonErrorBoundary fallbackMessage="Settings are not available">
+              <div className="mobile-grid-auto-fit">
+                <FlippableCard
+                  frontContent={accountCard.front}
+                  backContent={accountCard.back}
+                  height="h-[500px]"
+                  className="mobile-touch mobile-haptic"
+                  flipOnHover={false}
+                  flipOnClick={true}
+                />
+                <FlippableCard
+                  frontContent={privacyCard.front}
+                  backContent={privacyCard.back}
+                  height="h-[500px]"
+                  className="mobile-touch mobile-haptic"
+                  flipOnHover={false}
+                  flipOnClick={true}
+                />
+                <FlippableCard
+                  frontContent={notificationsCard.front}
+                  backContent={notificationsCard.back}
+                  height="h-[500px]"
+                  className="mobile-touch mobile-haptic"
+                  flipOnHover={false}
+                  flipOnClick={true}
+                />
+                <FlippableCard
+                  frontContent={preferencesCard.front}
+                  backContent={preferencesCard.back}
+                  height="h-[500px]"
+                  className="mobile-touch mobile-haptic"
+                  flipOnHover={false}
+                  flipOnClick={true}
+                />
+              </div>
+            </ButtonErrorBoundary>
+          </MobileSection>
+        </div>
+      </MobileContent>
+    </MobilePage>
   );
 };
 

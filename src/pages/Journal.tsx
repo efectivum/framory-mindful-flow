@@ -2,8 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
+import { MobileCard } from '@/components/ui/MobileCard';
+import { MobileButton } from '@/components/ui/MobileButton';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
 
 import { JournalSearchModal } from '@/components/JournalSearchModal';
@@ -61,56 +62,197 @@ const Journal = () => {
 
   if (entries.length === 0 && !isLoading) {
     return (
-      <ResponsiveLayout title="Journal" subtitle="Your personal sanctuary for reflection">
-        <NetworkStatusIndicator />
-        <div className="app-content-flow">
-          {/* Enhanced Welcome Section */}
-          <div className="text-center space-y-6 pt-6">
-            <div className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-2xl animate-breathe app-card-organic" 
-                 style={{ background: 'var(--app-accent-primary)' }}>
-              <BookOpen className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h1 className="text-hero mb-4">
-                {greeting}
-              </h1>
-              <p className="text-subhero max-w-2xl mx-auto">
-                Welcome to your personal sanctuary. Start your journey of self-discovery by writing your first entry.
-              </p>
-            </div>
-          </div>
-
-          {/* Enhanced Action Buttons */}
-          <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
-            <div className="space-y-4">
-              <Button 
-                onClick={() => navigate('/journal/new')}
-                className="btn-organic w-full h-16 text-lg font-semibold glow-primary"
-              >
-                <Plus className="w-6 h-6 mr-3" />
-                Write Your First Entry
-              </Button>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button
-                  onClick={() => setShowVoiceModal(true)}
-                  className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white h-14 rounded-2xl border border-gray-600/30 hover:border-gray-500/40 shadow-lg hover:shadow-xl transition-all duration-300 card-hover"
-                >
-                  <Mic className="w-5 h-5 mr-2" />
-                  Voice Recording
-                </Button>
-                
-                <Button
-                  onClick={() => window.location.href = '/coach'}
-                  className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white h-14 rounded-2xl border border-gray-600/30 hover:border-gray-500/40 shadow-lg hover:shadow-xl transition-all duration-300 card-hover"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Talk to Coach
-                </Button>
+      <MobilePage>
+        <MobileContent padded>
+          <NetworkStatusIndicator />
+          <div className="mobile-flow">
+            {/* Welcome Section */}
+            <MobileSection>
+              <div className="mobile-stack-center">
+                <div className="mobile-touch mobile-haptic" style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  borderRadius: 'var(--app-radius-lg)', 
+                  background: 'var(--app-gradient-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <BookOpen className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h1 className="mobile-h1">{greeting}</h1>
+                  <p className="mobile-body" style={{ color: 'var(--app-text-secondary)' }}>
+                    Welcome to your personal sanctuary. Start your journey of self-discovery by writing your first entry.
+                  </p>
+                </div>
               </div>
-            </div>
-          </ButtonErrorBoundary>
+            </MobileSection>
 
+            {/* Action Buttons */}
+            <MobileSection>
+              <div className="mobile-flow">
+                <MobileButton 
+                  onClick={() => navigate('/journal/new')}
+                  variant="primary"
+                  size="large"
+                  fullWidth
+                >
+                  <Plus className="w-6 h-6 mr-3" />
+                  Write Your First Entry
+                </MobileButton>
+                
+                <div className="mobile-grid-auto-fit">
+                  <MobileButton
+                    onClick={() => setShowVoiceModal(true)}
+                    variant="secondary"
+                  >
+                    <Mic className="w-5 h-5 mr-2" />
+                    Voice Recording
+                  </MobileButton>
+                  
+                  <MobileButton
+                    onClick={() => window.location.href = '/coach'}
+                    variant="secondary"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Talk to Coach
+                  </MobileButton>
+                </div>
+              </div>
+            </MobileSection>
+
+            <VoiceRecordingModal
+              open={showVoiceModal}
+              onClose={() => setShowVoiceModal(false)}
+              onTranscriptionComplete={handleVoiceComplete}
+            />
+          </div>
+        </MobileContent>
+      </MobilePage>
+    );
+  }
+
+  return (
+    <MobilePage>
+      <MobileContent padded>
+        <NetworkStatusIndicator />
+        <div className="mobile-flow">
+          {/* Header Actions */}
+          <MobileSection>
+            <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
+              <div className="mobile-flex mobile-flex-row gap-3">
+                <MobileButton 
+                  onClick={() => navigate('/journal/new')}
+                  variant="primary"
+                  className="mobile-flex-1"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Entry
+                </MobileButton>
+                
+                <MobileButton
+                  onClick={() => setShowVoiceModal(true)}
+                  variant="outline"
+                >
+                  <Mic className="w-4 h-4" />
+                </MobileButton>
+              </div>
+            </ButtonErrorBoundary>
+          </MobileSection>
+
+          {/* Smart Search */}
+          <MobileSection>
+            <SmartSearch
+              onSearch={handleSmartSearch}
+              onClear={clearSearch}
+              availableTags={availableTags}
+              availableEmotions={availableEmotions}
+            />
+          </MobileSection>
+
+          {/* Filter Section */}
+          {showFilters && (
+            <MobileSection>
+              <MobileCard>
+                <JournalFilterDropdown
+                  filters={filters}
+                  availableTags={availableTags}
+                  availableEmotions={availableEmotions}
+                  activeFilterCount={activeFilterCount}
+                  onFilterChange={updateFilter}
+                  onClearAll={clearAllFilters}
+                />
+              </MobileCard>
+            </MobileSection>
+          )}
+
+          {/* Search Results */}
+          {searchQuery && (
+            <MobileSection>
+              <MobileCard>
+                <div className="mobile-flex mobile-flex-between">
+                  <p className="mobile-body-sm" style={{ color: 'var(--app-text-secondary)' }}>
+                    {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+                  </p>
+                  <MobileButton variant="ghost" onClick={clearSearch}>
+                    Clear
+                  </MobileButton>
+                </div>
+              </MobileCard>
+            </MobileSection>
+          )}
+
+          {/* Entries Grid */}
+          <MobileSection>
+            <div className="mobile-flow">
+              {isLoading ? (
+                <>
+                  <LoadingCardSkeleton />
+                  <LoadingCardSkeleton />
+                  <LoadingCardSkeleton />
+                </>
+              ) : (
+                displayEntries.map(entry => (
+                  <JournalEntryCard key={entry.id} entry={entry} />
+                ))
+              )}
+            </div>
+          </MobileSection>
+
+          {/* Load More */}
+          {isLoading && (
+            <MobileSection>
+              <div ref={loadMoreRef} className="mobile-center">
+                <div className="mobile-flex gap-2" style={{ color: 'var(--app-text-muted)' }}>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-accent-primary)' }}></div>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ 
+                    background: 'var(--app-accent-primary)', 
+                    animationDelay: '0.2s' 
+                  }}></div>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ 
+                    background: 'var(--app-accent-primary)', 
+                    animationDelay: '0.4s' 
+                  }}></div>
+                </div>
+              </div>
+            </MobileSection>
+          )}
+
+          {/* Quick AI */}
+          <MobileSection>
+            <QuickAI />
+          </MobileSection>
+
+          {/* Modals */}
+          <JournalSearchModal
+            isOpen={showSearchModal}
+            onClose={() => setShowSearchModal(false)}
+            entries={entries}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchResults={searchResults}
+          />
           
           <VoiceRecordingModal
             open={showVoiceModal}
@@ -118,124 +260,8 @@ const Journal = () => {
             onTranscriptionComplete={handleVoiceComplete}
           />
         </div>
-      </ResponsiveLayout>
-    );
-  }
-
-  return (
-    <ResponsiveLayout title="Journal" subtitle={`${entries.length} entries in your sanctuary`}>
-      <NetworkStatusIndicator />
-      <div className="app-content-flow">
-        {/* Enhanced Header Actions */}
-        <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
-          <div className="flex gap-3 mb-6">
-            <Button 
-              onClick={() => navigate('/journal/new')}
-              className="btn-organic flex-1 h-10 glow-primary"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Entry
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => setShowVoiceModal(true)}
-              className="app-card-organic bg-gray-700/30 hover:bg-gray-600/40 text-white border border-gray-600/30 hover:border-gray-500/40 h-10 px-4"
-            >
-              <Mic className="w-4 h-4" />
-            </Button>
-          </div>
-        </ButtonErrorBoundary>
-
-        {/* Enhanced Smart Search */}
-        <SmartSearch
-          onSearch={handleSmartSearch}
-          onClear={clearSearch}
-          availableTags={availableTags}
-          availableEmotions={availableEmotions}
-          className="mb-6"
-        />
-
-        {/* Enhanced Filter Section */}
-        {showFilters && (
-          <Card className="app-card-organic mb-6 animate-fade-in">
-            <CardContent className="p-6">
-              <JournalFilterDropdown
-                filters={filters}
-                availableTags={availableTags}
-                availableEmotions={availableEmotions}
-                activeFilterCount={activeFilterCount}
-                onFilterChange={updateFilter}
-                onClearAll={clearAllFilters}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Enhanced Search Results */}
-        {searchQuery && (
-          <Card className="app-card-organic mb-6 animate-fade-in">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-gray-300 text-sm">
-                  {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
-                </p>
-                <Button variant="ghost" size="sm" onClick={clearSearch} className="text-gray-400 hover:text-white">
-                  Clear
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Enhanced Entries Grid with Loading States */}
-        <div className="space-y-4">
-          {isLoading ? (
-            <>
-              <LoadingCardSkeleton />
-              <LoadingCardSkeleton />
-              <LoadingCardSkeleton />
-            </>
-          ) : (
-            displayEntries.map(entry => (
-              <div key={entry.id} className="animate-fade-in">
-                <JournalEntryCard entry={entry} />
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Enhanced Load More */}
-        {isLoading && (
-          <div ref={loadMoreRef} className="flex justify-center py-8">
-            <div className="flex items-center gap-2 text-gray-400">
-              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Quick AI */}
-        <QuickAI />
-
-        {/* Enhanced Modals */}
-        <JournalSearchModal
-          isOpen={showSearchModal}
-          onClose={() => setShowSearchModal(false)}
-          entries={entries}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchResults={searchResults}
-        />
-        
-        <VoiceRecordingModal
-          open={showVoiceModal}
-          onClose={() => setShowVoiceModal(false)}
-          onTranscriptionComplete={handleVoiceComplete}
-        />
-      </div>
-    </ResponsiveLayout>
+      </MobileContent>
+    </MobilePage>
   );
 };
 
