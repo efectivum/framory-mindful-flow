@@ -6,6 +6,10 @@
 @import './styles/mobile/interactions.css';
 @import './styles/mobile/typography.css';
 @import './styles/mobile/layouts.css';
+@import './styles/mobile/utilities.css';
+
+/* Legacy mobile utilities - will be phased out */
+@import './styles/mobile.css';
 @import './styles/layout/base.css';
 @import './styles/layout/grid.css';
 @import './styles/components/cards.css';

@@ -15,29 +15,31 @@ export const TodayDashboard: React.FC = () => {
   if (!user) return null;
 
   return (
-    <ResponsiveLayout showHeader={false}>
-      <div className="max-w-2xl mx-auto space-y-6 p-4 pb-24 md:pb-8">
-        {/* Welcome */}
-        <div className="text-center space-y-3 pt-2">
-          <h1 className="text-2xl md:text-3xl font-semibold text-white animate-fade-in">{greeting}</h1>
-          <p className="text-gray-400 animate-fade-in">
-            Let's take a moment to check in with yourself
-          </p>
+    <div className="mobile-page">
+      <div className="mobile-container mobile-nav-safe">
+        <div className="mobile-flow-loose">
+          {/* Welcome */}
+          <div className="text-center mobile-flow pt-2">
+            <h1 className="mobile-h1 text-foreground animate-fade-in">{greeting}</h1>
+            <p className="mobile-text-base text-muted-foreground animate-fade-in">
+              Let's take a moment to check in with yourself
+            </p>
+          </div>
+
+          {/* Components */}
+          <ButtonErrorBoundary fallbackMessage="Mood check is not available">
+            <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
+          </ButtonErrorBoundary>
+
+          <ButtonErrorBoundary fallbackMessage="Habits are not available">
+            <TodayHabits />
+          </ButtonErrorBoundary>
+
+          <ButtonErrorBoundary fallbackMessage="AI Coach is not available">
+            <CoachQuickAccess />
+          </ButtonErrorBoundary>
         </div>
-
-        {/* Components */}
-        <ButtonErrorBoundary fallbackMessage="Mood check is not available">
-          <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
-        </ButtonErrorBoundary>
-
-        <ButtonErrorBoundary fallbackMessage="Habits are not available">
-          <TodayHabits />
-        </ButtonErrorBoundary>
-
-        <ButtonErrorBoundary fallbackMessage="AI Coach is not available">
-          <CoachQuickAccess />
-        </ButtonErrorBoundary>
       </div>
-    </ResponsiveLayout>
+    </div>
   );
 };

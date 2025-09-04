@@ -115,12 +115,12 @@ const JournalWrite = () => {
               {isCreating ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span className="mobile-text-sm">Saving...</span>
+                  <span className="text-sm">Saving...</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Save className="w-4 h-4" />
-                  <span className="mobile-text-sm font-medium">Publish</span>
+                  <span className="text-sm font-medium">Publish</span>
                 </div>
               )}
             </MobileHeaderAction>
@@ -128,20 +128,20 @@ const JournalWrite = () => {
         />
 
         <MobileContent padded>
-          <div className="mobile-stack">
+          <div className="space-y-4">
             {/* Status Bar */}
-            <div className="mobile-flex mobile-flex-between mobile-caption text-muted-foreground">
-              <div className="mobile-flex items-center gap-2">
+            <div className="flex justify-between items-center text-muted-foreground">
+              <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
                 <span className="font-medium">New Entry</span>
               </div>
-              <div className="mobile-flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <span className="font-medium">{wordCount} words</span>
                 {status === 'saving' && (
-                  <span className="text-primary font-medium mobile-text-xs">Saving...</span>
+                  <span className="text-primary font-medium text-xs">Saving...</span>
                 )}
                 {status === 'saved' && lastSaved && (
-                  <span className="text-green-600 font-medium mobile-text-xs">Draft saved</span>
+                  <span className="text-green-600 font-medium text-xs">Draft saved</span>
                 )}
               </div>
             </div>
@@ -152,17 +152,17 @@ const JournalWrite = () => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind today? Share your thoughts, feelings, experiences, or anything else you'd like to reflect on..."
-                className="min-h-[calc(100vh-280px)] mobile-textarea mobile-input bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground resize-none"
+                className="min-h-[calc(100vh-280px)] bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground resize-none"
                 style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 autoFocus
               />
               
               {/* Voice Button - Mobile Optimized */}
               <div className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6">
-                <div className="mobile-card mobile-card-compact bg-primary/90 backdrop-blur-sm rounded-full shadow-lg border border-border/20">
+                <div className="bg-primary/90 backdrop-blur-sm rounded-full shadow-lg border border-border/20 p-2">
                   <VoiceButton 
                     onTranscription={handleVoiceTranscription}
-                    className="text-primary-foreground hover:text-primary-foreground hover:bg-primary/20 h-12 w-12 rounded-full mobile-touch mobile-haptic"
+                    className="text-primary-foreground hover:text-primary-foreground hover:bg-primary/20 h-12 w-12 rounded-full"
                   />
                 </div>
               </div>

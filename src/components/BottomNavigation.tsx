@@ -39,10 +39,9 @@ export const BottomNavigation: React.FC = () => {
   }, [navigate]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      {/* Glass morphism background with subtle gradient */}
-      <div className="bg-gray-900/90 backdrop-blur-xl border-t border-gray-700/30 shadow-2xl">
-        <div className="flex items-center justify-around px-1 py-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden" style={{ height: 'var(--bottom-nav-height)' }}>
+      <div className="bg-card/90 backdrop-blur-xl border-t border-border shadow-2xl">
+        <div className="mobile-flex mobile-flex-around px-1 py-1">
           {mainNavItems.map((item) => {
             const isActive = currentPageId === item.id;
             const Icon = item.icon;
@@ -52,41 +51,31 @@ export const BottomNavigation: React.FC = () => {
                 key={item.id}
                 onClick={() => handleNavigation(item.path, item.title)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ease-out min-w-12 min-h-14 flex-1 max-w-16",
-                  "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-gray-900",
-                  "active:scale-95 transform-gpu",
-                  "relative overflow-hidden",
+                  "mobile-touch mobile-haptic mobile-flex mobile-flex-col mobile-flex-center",
+                  "p-2 rounded-xl transition-all duration-300 min-w-12 min-h-14 flex-1 max-w-16",
+                  "mobile-focus-visible relative overflow-hidden",
                   isActive 
-                    ? "text-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20" 
-                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/40 active:bg-gray-700/40"
+                    ? "text-primary bg-primary/10 shadow-lg" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                 )}
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation'
-                }}
                 aria-label={`Navigate to ${item.title}`}
                 role="tab"
                 aria-selected={isActive}
               >
-                {/* Active indicator glow */}
                 {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent rounded-xl" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent rounded-xl" />
                 )}
                 
                 <Icon 
                   className={cn(
-                    "w-4 h-4 mb-1 transition-all duration-300 flex-shrink-0",
-                    isActive 
-                      ? "stroke-2 drop-shadow-sm" 
-                      : "stroke-[1.5] group-hover:stroke-2"
+                    "w-4 h-4 mb-1 transition-all duration-300",
+                    isActive ? "stroke-2" : "stroke-[1.5]"
                   )} 
                 />
                 <span 
                   className={cn(
                     "text-xs font-medium leading-tight transition-all duration-300 text-center",
-                    isActive 
-                      ? "text-blue-300 drop-shadow-sm" 
-                      : "text-gray-500"
+                    isActive ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   {item.title}
@@ -96,9 +85,8 @@ export const BottomNavigation: React.FC = () => {
           })}
         </div>
         
-        {/* Bottom safe area padding */}
-        <div className="h-4 bg-gray-900/50" />
+        <div className="mobile-safe-bottom h-1" />
       </div>
-    </div>
+    </nav>
   );
 };

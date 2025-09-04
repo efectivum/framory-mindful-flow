@@ -1,0 +1,124 @@
+/* Mobile-First Utility Classes */
+
+/* Mobile Flexbox Utilities */
+.mobile-flex {
+  display: flex;
+}
+
+.mobile-flex-col {
+  flex-direction: column;
+}
+
+.mobile-flex-row {
+  flex-direction: row;
+}
+
+.mobile-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.mobile-flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-flex-between {
+  justify-content: space-between;
+}
+
+.mobile-flex-around {
+  justify-content: space-around;
+}
+
+.mobile-flex-1 {
+  flex: 1;
+}
+
+/* Mobile Spacing Utilities */
+.mobile-space-y-1 > * + * {
+  margin-top: var(--app-mobile-space-xs);
+}
+
+.mobile-space-y-2 > * + * {
+  margin-top: var(--app-mobile-space-sm);
+}
+
+.mobile-space-y-3 > * + * {
+  margin-top: var(--app-mobile-space-md);
+}
+
+.mobile-space-y-4 > * + * {
+  margin-top: var(--app-mobile-space-lg);
+}
+
+.mobile-space-y-6 > * + * {
+  margin-top: var(--app-mobile-space-xl);
+}
+
+/* Mobile Positioning */
+.mobile-fixed {
+  position: fixed;
+}
+
+.mobile-relative {
+  position: relative;
+}
+
+.mobile-absolute {
+  position: absolute;
+}
+
+.mobile-bottom-safe {
+  bottom: max(env(safe-area-inset-bottom), var(--app-mobile-space-md));
+}
+
+.mobile-right-md {
+  right: var(--app-mobile-space-md);
+}
+
+/* Mobile Display */
+.mobile-hidden {
+  display: none;
+}
+
+.mobile-block {
+  display: block;
+}
+
+/* Mobile Width/Height */
+.mobile-w-full {
+  width: 100%;
+}
+
+.mobile-h-full {
+  height: 100%;
+}
+
+.mobile-min-h-screen {
+  min-height: 100vh;
+}
+
+/* Mobile Shadows */
+.mobile-shadow-floating {
+  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile Resize */
+.mobile-resize-none {
+  resize: none;
+}
+
+/* Desktop Overrides */
+@media (min-width: 769px) {
+  .mobile-hidden {
+    display: block;
+  }
+  
+  .desktop-flex {
+    display: flex;
+  }
+  
+  .desktop-block {
+    display: block;
+  }
+}
