@@ -50,16 +50,16 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
   const todaysPrompt = getTodaysPrompt();
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+    <Card className="bg-card/50 border-border backdrop-blur">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+        <div className="mobile-flex mobile-flex-between mobile-flex-start">
           <div className="flex-1">
-            <CardTitle className="text-white text-lg mb-2">{challenge.title}</CardTitle>
-            <div className="flex items-center gap-2 mb-2">
+            <CardTitle className="text-foreground mobile-h3 mb-2">{challenge.title}</CardTitle>
+            <div className="mobile-flex mobile-flex-center mobile-gap-sm mb-2">
               <Badge className={getDifficultyColor(challenge.difficulty)}>
                 {challenge.difficulty}
               </Badge>
-              <Badge variant="outline" className="text-gray-300">
+              <Badge variant="outline" className="text-muted-foreground">
                 {challenge.category}
               </Badge>
             </div>
@@ -68,25 +68,25 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => navigate(`/challenge/${challenge.id}`)}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="mobile-flow">
         {/* Progress */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-gray-300 text-sm">Progress</span>
-            <span className="text-gray-300 text-sm">
+        <div className="mobile-flow-tight">
+          <div className="mobile-flex mobile-flex-between mobile-flex-center mb-2">
+            <span className="text-muted-foreground mobile-text-sm">Progress</span>
+            <span className="text-muted-foreground mobile-text-sm">
               Day {userChallenge.current_day} of {challenge.duration_days}
             </span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(progressPercentage, 100)}%` }}
             />
           </div>
@@ -94,27 +94,24 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
 
         {/* Today's Prompt */}
         {todaysPrompt && (
-          <div className="p-3 bg-blue-600/10 border border-blue-600/20 rounded-lg">
-            <div className="flex items-start gap-2">
-              <BookOpen className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-blue-300 text-sm font-medium mb-1">Today's Focus:</p>
-                <p className="text-gray-300 text-sm">{todaysPrompt}</p>
+          <div className="mobile-card-content bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="mobile-flex mobile-flex-start mobile-gap-sm">
+              <BookOpen className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="mobile-flow-tight">
+                <p className="text-primary mobile-text-sm font-medium">Today's Focus:</p>
+                <p className="text-muted-foreground mobile-text-sm">{todaysPrompt}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Action Button */}
-        <div className="flex items-center gap-3">
+        <div className="mobile-flex mobile-flex-center mobile-gap-md">
           <Button
             onClick={handleCompleteDay}
             disabled={isCompleting || isCompletedToday || userChallenge.current_day > challenge.duration_days}
-            className={`flex-1 ${
-              isCompletedToday 
-                ? 'bg-green-600 hover:bg-green-700' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            variant={isCompletedToday ? "default" : "default"}
+            className="flex-1"
           >
             {isCompleting ? (
               'Completing...'
@@ -135,7 +132,7 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
         </div>
 
         {/* Completion Stats */}
-        <div className="text-center text-sm text-gray-400">
+        <div className="mobile-center mobile-text-sm text-muted-foreground">
           {userChallenge.total_completions} of {challenge.duration_days} days completed
         </div>
       </CardContent>

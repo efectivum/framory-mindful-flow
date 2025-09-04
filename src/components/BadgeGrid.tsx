@@ -28,17 +28,17 @@ export const BadgeGrid: React.FC<BadgeGridProps> = ({
   const totalCount = milestones.length;
 
   return (
-    <div className="space-y-4">
+    <div className="mobile-flow">
       {/* Category Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">
+      <div className="mobile-flex mobile-flex-between mobile-flex-center">
+        <h3 className="mobile-h3 text-foreground">{title}</h3>
+        <div className="mobile-flex mobile-flex-center mobile-gap-sm">
+          <span className="mobile-text-sm text-muted-foreground">
             {achievedCount}/{totalCount}
           </span>
-          <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-accent to-primary transition-all duration-500"
               style={{ width: `${(achievedCount / totalCount) * 100}%` }}
             />
           </div>
@@ -46,7 +46,7 @@ export const BadgeGrid: React.FC<BadgeGridProps> = ({
       </div>
 
       {/* Badge Grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
+      <div className="mobile-badge-grid">
         {sortedMilestones.map((milestone) => (
           <AchievementBadge
             key={milestone.id}

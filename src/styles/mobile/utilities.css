@@ -261,6 +261,31 @@
 .mobile-overflow-x-hidden { overflow-x: hidden; }
 .mobile-overflow-y-auto { overflow-y: auto; }
 
+/* Mobile Badge Grid */
+.mobile-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--app-mobile-space-md);
+}
+
+/* Mobile Card Content Spacing */
+.mobile-card-content {
+  padding: var(--app-mobile-space-md);
+}
+
+.mobile-card-content-lg {
+  padding: var(--app-mobile-space-lg);
+}
+
+.mobile-card-content-xl {
+  padding: var(--app-mobile-space-xl);
+}
+
+/* Mobile Admin Full Span */
+.mobile-admin-full-span {
+  grid-column: 1 / -1;
+}
+
 /* Desktop Overrides */
 @media (min-width: 769px) {
   .mobile-hidden {

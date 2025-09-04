@@ -51,8 +51,8 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
         <DialogHeader>
           <DialogTitle>Create New Habit</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="mobile-flow">
+          <div className="mobile-flow-tight">
             <Label htmlFor="title">Habit Title</Label>
             <Input
               id="title"
@@ -63,7 +63,7 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="mobile-flow-tight">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
@@ -74,7 +74,7 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="mobile-flow-tight">
             <Label htmlFor="frequency">Frequency</Label>
             <Select value={frequencyType} onValueChange={(value: 'daily' | 'weekly' | 'custom') => setFrequencyType(value)}>
               <SelectTrigger>
@@ -89,7 +89,7 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
           </div>
 
           {frequencyType !== 'daily' && (
-            <div className="space-y-2">
+            <div className="mobile-flow-tight">
               <Label htmlFor="frequency-value">
                 {frequencyType === 'weekly' ? 'Times per week' : 'Custom frequency'}
               </Label>
@@ -104,7 +104,7 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="mobile-flow-tight">
             <Label htmlFor="target">Target Days</Label>
             <Input
               id="target"
@@ -116,7 +116,7 @@ export const CreateHabitDialog = ({ open, onOpenChange }: CreateHabitDialogProps
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="mobile-flex mobile-flex-end mobile-gap-sm">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

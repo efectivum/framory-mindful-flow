@@ -38,19 +38,19 @@ export const EmotionBreakdown = ({ emotions, title = "Emotion Analysis" }: Emoti
     .slice(0, 6);
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+    <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white text-lg">{title}</CardTitle>
+        <CardTitle className="text-foreground mobile-h3">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="mobile-flow">
           {sortedEmotions.map(([emotion, percentage]) => (
-            <div key={emotion} className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-300 capitalize">{emotion}</span>
-                <span className="text-white font-medium">{Math.round(percentage)}%</span>
+            <div key={emotion} className="mobile-flow-tight">
+              <div className="mobile-flex mobile-flex-between mobile-text-sm">
+                <span className="text-muted-foreground capitalize">{emotion}</span>
+                <span className="text-foreground font-medium">{Math.round(percentage)}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all duration-1000 ${getEmotionColor(emotion)}`}
                   style={{ width: `${percentage}%` }}

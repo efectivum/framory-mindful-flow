@@ -37,26 +37,22 @@ export const AdvancedInsights: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="mobile-flow-loose">
       {/* Header with Time Range Selector */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Advanced Analytics</h2>
-          <p className="text-gray-400">Deep insights from your journaling data</p>
+      <div className="mobile-flex mobile-flex-between mobile-flex-wrap mobile-gap-md">
+        <div className="mobile-flow-tight">
+          <h2 className="mobile-h1 text-foreground">Advanced Analytics</h2>
+          <p className="mobile-text-base text-muted-foreground">Deep insights from your journaling data</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
-          <div className="flex gap-1">
+        <div className="mobile-flex mobile-flex-center mobile-gap-sm">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <div className="mobile-flex mobile-gap-xs">
             {timeRangeOptions.map((option) => (
               <Button
                 key={option.value}
                 variant={timeRange === option.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => setTimeRange(option.value as 30 | 90 | 365)}
-                className={timeRange === option.value ? 
-                  "bg-blue-600 hover:bg-blue-700" : 
-                  "text-gray-400 border-gray-600 hover:bg-gray-700"
-                }
               >
                 {option.label}
               </Button>
@@ -66,52 +62,52 @@ export const AdvancedInsights: React.FC = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-600/10 border-gray-700/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-blue-400" />
-              <div>
-                <div className="text-2xl font-bold text-white">{totalEntries}</div>
-                <div className="text-xs text-gray-400">Total Entries</div>
+      <div className="mobile-admin-grid-1 mobile-admin-grid-4">
+        <Card className="bg-gradient-to-br from-primary/10 to-primary-variant/10 border-border/50">
+          <CardContent className="mobile-card-content">
+            <div className="mobile-flex mobile-flex-center mobile-gap-md">
+              <BarChart3 className="w-8 h-8 text-primary" />
+              <div className="mobile-flow-tight">
+                <div className="mobile-h2 text-foreground">{totalEntries}</div>
+                <div className="mobile-text-xs text-muted-foreground">Total Entries</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-600/10 border-gray-700/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-green-400" />
-              <div>
-                <div className="text-2xl font-bold text-white">{currentStreak}</div>
-                <div className="text-xs text-gray-400">Day Streak</div>
+        <Card className="bg-gradient-to-br from-success/10 to-success-variant/10 border-border/50">
+          <CardContent className="mobile-card-content">
+            <div className="mobile-flex mobile-flex-center mobile-gap-md">
+              <Calendar className="w-8 h-8 text-success" />
+              <div className="mobile-flow-tight">
+                <div className="mobile-h2 text-foreground">{currentStreak}</div>
+                <div className="mobile-text-xs text-muted-foreground">Day Streak</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-violet-600/10 border-gray-700/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Target className="w-8 h-8 text-purple-400" />
-              <div>
-                <div className="text-2xl font-bold text-white">{goalProgress.length}</div>
-                <div className="text-xs text-gray-400">Active Goals</div>
+        <Card className="bg-gradient-to-br from-accent/10 to-accent-variant/10 border-border/50">
+          <CardContent className="mobile-card-content">
+            <div className="mobile-flex mobile-flex-center mobile-gap-md">
+              <Target className="w-8 h-8 text-accent" />
+              <div className="mobile-flow-tight">
+                <div className="mobile-h2 text-foreground">{goalProgress.length}</div>
+                <div className="mobile-text-xs text-muted-foreground">Active Goals</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-red-600/10 border-gray-700/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Brain className="w-8 h-8 text-orange-400" />
-              <div>
-                <div className="text-2xl font-bold text-white">
+        <Card className="bg-gradient-to-br from-warning/10 to-warning-variant/10 border-border/50">
+          <CardContent className="mobile-card-content">
+            <div className="mobile-flex mobile-flex-center mobile-gap-md">
+              <Brain className="w-8 h-8 text-warning" />
+              <div className="mobile-flow-tight">
+                <div className="mobile-h2 text-foreground">
                   {weeklyInsights.entriesThisWeek}
                 </div>
-                <div className="text-xs text-gray-400">This Week</div>
+                <div className="mobile-text-xs text-muted-foreground">This Week</div>
               </div>
             </div>
           </CardContent>
@@ -119,37 +115,37 @@ export const AdvancedInsights: React.FC = () => {
       </div>
 
       {/* Main Analytics Tabs */}
-      <Tabs defaultValue="mood" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-800/50">
-          <TabsTrigger value="mood" className="data-[state=active]:bg-blue-600">
+      <Tabs defaultValue="mood" className="mobile-flow-lg">
+        <TabsList className="mobile-admin-grid-4 bg-card/50">
+          <TabsTrigger value="mood" className="data-[state=active]:bg-primary">
             Mood Trends
           </TabsTrigger>
-          <TabsTrigger value="goals" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="goals" className="data-[state=active]:bg-primary">
             Goal Progress
           </TabsTrigger>
-          <TabsTrigger value="emotions" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="emotions" className="data-[state=active]:bg-primary">
             Emotions
           </TabsTrigger>
-          <TabsTrigger value="personality" className="data-[state=active]:bg-blue-600">
+          <TabsTrigger value="personality" className="data-[state=active]:bg-primary">
             Personality
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mood" className="space-y-6">
+        <TabsContent value="mood" className="mobile-flow-lg">
           <MoodTrendChart data={moodTrends} timeRange={timeRange} />
           
           {weeklyInsights.moodImprovement !== 0 && (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
+            <Card className="bg-card/50 border-border backdrop-blur-sm">
+              <CardContent className="mobile-card-content">
+                <div className="mobile-flex mobile-flex-center mobile-gap-md">
                   <TrendingUp className={`w-5 h-5 ${
-                    weeklyInsights.moodImprovement > 0 ? 'text-green-400' : 'text-red-400'
+                    weeklyInsights.moodImprovement > 0 ? 'text-success' : 'text-destructive'
                   }`} />
-                  <div>
-                    <div className="text-white font-medium">
+                  <div className="mobile-flow-tight">
+                    <div className="text-foreground font-medium">
                       {weeklyInsights.moodImprovement > 0 ? 'Mood Improving' : 'Mood Declining'}
                     </div>
-                    <div className="text-gray-400 text-sm">
+                    <div className="text-muted-foreground mobile-text-sm">
                       {Math.abs(weeklyInsights.moodImprovement).toFixed(1)} point change this week
                     </div>
                   </div>

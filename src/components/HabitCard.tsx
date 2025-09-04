@@ -78,23 +78,23 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   };
 
   return (
-    <Card className={`bg-gray-800/50 border-gray-700 backdrop-blur transition-all duration-200 ${
-      isCompleted ? 'ring-2 ring-green-500/30 bg-green-500/5' : 'hover:bg-gray-800/70'
+    <Card className={`bg-card/50 border-border backdrop-blur transition-all duration-200 ${
+      isCompleted ? 'ring-2 ring-success/30 bg-success/5' : 'hover:bg-card/70'
     }`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
+      <CardContent className="mobile-card-content-lg">
+        <div className="mobile-flex mobile-flex-start mobile-flex-between mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-medium text-white mb-2">{habit.title}</h3>
+            <h3 className="mobile-h3 text-foreground mb-2">{habit.title}</h3>
             {habit.description && (
-              <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+              <p className="text-muted-foreground mobile-text-sm mb-3 line-clamp-2">
                 {habit.description}
               </p>
             )}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="mobile-flex mobile-flex-center mobile-gap-sm mb-3">
               <Badge className={getFrequencyColor(habit.frequency_type)}>
                 {habit.frequency_type}
               </Badge>
-              <div className="flex items-center gap-1 text-sm text-gray-400">
+              <div className="mobile-flex mobile-flex-center mobile-gap-xs mobile-text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 {habit.target_days} days
               </div>
@@ -103,7 +103,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         </div>
 
         {/* Progress Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-900/30 rounded-lg">
+        <div className="mobile-admin-grid-2 mb-4 mobile-card-content bg-muted/30 rounded-lg">
           <div className="text-center">
             <div className={`text-xl font-bold ${getStreakColor(habit.current_streak)}`}>
               {habit.current_streak}
