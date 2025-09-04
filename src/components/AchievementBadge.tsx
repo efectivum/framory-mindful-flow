@@ -55,11 +55,11 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={`
-              relative w-20 h-20 rounded-2xl flex flex-col items-center justify-center
+              mobile-relative mobile-w-20 mobile-h-20 mobile-rounded-lg mobile-flex mobile-flex-col mobile-flex-center
               transition-all duration-300 cursor-pointer
               ${getGradientStyle()}
               ${getRarityBorder()}
-              ${!milestone.achieved ? 'opacity-50 grayscale' : 'shadow-lg hover:shadow-xl'}
+              ${!milestone.achieved ? 'opacity-50 grayscale' : 'mobile-shadow-floating'}
             `}
           >
             {/* Badge Icon */}
@@ -77,8 +77,8 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
 
             {/* Progress Ring for Locked Badges */}
             {!milestone.achieved && showProgress && milestone.progress > 0 && (
-              <div className="absolute inset-0 rounded-2xl">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <div className="mobile-absolute mobile-inset-0 mobile-rounded-lg">
+                <svg className="mobile-w-full mobile-h-full transform -rotate-90" viewBox="0 0 100 100">
                   <circle
                     cx="50"
                     cy="50"
@@ -104,15 +104,15 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             {/* New Badge Indicator */}
             {milestone.achieved && milestone.achievedAt && 
              new Date().getTime() - milestone.achievedAt.getTime() < 24 * 60 * 60 * 1000 && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <div className="mobile-absolute -top-1 -right-1 mobile-w-3 mobile-h-3 mobile-bg-error mobile-rounded-full animate-pulse" />
             )}
           </motion.div>
         </TooltipTrigger>
         
         <TooltipContent side="top" className="max-w-xs">
           <div className="text-center">
-            <div className="font-semibold mobile-text-primary mb-1">{milestone.title}</div>
-            <div className="mobile-text-secondary mobile-text-body mb-2">{milestone.description}</div>
+            <div className="font-semibold mobile-text-primary mobile-mb-1">{milestone.title}</div>
+            <div className="mobile-text-secondary mobile-text-body mobile-mb-2">{milestone.description}</div>
             
             {milestone.achieved ? (
               <div className="text-success mobile-text-caption">

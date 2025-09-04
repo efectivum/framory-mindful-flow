@@ -37,9 +37,9 @@ export const AccountDeletionDialog = () => {
         </DialogHeader>
         
         <div className="mobile-space-y-6">
-          <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
-            <h3 className="text-red-300 font-medium mb-2">⚠️ This action cannot be undone</h3>
-            <ul className="text-red-300 mobile-text-body mobile-space-y-1">
+          <div className="mobile-bg-error mobile-border-error mobile-rounded-lg mobile-p-4">
+            <h3 className="mobile-text-error font-medium mobile-mb-2">⚠️ This action cannot be undone</h3>
+            <ul className="mobile-text-error mobile-text-body mobile-space-y-1">
               <li>• All your journal entries will be permanently deleted</li>
               <li>• All your habits and tracking data will be lost</li>
               <li>• Your account preferences will be removed</li>
@@ -47,8 +47,8 @@ export const AccountDeletionDialog = () => {
             </ul>
           </div>
 
-          <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
-            <p className="text-blue-300 text-sm mb-3">
+          <div className="mobile-bg-accent mobile-border-accent mobile-rounded-lg mobile-p-4">
+            <p className="mobile-text-accent mobile-text-body mobile-mb-3">
               Before deleting your account, consider exporting your data:
             </p>
             <DataExportDialog />
@@ -67,7 +67,7 @@ export const AccountDeletionDialog = () => {
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="mobile-flex mobile-gap-3">
             <Button
               onClick={handleDelete}
               disabled={!isConfirmationValid || isDeleting}
@@ -78,7 +78,7 @@ export const AccountDeletionDialog = () => {
                 "Deleting Account..."
               ) : (
                 <>
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="mobile-w-4 mobile-h-4 mobile-mr-2" />
                   Delete Account
                 </>
               )}

@@ -40,7 +40,7 @@ export const BottomNavigation: React.FC = () => {
 
   return (
     <nav className="mobile-fixed mobile-bottom-0 left-0 right-0 z-50 mobile-hidden desktop-hidden" style={{ height: 'var(--bottom-nav-height)' }}>
-      <div className="bg-card/90 backdrop-blur-xl border-t border-border mobile-shadow-floating">
+      <div className="mobile-bg-card backdrop-blur-xl mobile-border mobile-shadow-floating">
         <div className="mobile-flex mobile-flex-around mobile-content-spacing">
           {mainNavItems.map((item) => {
             const isActive = currentPageId === item.id;
@@ -55,8 +55,8 @@ export const BottomNavigation: React.FC = () => {
                   "transition-all duration-300 mobile-flex-1",
                   "mobile-focus-visible mobile-relative overflow-hidden",
                   isActive 
-                    ? "text-primary bg-primary/10 mobile-shadow-floating" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    ? "mobile-text-accent mobile-bg-accent mobile-shadow-floating" 
+                    : "mobile-text-muted"
                 )}
                 aria-label={`Navigate to ${item.title}`}
                 role="tab"
@@ -68,14 +68,14 @@ export const BottomNavigation: React.FC = () => {
                 
                 <Icon 
                   className={cn(
-                    "w-4 h-4 transition-all duration-300",
+                    "mobile-w-4 mobile-h-4 transition-all duration-300",
                     isActive ? "stroke-2" : "stroke-[1.5]"
                   )} 
                 />
                 <span 
                   className={cn(
                     "mobile-text-caption font-medium leading-tight transition-all duration-300 text-center",
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    isActive ? "mobile-text-accent" : "mobile-text-muted"
                   )}
                 >
                   {item.title}

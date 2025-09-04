@@ -174,11 +174,11 @@ export const ChatInterface = () => {
   // Now handle loading state rendering - after all hooks are defined
   if (isLoadingSessions || !hasInitialized) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#171c26]">
+      <div className="mobile-h-screen mobile-w-screen mobile-flex mobile-flex-center mobile-bg-primary">
         <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <h3 className="text-white font-medium mb-2">Setting up your chat...</h3>
-          <p className="text-gray-400 text-sm">Loading your conversation history</p>
+          <LoadingSpinner size="lg" className="mx-auto mobile-mb-4" />
+          <h3 className="mobile-text-white font-medium mobile-mb-2">Setting up your chat...</h3>
+          <p className="mobile-text-muted mobile-text-body">Loading your conversation history</p>
         </div>
       </div>
     );
@@ -186,7 +186,7 @@ export const ChatInterface = () => {
 
   return (
     <ChatErrorBoundary>
-      <div className="h-screen w-screen flex flex-col bg-[#171c26] overflow-hidden">
+      <div className="mobile-h-screen mobile-w-screen mobile-flex mobile-flex-col mobile-bg-primary mobile-overflow-hidden">
         <ChatHeader onShowSessions={() => setShowSessionSidebar(true)} />
         
         <MessageList
