@@ -99,67 +99,73 @@ const JournalWrite = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="hover:bg-muted"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <BookOpen className="w-4 h-4" />
-                <span className="text-sm font-medium">New Entry</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-background safe-area-pt">
+      {/* Mobile-First Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border safe-area-pt">
+        <div className="px-4 py-3 sm:px-6 sm:py-4">
+          {/* Mobile Header Layout */}
+          <div className="flex items-center justify-between mb-3 sm:mb-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="mobile-button h-10 w-auto px-3 hover:bg-muted touch-manipulation"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              <span className="text-base font-medium">Back</span>
+            </Button>
 
-            <div className="flex items-center gap-3">
-              {/* Word count & auto-save status */}
-              <div className="text-sm text-muted-foreground">
-                {wordCount} words
-                {status === 'saving' && (
-                  <span className="ml-2 text-primary">Saving...</span>
-                )}
-                {status === 'saved' && lastSaved && (
-                  <span className="ml-2 text-green-600">Draft saved</span>
-                )}
-              </div>
-
-              <Button
-                onClick={handleSaveAndFinish}
-                disabled={isCreating || !content.trim()}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Save className="w-4 h-4 mr-2" />
+            <Button
+              onClick={handleSaveAndFinish}
+              disabled={isCreating || !content.trim()}
+              className="mobile-button bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-4 touch-manipulation"
+            >
+              <Save className="w-5 h-5 mr-2" />
+              <span className="text-base font-medium">
                 {isCreating ? 'Saving...' : 'Publish'}
-              </Button>
+              </span>
+            </Button>
+          </div>
+
+          {/* Mobile Status Bar */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="font-medium">New Entry</span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <span className="font-medium">{wordCount} words</span>
+              {status === 'saving' && (
+                <span className="text-primary font-medium">Saving...</span>
+              )}
+              {status === 'saved' && lastSaved && (
+                <span className="text-green-600 font-medium">Draft saved</span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Editor */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Mobile-Optimized Editor */}
+      <div className="px-4 py-6 sm:px-6 sm:py-8 pb-24 safe-area-pb">
         <div className="relative">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind today? Share your thoughts, feelings, experiences, or anything else you'd like to reflect on..."
-            className="min-h-[calc(100vh-200px)] text-lg leading-relaxed border-none resize-none focus:ring-0 focus:border-none bg-transparent p-0 text-foreground placeholder:text-muted-foreground"
+            className="min-h-[calc(100vh-240px)] text-base sm:text-lg leading-relaxed border-none resize-none focus:ring-0 focus:border-none bg-transparent p-0 text-foreground placeholder:text-muted-foreground touch-manipulation"
+            style={{ fontSize: '16px' }} // Prevent zoom on iOS
             autoFocus
           />
           
-          {/* Voice button */}
-          <div className="fixed bottom-6 right-6 z-20">
-            <div className="bg-background/95 backdrop-blur-sm rounded-full p-2 shadow-lg border border-border">
-              <VoiceButton onTranscription={handleVoiceTranscription} />
+          {/* Mobile-Optimized Voice Button */}
+          <div className="fixed bottom-20 right-4 z-20 sm:bottom-6 sm:right-6">
+            <div className="bg-primary/90 backdrop-blur-sm rounded-full p-3 shadow-lg border border-border touch-manipulation">
+              <VoiceButton 
+                onTranscription={handleVoiceTranscription}
+                className="text-primary-foreground hover:text-primary-foreground hover:bg-primary/20 h-12 w-12 rounded-full"
+              />
             </div>
           </div>
         </div>
