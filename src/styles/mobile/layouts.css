@@ -1,0 +1,365 @@
+/* Mobile-First Layout System */
+
+/* Mobile Layout Containers */
+.mobile-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg-primary);
+}
+
+.mobile-layout-with-nav {
+  padding-bottom: var(--bottom-nav-height);
+}
+
+.mobile-layout-fullscreen {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Mobile Grid System */
+.mobile-grid {
+  display: grid;
+  gap: var(--app-mobile-space-md);
+  width: 100%;
+}
+
+.mobile-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.mobile-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mobile-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.mobile-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.mobile-grid-auto-sm {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.mobile-grid-dense {
+  grid-auto-flow: dense;
+}
+
+/* Mobile Flexbox Layouts */
+.mobile-flex {
+  display: flex;
+  gap: var(--app-mobile-space-md);
+}
+
+.mobile-flex-col {
+  flex-direction: column;
+}
+
+.mobile-flex-row {
+  flex-direction: row;
+}
+
+.mobile-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.mobile-flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-flex-between {
+  justify-content: space-between;
+}
+
+.mobile-flex-around {
+  justify-content: space-around;
+}
+
+.mobile-flex-start {
+  align-items: flex-start;
+}
+
+.mobile-flex-end {
+  align-items: flex-end;
+}
+
+/* Mobile Stack Layout */
+.mobile-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-stack > * + * {
+  margin-top: var(--app-mobile-space-md);
+}
+
+.mobile-stack-tight > * + * {
+  margin-top: var(--app-mobile-space-sm);
+}
+
+.mobile-stack-loose > * + * {
+  margin-top: var(--app-mobile-space-lg);
+}
+
+.mobile-stack-xl > * + * {
+  margin-top: var(--app-mobile-space-xl);
+}
+
+/* Mobile Cluster Layout */
+.mobile-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-mobile-space-sm);
+  align-items: center;
+}
+
+.mobile-cluster-center {
+  justify-content: center;
+}
+
+.mobile-cluster-end {
+  justify-content: flex-end;
+}
+
+/* Mobile Sidebar Layout */
+.mobile-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-mobile-space-lg);
+}
+
+.mobile-sidebar-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-sidebar-aside {
+  flex-shrink: 0;
+}
+
+/* Mobile Cover Layout */
+.mobile-cover {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: var(--app-mobile-space-lg);
+}
+
+.mobile-cover-content {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.mobile-cover-header {
+  margin-bottom: auto;
+}
+
+.mobile-cover-footer {
+  margin-top: auto;
+}
+
+/* Mobile Center Layout */
+.mobile-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--app-mobile-space-lg);
+  text-align: center;
+}
+
+.mobile-center-content {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Mobile Switcher Layout */
+.mobile-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-mobile-space-md);
+}
+
+.mobile-switcher > * {
+  flex-grow: 1;
+  flex-basis: calc(50% - var(--app-mobile-space-md) / 2);
+}
+
+.mobile-switcher-third > * {
+  flex-basis: calc(33.333% - var(--app-mobile-space-md) * 2 / 3);
+}
+
+/* Mobile Frame Layout */
+.mobile-frame {
+  padding: var(--app-mobile-space-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--app-radius-lg);
+  background: var(--app-bg-card);
+}
+
+.mobile-frame-tight {
+  padding: var(--app-mobile-space-md);
+}
+
+.mobile-frame-loose {
+  padding: var(--app-mobile-space-xl);
+}
+
+/* Mobile Reel Layout (Horizontal Scroll) */
+.mobile-reel {
+  display: flex;
+  gap: var(--app-mobile-space-md);
+  overflow-x: auto;
+  padding: var(--app-mobile-space-md);
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-reel::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-reel > * {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.mobile-reel-item {
+  width: 280px;
+}
+
+.mobile-reel-item-sm {
+  width: 200px;
+}
+
+.mobile-reel-item-lg {
+  width: 320px;
+}
+
+/* Mobile Imposter Layout (Overlay) */
+.mobile-imposter {
+  position: relative;
+}
+
+.mobile-imposter-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+/* Mobile Icon Layout */
+.mobile-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: var(--app-mobile-space-lg);
+  place-items: center;
+}
+
+.mobile-icon-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-mobile-space-md);
+}
+
+.mobile-icon-item {
+  display: flex;
+  align-items: center;
+  gap: var(--app-mobile-space-md);
+  padding: var(--app-mobile-space-md);
+  border-radius: var(--app-radius-md);
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-icon-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Desktop Enhancements */
+@media (min-width: 769px) {
+  .mobile-grid {
+    gap: var(--app-space-lg);
+  }
+  
+  .mobile-flex {
+    gap: var(--app-space-lg);
+  }
+  
+  .mobile-stack > * + * {
+    margin-top: var(--app-space-lg);
+  }
+  
+  .mobile-stack-tight > * + * {
+    margin-top: var(--app-space-md);
+  }
+  
+  .mobile-stack-loose > * + * {
+    margin-top: var(--app-space-xl);
+  }
+  
+  .mobile-cluster {
+    gap: var(--app-space-md);
+  }
+  
+  .mobile-sidebar {
+    flex-direction: row;
+    gap: var(--app-space-xl);
+  }
+  
+  .mobile-cover {
+    padding: var(--app-space-xl);
+  }
+  
+  .mobile-center {
+    padding: var(--app-space-xl);
+  }
+  
+  .mobile-center-content {
+    max-width: 600px;
+  }
+  
+  .mobile-frame {
+    padding: var(--app-space-xl);
+  }
+  
+  .mobile-reel {
+    gap: var(--app-space-lg);
+    padding: var(--app-space-lg);
+  }
+  
+  .mobile-icon-grid {
+    gap: var(--app-space-xl);
+  }
+  
+  .mobile-icon-list {
+    gap: var(--app-space-lg);
+  }
+}
+
+/* Large Desktop Enhancements */
+@media (min-width: 1200px) {
+  .mobile-grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  
+  .mobile-sidebar {
+    gap: var(--app-space-2xl);
+  }
+  
+  .mobile-center-content {
+    max-width: 800px;
+  }
+}

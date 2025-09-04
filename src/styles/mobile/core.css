@@ -1,0 +1,106 @@
+/* Mobile-First Core System */
+
+/* Mobile Breakpoints */
+:root {
+  --mobile-xs: 375px;
+  --mobile-sm: 425px;
+  --mobile-md: 768px;
+  --tablet: 1024px;
+  --desktop: 1440px;
+}
+
+/* Mobile-First Base Layout Classes */
+.mobile-container {
+  width: 100%;
+  max-width: var(--mobile-md);
+  margin: 0 auto;
+  padding: 0 var(--app-mobile-space-md);
+  min-height: 100vh;
+  background: var(--app-bg-primary);
+}
+
+.mobile-content {
+  padding: var(--app-mobile-space-lg) 0;
+  margin-bottom: calc(var(--bottom-nav-height) + var(--app-mobile-space-md));
+}
+
+.mobile-content-padded {
+  padding: var(--app-mobile-space-lg) var(--app-mobile-space-md);
+  margin-bottom: calc(var(--bottom-nav-height) + var(--app-mobile-space-md));
+}
+
+.mobile-page {
+  min-height: 100vh;
+  background: var(--app-bg-primary);
+  padding-bottom: calc(var(--bottom-nav-height) + var(--app-mobile-space-lg));
+}
+
+.mobile-section {
+  margin-bottom: var(--app-mobile-space-xl);
+}
+
+.mobile-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile Safe Areas */
+.mobile-safe-top {
+  padding-top: max(env(safe-area-inset-top), var(--app-mobile-space-md));
+}
+
+.mobile-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), var(--app-mobile-space-md));
+}
+
+.mobile-safe-horizontal {
+  padding-left: max(env(safe-area-inset-left), var(--app-mobile-space-md));
+  padding-right: max(env(safe-area-inset-right), var(--app-mobile-space-md));
+}
+
+/* Mobile Navigation Safe Area */
+.mobile-nav-safe {
+  padding-bottom: calc(var(--bottom-nav-height) + max(env(safe-area-inset-bottom), var(--app-mobile-space-md)));
+}
+
+/* Mobile Content Flow */
+.mobile-flow > * + * {
+  margin-top: var(--app-mobile-space-md);
+}
+
+.mobile-flow-tight > * + * {
+  margin-top: var(--app-mobile-space-sm);
+}
+
+.mobile-flow-loose > * + * {
+  margin-top: var(--app-mobile-space-lg);
+}
+
+/* Desktop Enhancements */
+@media (min-width: 769px) {
+  .mobile-container {
+    max-width: var(--tablet);
+    padding: 0 var(--app-space-lg);
+  }
+  
+  .mobile-content {
+    padding: var(--app-space-xl) 0;
+    margin-bottom: 0;
+  }
+  
+  .mobile-content-padded {
+    padding: var(--app-space-xl) var(--app-space-lg);
+    margin-bottom: 0;
+  }
+  
+  .mobile-page {
+    padding-bottom: var(--app-space-xl);
+  }
+  
+  .mobile-section {
+    margin-bottom: var(--app-space-2xl);
+  }
+  
+  .mobile-flow > * + * {
+    margin-top: var(--app-space-lg);
+  }
+}

@@ -1,0 +1,304 @@
+/* Mobile-First Typography System */
+
+/* Mobile Typography Scale */
+:root {
+  /* Mobile Font Sizes - Optimized for readability */
+  --mobile-text-xs: 0.8125rem;
+  --mobile-text-sm: 0.9375rem;
+  --mobile-text-base: 1.0625rem;
+  --mobile-text-lg: 1.1875rem;
+  --mobile-text-xl: 1.375rem;
+  --mobile-text-2xl: 1.625rem;
+  --mobile-text-3xl: 2rem;
+  
+  /* Line Heights */
+  --mobile-leading-tight: 1.25;
+  --mobile-leading-normal: 1.5;
+  --mobile-leading-relaxed: 1.75;
+  
+  /* Letter Spacing */
+  --mobile-tracking-tight: -0.025em;
+  --mobile-tracking-normal: 0;
+  --mobile-tracking-wide: 0.025em;
+}
+
+/* Base Mobile Typography */
+.mobile-text-xs {
+  font-size: var(--mobile-text-xs);
+  line-height: var(--mobile-leading-normal);
+  letter-spacing: var(--mobile-tracking-wide);
+}
+
+.mobile-text-sm {
+  font-size: var(--mobile-text-sm);
+  line-height: var(--mobile-leading-normal);
+  letter-spacing: var(--mobile-tracking-normal);
+}
+
+.mobile-text-base {
+  font-size: var(--mobile-text-base);
+  line-height: var(--mobile-leading-normal);
+  letter-spacing: var(--mobile-tracking-normal);
+}
+
+.mobile-text-lg {
+  font-size: var(--mobile-text-lg);
+  line-height: var(--mobile-leading-normal);
+  letter-spacing: var(--mobile-tracking-normal);
+}
+
+.mobile-text-xl {
+  font-size: var(--mobile-text-xl);
+  line-height: var(--mobile-leading-tight);
+  letter-spacing: var(--mobile-tracking-tight);
+}
+
+.mobile-text-2xl {
+  font-size: var(--mobile-text-2xl);
+  line-height: var(--mobile-leading-tight);
+  letter-spacing: var(--mobile-tracking-tight);
+}
+
+.mobile-text-3xl {
+  font-size: var(--mobile-text-3xl);
+  line-height: var(--mobile-leading-tight);
+  letter-spacing: var(--mobile-tracking-tight);
+}
+
+/* Mobile Heading System */
+.mobile-h1 {
+  font-size: var(--mobile-text-3xl);
+  font-weight: 700;
+  line-height: var(--mobile-leading-tight);
+  letter-spacing: var(--mobile-tracking-tight);
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-mobile-space-lg);
+  background: var(--app-accent-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mobile-h2 {
+  font-size: var(--mobile-text-2xl);
+  font-weight: 600;
+  line-height: var(--mobile-leading-tight);
+  letter-spacing: var(--mobile-tracking-tight);
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-mobile-space-md);
+}
+
+.mobile-h3 {
+  font-size: var(--mobile-text-xl);
+  font-weight: 600;
+  line-height: var(--mobile-leading-normal);
+  letter-spacing: var(--mobile-tracking-normal);
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-mobile-space-sm);
+}
+
+.mobile-h4 {
+  font-size: var(--mobile-text-lg);
+  font-weight: 500;
+  line-height: var(--mobile-leading-normal);
+  color: var(--app-text-secondary);
+  margin-bottom: var(--app-mobile-space-sm);
+}
+
+/* Mobile Body Text */
+.mobile-body {
+  font-size: var(--mobile-text-base);
+  line-height: var(--mobile-leading-relaxed);
+  color: var(--app-text-secondary);
+  margin-bottom: var(--app-mobile-space-md);
+}
+
+.mobile-body-sm {
+  font-size: var(--mobile-text-sm);
+  line-height: var(--mobile-leading-relaxed);
+  color: var(--app-text-secondary);
+  margin-bottom: var(--app-mobile-space-sm);
+}
+
+.mobile-caption {
+  font-size: var(--mobile-text-xs);
+  line-height: var(--mobile-leading-normal);
+  color: var(--app-text-muted);
+  font-weight: 500;
+}
+
+/* Mobile Display Text */
+.mobile-display {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: var(--app-text-primary);
+  background: var(--app-accent-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: var(--app-mobile-space-xl);
+}
+
+.mobile-hero {
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-mobile-space-lg);
+}
+
+.mobile-subhero {
+  font-size: var(--mobile-text-xl);
+  font-weight: 400;
+  line-height: var(--mobile-leading-relaxed);
+  color: var(--app-text-secondary);
+  margin-bottom: var(--app-mobile-space-lg);
+}
+
+/* Mobile Semantic Text */
+.mobile-label {
+  font-size: var(--mobile-text-sm);
+  font-weight: 600;
+  line-height: var(--mobile-leading-normal);
+  color: var(--app-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-helper {
+  font-size: var(--mobile-text-xs);
+  line-height: var(--mobile-leading-normal);
+  color: var(--app-text-muted);
+  font-style: italic;
+}
+
+.mobile-link {
+  color: var(--app-accent-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--app-transition-smooth);
+  position: relative;
+}
+
+.mobile-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--app-accent-primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--app-transition-smooth);
+}
+
+.mobile-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Mobile Text States */
+.mobile-text-success {
+  color: #10b981;
+}
+
+.mobile-text-warning {
+  color: #f59e0b;
+}
+
+.mobile-text-error {
+  color: #ef4444;
+}
+
+.mobile-text-info {
+  color: #6366f1;
+}
+
+.mobile-text-muted {
+  color: var(--app-text-muted);
+}
+
+.mobile-text-accent {
+  color: var(--app-text-accent);
+}
+
+/* Mobile Reading Optimizations */
+.mobile-reading {
+  font-size: var(--mobile-text-base);
+  line-height: var(--mobile-leading-relaxed);
+  color: var(--app-text-secondary);
+  max-width: 65ch;
+  margin: 0 auto;
+}
+
+.mobile-reading p {
+  margin-bottom: var(--app-mobile-space-md);
+}
+
+.mobile-reading h1,
+.mobile-reading h2,
+.mobile-reading h3 {
+  margin-top: var(--app-mobile-space-xl);
+  margin-bottom: var(--app-mobile-space-md);
+}
+
+.mobile-reading h1:first-child,
+.mobile-reading h2:first-child,
+.mobile-reading h3:first-child {
+  margin-top: 0;
+}
+
+/* Desktop Enhancements */
+@media (min-width: 769px) {
+  .mobile-h1 {
+    font-size: 2.5rem;
+    margin-bottom: var(--app-space-xl);
+  }
+  
+  .mobile-h2 {
+    font-size: 2rem;
+    margin-bottom: var(--app-space-lg);
+  }
+  
+  .mobile-h3 {
+    font-size: 1.5rem;
+    margin-bottom: var(--app-space-md);
+  }
+  
+  .mobile-body {
+    font-size: 1.125rem;
+    margin-bottom: var(--app-space-lg);
+  }
+  
+  .mobile-display {
+    font-size: 4rem;
+    margin-bottom: var(--app-space-2xl);
+  }
+  
+  .mobile-hero {
+    font-size: 3rem;
+    margin-bottom: var(--app-space-xl);
+  }
+  
+  .mobile-subhero {
+    font-size: 1.25rem;
+    margin-bottom: var(--app-space-xl);
+  }
+}
+
+/* Print Optimizations */
+@media print {
+  .mobile-h1,
+  .mobile-h2,
+  .mobile-h3,
+  .mobile-display,
+  .mobile-hero {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: black;
+  }
+}

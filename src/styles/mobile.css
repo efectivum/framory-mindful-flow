@@ -1,6 +1,6 @@
 
-/* Mobile-first CSS utilities */
-@import url('./index.css');
+/* Legacy Mobile Utilities - Deprecated in favor of mobile-first system */
+/* Use classes from ./mobile/ directory instead */
 
 /* Safe area padding for iOS devices */
 .safe-area-pb {
@@ -90,7 +90,7 @@ textarea {
   }
 }
 
-/* Enhanced touch interactions */
+/* Enhanced touch interactions - Use mobile-haptic classes instead */
 .haptic-light {
   transition: transform 0.15s ease-out;
 }

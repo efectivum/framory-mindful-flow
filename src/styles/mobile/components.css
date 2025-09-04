@@ -1,0 +1,282 @@
+/* Mobile-First Component System */
+
+/* Mobile Cards */
+.mobile-card {
+  background: var(--app-bg-card);
+  border-radius: var(--app-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--app-backdrop);
+  padding: var(--app-mobile-space-lg);
+  box-shadow: var(--app-shadow-md);
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--app-shadow-lg);
+}
+
+.mobile-card:active {
+  transform: translateY(0);
+  transition: all var(--app-transition-quick);
+}
+
+.mobile-card-compact {
+  padding: var(--app-mobile-space-md);
+}
+
+.mobile-card-spacious {
+  padding: var(--app-mobile-space-xl);
+}
+
+.mobile-card-flat {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--app-shadow-sm);
+}
+
+/* Mobile Buttons */
+.mobile-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--app-mobile-space-sm) var(--app-mobile-space-lg);
+  border-radius: var(--app-radius-md);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  transition: all var(--app-transition-smooth);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-mobile-space-xs);
+  text-decoration: none;
+  background: var(--app-accent-primary);
+  color: white;
+  box-shadow: var(--app-shadow-md);
+}
+
+.mobile-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--app-shadow-lg);
+}
+
+.mobile-button:active {
+  transform: translateY(0) scale(0.98);
+  transition: all var(--app-transition-quick);
+}
+
+.mobile-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mobile-button-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--app-text-primary);
+}
+
+.mobile-button-outline {
+  background: transparent;
+  border: 1px solid var(--app-accent-primary);
+  color: var(--app-text-primary);
+}
+
+.mobile-button-ghost {
+  background: transparent;
+  border: none;
+  color: var(--app-text-secondary);
+  box-shadow: none;
+}
+
+.mobile-button-small {
+  min-height: 36px;
+  min-width: 36px;
+  padding: var(--app-mobile-space-xs) var(--app-mobile-space-md);
+  font-size: 0.875rem;
+}
+
+.mobile-button-large {
+  min-height: 52px;
+  padding: var(--app-mobile-space-md) var(--app-mobile-space-xl);
+  font-size: 1.125rem;
+}
+
+/* Mobile Headers */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--app-mobile-space-md) var(--app-mobile-space-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--app-bg-glass);
+  backdrop-filter: var(--app-backdrop);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 56px;
+}
+
+.mobile-header-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--app-text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.mobile-header-back {
+  display: flex;
+  align-items: center;
+  gap: var(--app-mobile-space-xs);
+  color: var(--app-text-secondary);
+  text-decoration: none;
+  padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
+  border-radius: var(--app-radius-md);
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-header-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--app-text-primary);
+}
+
+.mobile-header-action {
+  padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
+  border-radius: var(--app-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-header-action-primary {
+  background: var(--app-accent-primary);
+  color: white;
+}
+
+.mobile-header-action-secondary {
+  color: var(--app-text-secondary);
+}
+
+/* Mobile Form Elements */
+.mobile-input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--app-mobile-space-sm) var(--app-mobile-space-md);
+  border-radius: var(--app-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--app-text-primary);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-input:focus {
+  outline: none;
+  border-color: var(--app-accent-primary);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.mobile-input::placeholder {
+  color: var(--app-text-muted);
+}
+
+.mobile-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.mobile-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--app-text-primary);
+  margin-bottom: var(--app-mobile-space-xs);
+}
+
+/* Mobile Lists */
+.mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-mobile-space-sm);
+}
+
+.mobile-list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--app-mobile-space-md);
+  border-radius: var(--app-radius-md);
+  background: var(--app-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-list-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-list-item:active {
+  transform: scale(0.98);
+  transition: all var(--app-transition-quick);
+}
+
+/* Mobile Status Indicators */
+.mobile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-mobile-space-xs);
+  padding: var(--app-mobile-space-xs) var(--app-mobile-space-sm);
+  border-radius: var(--app-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.mobile-status-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.mobile-status-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.mobile-status-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.mobile-status-info {
+  background: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+}
+
+/* Desktop Enhancements */
+@media (min-width: 769px) {
+  .mobile-card {
+    padding: var(--app-space-xl);
+  }
+  
+  .mobile-button {
+    min-height: 40px;
+    padding: var(--app-space-sm) var(--app-space-lg);
+  }
+  
+  .mobile-header {
+    padding: var(--app-space-md) var(--app-space-xl);
+    min-height: 64px;
+  }
+  
+  .mobile-input {
+    min-height: 40px;
+    padding: var(--app-space-sm) var(--app-space-md);
+  }
+}

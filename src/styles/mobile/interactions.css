@@ -1,0 +1,238 @@
+/* Mobile-First Interaction System */
+
+/* Touch-Optimized Base */
+.mobile-touch {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Touch Feedback */
+.mobile-haptic {
+  transition: transform var(--app-transition-quick);
+}
+
+.mobile-haptic:active {
+  transform: scale(0.96);
+}
+
+.mobile-haptic-light:active {
+  transform: scale(0.98);
+}
+
+.mobile-haptic-strong:active {
+  transform: scale(0.94);
+}
+
+/* Touch States */
+.mobile-touchable {
+  cursor: pointer;
+  transition: all var(--app-transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-touchable::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity var(--app-transition-quick);
+  pointer-events: none;
+}
+
+.mobile-touchable:active::before {
+  opacity: 1;
+}
+
+/* Swipe Gestures */
+.mobile-swipeable {
+  touch-action: pan-y;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.mobile-swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: all var(--app-transition-smooth);
+  pointer-events: none;
+}
+
+.mobile-swipe-left {
+  right: var(--app-mobile-space-lg);
+}
+
+.mobile-swipe-right {
+  left: var(--app-mobile-space-lg);
+}
+
+/* Pull to Refresh */
+.mobile-pull-refresh {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-pull-refresh-indicator {
+  position: absolute;
+  top: calc(-1 * var(--app-mobile-space-xl));
+  left: 50%;
+  transform: translateX(-50%);
+  transition: all var(--app-transition-smooth);
+  opacity: 0;
+}
+
+.mobile-pull-refresh.pulling .mobile-pull-refresh-indicator {
+  opacity: 1;
+  transform: translateX(-50%) translateY(var(--app-mobile-space-lg));
+}
+
+/* Long Press */
+.mobile-long-press {
+  position: relative;
+}
+
+.mobile-long-press-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all var(--app-transition-smooth);
+  pointer-events: none;
+}
+
+.mobile-long-press.pressing .mobile-long-press-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Scroll Momentum */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.mobile-scroll-horizontal {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-scroll-horizontal::-webkit-scrollbar {
+  display: none;
+}
+
+/* Focus Management */
+.mobile-focus-visible:focus-visible {
+  outline: 2px solid var(--app-accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--app-radius-sm);
+}
+
+.mobile-focus-within:focus-within {
+  border-color: var(--app-accent-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Keyboard Handling */
+.mobile-keyboard-adjust {
+  transition: all 0.3s ease-out;
+}
+
+.mobile-keyboard-visible .mobile-keyboard-adjust {
+  transform: translateY(-20vh);
+}
+
+/* Loading States */
+.mobile-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.mobile-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-top: 2px solid var(--app-accent-primary);
+  border-radius: 50%;
+  animation: mobile-spin 1s linear infinite;
+}
+
+@keyframes mobile-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Gesture Zones */
+.mobile-gesture-zone {
+  position: relative;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-gesture-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  z-index: 10;
+}
+
+.mobile-gesture-edge-left {
+  left: 0;
+}
+
+.mobile-gesture-edge-right {
+  right: 0;
+}
+
+/* Remove Hover Effects on Touch Devices */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-touchable:hover {
+    transform: none;
+    background: initial;
+    box-shadow: initial;
+  }
+  
+  .mobile-card:hover {
+    transform: none;
+    box-shadow: var(--app-shadow-md);
+  }
+  
+  .mobile-button:hover {
+    transform: none;
+    box-shadow: var(--app-shadow-md);
+  }
+}
+
+/* High DPI Adjustments */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .mobile-touchable {
+    /* Sharper borders on high DPI */
+    border-width: 0.5px;
+  }
+}
