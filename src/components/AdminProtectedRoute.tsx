@@ -21,11 +21,11 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardContent className="p-6 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <div className="text-white text-lg">Checking authentication...</div>
+      <div className="mobile-center mobile-bg-background">
+        <Card className="mobile-card bg-card/50 border-border">
+          <CardContent className="mobile-card-content mobile-text-center">
+            <div className="animate-spin mobile-w-8 mobile-h-8 border-2 border-primary border-t-transparent mobile-rounded-full mobile-mx-auto mobile-mb-md"></div>
+            <div className="mobile-text-primary mobile-text-lg">Checking authentication...</div>
           </CardContent>
         </Card>
       </div>
@@ -40,23 +40,23 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   if (!isAdmin) {
     console.log('AdminProtectedRoute: User not admin, redirecting to home');
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <Card className="bg-red-900/20 border-red-800 max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-6 h-6 text-red-400" />
+      <div className="mobile-center mobile-bg-background">
+        <Card className="mobile-card bg-destructive/20 border-destructive mobile-max-w-md">
+          <CardContent className="mobile-card-content mobile-text-center">
+            <div className="mobile-w-12 mobile-h-12 mobile-bg-destructive/20 mobile-rounded-full mobile-flex mobile-flex-center mobile-mx-auto mobile-mb-md">
+              <Shield className="mobile-w-6 mobile-h-6 mobile-text-destructive" />
             </div>
-            <h3 className="text-white font-semibold mb-2">Access Denied</h3>
-            <p className="text-gray-400 text-sm mb-4">
+            <h3 className="mobile-text-primary font-semibold mobile-mb-sm">Access Denied</h3>
+            <p className="mobile-text-muted mobile-text-sm mobile-mb-md">
               You don't have admin privileges to access this area.
             </p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <div className="flex items-center justify-center gap-2">
-                <User className="w-3 h-3" />
+            <div className="mobile-text-xs mobile-text-muted mobile-flow-xs">
+              <div className="mobile-flex mobile-flex-center mobile-gap-sm">
+                <User className="mobile-w-3 mobile-h-3" />
                 <span>User: {user.email}</span>
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <AlertCircle className="w-3 h-3" />
+              <div className="mobile-flex mobile-flex-center mobile-gap-sm">
+                <AlertCircle className="mobile-w-3 mobile-h-3" />
                 <span>Admin Status: {isAdmin ? 'Yes' : 'No'}</span>
               </div>
             </div>

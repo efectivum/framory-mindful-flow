@@ -1,5 +1,183 @@
 /* Mobile-First Utility Classes */
 
+/* Essential Missing Component Classes */
+.mobile-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--app-radius-md);
+  color: hsl(var(--foreground));
+  font-size: 16px;
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-input:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.mobile-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-md);
+  padding: var(--app-mobile-space-lg);
+}
+
+.mobile-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 16px;
+  border-radius: var(--app-radius-md);
+  font-size: 16px;
+  font-weight: 500;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  cursor: pointer;
+  transition: all var(--app-transition-smooth);
+}
+
+.mobile-button:hover {
+  background: hsl(var(--primary) / 0.9);
+  transform: translateY(-1px);
+  box-shadow: var(--app-shadow-lg);
+}
+
+.mobile-touchable {
+  position: relative;
+  cursor: pointer;
+  transition: all var(--app-transition-quick);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-touchable:active {
+  transform: scale(0.96);
+}
+
+.mobile-haptic {
+  transition: transform var(--app-transition-quick);
+}
+
+.mobile-haptic:active {
+  transform: scale(0.96);
+}
+
+.mobile-gesture-zone {
+  position: relative;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-page {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  padding-bottom: calc(var(--bottom-nav-height) + var(--app-mobile-space-lg));
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: var(--mobile-md);
+  margin: 0 auto;
+  padding: 0 var(--app-mobile-space-md);
+  min-height: 100vh;
+  background: hsl(var(--background));
+}
+
+.mobile-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--app-mobile-space-lg);
+}
+
+.mobile-flow {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-flow > * + * {
+  margin-top: var(--app-mobile-space-md);
+}
+
+.mobile-flow-tight > * + * {
+  margin-top: var(--app-mobile-space-sm);
+}
+
+.mobile-flow-loose > * + * {
+  margin-top: var(--app-mobile-space-lg);
+}
+
+.mobile-display {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: hsl(var(--foreground));
+}
+
+.mobile-h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+}
+
+.mobile-h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+}
+
+.mobile-text-base {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: hsl(var(--foreground));
+}
+
+.mobile-text-sm {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+}
+
+.mobile-text-xs {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+}
+
+.mobile-text-primary {
+  color: hsl(var(--primary));
+}
+
+.mobile-text-muted {
+  color: hsl(var(--muted-foreground));
+}
+
+.mobile-card-content {
+  padding: var(--app-mobile-space-md);
+}
+
+.mobile-card-content-lg {
+  padding: var(--app-mobile-space-lg);
+}
+
+.mobile-card-content-xl {
+  padding: var(--app-mobile-space-xl);
+}
+
 /* Mobile Flexbox Utilities */
 .mobile-flex {
   display: flex;

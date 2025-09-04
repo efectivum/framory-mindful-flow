@@ -159,21 +159,21 @@ export const AdvancedInsights: React.FC = () => {
           <GoalProgressVisualization goals={goalProgress} />
         </TabsContent>
 
-        <TabsContent value="emotions" className="space-y-6">
+        <TabsContent value="emotions" className="mobile-flow-lg">
           <EnhancedEmotionAnalysis emotions={emotionAnalysis} />
           
           {Object.keys(weeklyInsights.topEmotionsThisWeek).length > 0 && (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <Card className="mobile-card bg-card/50 border-border backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white text-lg">This Week's Emotional Focus</CardTitle>
+                <CardTitle className="mobile-text-primary mobile-text-lg">This Week's Emotional Focus</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
+                <div className="mobile-flex mobile-flex-wrap mobile-gap-sm">
                   {Object.entries(weeklyInsights.topEmotionsThisWeek)
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 5)
                     .map(([emotion, count]) => (
-                      <Badge key={emotion} variant="outline" className="text-purple-300 border-purple-500/30">
+                      <Badge key={emotion} variant="outline" className="mobile-text-primary border-primary/30">
                         {emotion} ({count})
                       </Badge>
                     ))
@@ -184,46 +184,46 @@ export const AdvancedInsights: React.FC = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="personality" className="space-y-6">
+        <TabsContent value="personality" className="mobile-flow-lg">
           <PersonalityRadarChart insights={personalityInsights} />
           
           {personalityInsights && (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <Card className="mobile-card bg-card/50 border-border backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Key Insights</CardTitle>
+                <CardTitle className="mobile-text-primary mobile-text-lg">Key Insights</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-400">Strongest Traits</div>
-                    <div className="space-y-1">
+              <CardContent className="mobile-flow-md">
+                <div className="mobile-admin-grid-1 mobile-admin-grid-2 mobile-gap-lg">
+                  <div className="mobile-flow-tight">
+                    <div className="mobile-text-sm mobile-text-muted">Strongest Traits</div>
+                    <div className="mobile-flow-xs">
                       {Object.entries(personalityInsights)
                         .sort(([,a], [,b]) => b - a)
                         .slice(0, 3)
                         .map(([trait, score]) => (
-                          <div key={trait} className="flex justify-between">
-                            <span className="text-gray-300 capitalize">
+                          <div key={trait} className="mobile-flex mobile-flex-between">
+                            <span className="mobile-text-muted capitalize">
                               {trait.replace(/([A-Z])/g, ' $1').trim()}
                             </span>
-                            <span className="text-white font-medium">{score}/100</span>
+                            <span className="mobile-text-primary font-medium">{score}/100</span>
                           </div>
                         ))
                       }
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-400">Growth Areas</div>
-                    <div className="space-y-1">
+                  <div className="mobile-flow-tight">
+                    <div className="mobile-text-sm mobile-text-muted">Growth Areas</div>
+                    <div className="mobile-flow-xs">
                       {Object.entries(personalityInsights)
                         .sort(([,a], [,b]) => a - b)
                         .slice(0, 2)
                         .map(([trait, score]) => (
-                          <div key={trait} className="flex justify-between">
-                            <span className="text-gray-300 capitalize">
+                          <div key={trait} className="mobile-flex mobile-flex-between">
+                            <span className="mobile-text-muted capitalize">
                               {trait.replace(/([A-Z])/g, ' $1').trim()}
                             </span>
-                            <span className="text-white font-medium">{score}/100</span>
+                            <span className="mobile-text-primary font-medium">{score}/100</span>
                           </div>
                         ))
                       }

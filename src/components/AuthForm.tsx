@@ -132,21 +132,21 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
   if (emailSent && mode === 'signup') {
     return (
-      <div className="text-center space-y-6">
-        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-green-400" />
+      <div className="mobile-center mobile-flow-lg">
+        <div className="mobile-w-16 mobile-h-16 mobile-bg-success/20 mobile-rounded-full mobile-flex mobile-flex-center mobile-mx-auto mobile-mb-md">
+          <Mail className="mobile-w-8 mobile-h-8 mobile-text-success" />
         </div>
         
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-white">Check your email</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
+        <div className="mobile-flow-tight mobile-text-center">
+          <h2 className="mobile-h2 mobile-text-primary">Check your email</h2>
+          <p className="mobile-text-sm mobile-text-muted">
             We've sent a verification link to<br />
-            <span className="text-blue-400 font-medium">{email}</span>
+            <span className="mobile-text-primary font-medium">{email}</span>
           </p>
         </div>
         
-        <div className="space-y-3">
-          <p className="text-xs text-gray-500 leading-relaxed">
+        <div className="mobile-flow-md">
+          <p className="mobile-text-xs mobile-text-muted">
             Click the link in your email to verify your account, then return here to sign in.
           </p>
           
@@ -154,11 +154,11 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             onClick={handleResendConfirmation}
             variant="outline"
             disabled={loading}
-            className="w-full bg-gray-700/50 border-gray-600/50 text-gray-200 hover:bg-gray-600/50 rounded-xl"
+            className="mobile-w-full mobile-button"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="mobile-w-4 mobile-h-4 mobile-mr-sm animate-spin" />
                 Sending...
               </>
             ) : (
@@ -172,7 +172,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               onToggleMode();
             }}
             variant="ghost"
-            className="w-full text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-xl"
+            className="mobile-w-full mobile-text-muted mobile-touchable"
           >
             Back to sign in
           </Button>
@@ -240,19 +240,19 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-semibold text-white">
+    <div className="mobile-flow-lg">
+      <div className="mobile-text-center mobile-flow-tight">
+        <h2 className="mobile-h2 mobile-text-primary">
           {mode === 'signin' ? 'Welcome back' : 'Create your account'}
         </h2>
-        <p className="text-gray-400 text-sm">
+        <p className="mobile-text-sm mobile-text-muted">
           {mode === 'signin' 
             ? 'Sign in to continue your journey' 
             : 'Start your personal growth journey'}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="mobile-flow-md">
         {mode === 'signup' && (
           <div className="space-y-2">
             <Label htmlFor="name" className="text-gray-300 text-sm font-medium">
