@@ -11,10 +11,10 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="mobile-page mobile-center">
-        <div className="mobile-center-content mobile-flow">
-          <Loader2 className="mobile-w-6 mobile-h-6 animate-spin mobile-text-accent" />
-          <div className="mobile-text-lg mobile-text-accent font-medium">Loading your sanctuary...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 px-4 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-lg text-muted-foreground font-medium">Loading your sanctuary...</div>
         </div>
       </div>
     );
@@ -22,23 +22,23 @@ const Index = () => {
 
   if (!user) {
     return (
-      <div className="mobile-page mobile-center">
-        <div className="mobile-center-content mobile-container">
-          <div className="mobile-flow-loose text-center">
-            <div className="mobile-w-20 mobile-h-20 mobile-rounded-lg mx-auto mobile-flex mobile-flex-center shadow-2xl animate-breathe mobile-bg-accent">
-              <Calendar className="mobile-w-10 mobile-h-10 mobile-text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-sm w-full">
+          <div className="flex flex-col items-center gap-8 text-center">
+            <div className="w-20 h-20 rounded-xl mx-auto flex items-center justify-center shadow-2xl animate-breathe bg-primary">
+              <Calendar className="w-10 h-10 text-primary-foreground" />
             </div>
-            <div className="mobile-flow">
-              <h1 className="mobile-display mobile-text-accent">
+            <div className="space-y-4">
+              <h1 className="text-3xl font-bold gradient-text">
                 Welcome to Lumatori
               </h1>
-              <p className="mobile-text-lg mobile-text-muted">
+              <p className="text-lg text-muted-foreground leading-relaxed">
                 Your personal sanctuary for mindful growth and reflection
               </p>
             </div>
             <Button 
               size="lg" 
-              className="mobile-w-full mobile-h-14 text-lg font-medium" 
+              className="w-full h-14 text-lg font-medium" 
               asChild
             >
               <Link to="/auth">

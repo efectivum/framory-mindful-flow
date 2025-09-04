@@ -1,25 +1,5 @@
 
-/* Import Design System Modules - Mobile-First Architecture */
-@import './styles/foundations/variables.css';
-@import './styles/mobile/core.css';
-@import './styles/mobile/components.css';
-@import './styles/mobile/interactions.css';
-@import './styles/mobile/typography.css';
-@import './styles/mobile/layouts.css';
-@import './styles/mobile/utilities.css';
-
-/* Legacy mobile utilities - will be phased out */
-@import './styles/mobile.css';
-@import './styles/layout/base.css';
-@import './styles/layout/grid.css';
-@import './styles/components/cards.css';
-@import './styles/components/headers.css';
-@import './styles/components/buttons.css';
-@import './styles/components/statistics.css';
-@import './styles/components/forms.css';
-@import './styles/animations/keyframes.css';
-@import './styles/utilities/spacing.css';
-@import './styles/utilities/states.css';
+/* Mobile-First Design System Foundation */
 
 @tailwind base;
 @tailwind components;
@@ -27,83 +7,85 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    /* Lumatori Brand Colors - Dark Mode First */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262 83% 58%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 262 83% 58%;
 
     --radius: 0.75rem;
   }
 
   .light {
+    /* Lumatori Brand Colors - Light Mode */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 240 10% 3.9%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 240 10% 3.9%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    --popover-foreground: 240 10% 3.9%;
+    
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
+    
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 262 83% 58%;
   }
 }
 
@@ -119,90 +101,26 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: var(--app-bg-primary);
-    color: var(--app-text-primary);
     overflow-x: hidden;
   }
 
-  /* Enhanced mobile-first typography for better readability and personality */
+  /* Mobile-first typography */
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
+    @apply font-semibold text-foreground;
     letter-spacing: -0.025em;
     line-height: 1.2;
-    color: var(--app-text-primary);
   }
   
   p {
+    @apply text-muted-foreground;
     line-height: 1.6;
     letter-spacing: 0.025em;
-    color: var(--app-text-secondary);
   }
 
-  /* Enhanced Mobile-specific typography improvements */
-  @media (max-width: 768px) {
-    body {
-      font-size: 16px; /* Prevent zoom on iOS */
-      line-height: 1.5;
-    }
-    
-    h1 {
-      @apply text-mobile-xl font-semibold;
-      background: var(--app-accent-primary);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: var(--app-mobile-space-md);
-    }
-    
-    h2 {
-      @apply text-mobile-lg font-semibold;
-      color: var(--app-text-primary);
-      margin-bottom: var(--app-mobile-space-sm);
-    }
-    
-    h3 {
-      @apply text-mobile-base font-medium;
-      color: var(--app-text-secondary);
-      margin-bottom: var(--app-mobile-space-sm);
-    }
-    
-    p {
-      @apply text-mobile-sm;
-      line-height: 1.6;
-      color: var(--app-text-secondary);
-      margin-bottom: var(--app-mobile-space-sm);
-    }
-    
-    .text-sm {
-      @apply text-mobile-xs;
-      color: var(--app-text-muted);
-    }
-    
-    .text-lg {
-      @apply text-mobile-base;
-      color: var(--app-text-secondary);
-    }
-
-    /* Premium text treatments */
-    .text-hero {
-      font-size: 1.5rem;
-      font-weight: 600;
-      line-height: 1.3;
-      letter-spacing: -0.02em;
-      background: var(--app-accent-primary);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: var(--app-mobile-space-lg);
-    }
-
-    .text-subhero {
-      font-size: 1.125rem;
-      font-weight: 400;
-      line-height: 1.5;
-      color: var(--app-text-secondary);
-      margin-bottom: var(--app-mobile-space-md);
-    }
+  /* Mobile-optimized base typography */
+  body {
+    font-size: 16px; /* Prevent zoom on iOS */
+    line-height: 1.5;
   }
 
   /* Smooth scrolling */
@@ -230,112 +148,29 @@
 }
 
 @layer components {
+  /* Mobile-first gradient text */
   .gradient-text {
-    background: var(--app-accent-primary);
+    @apply bg-gradient-to-r from-primary to-accent;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  .gradient-text-warm {
-    background: var(--app-accent-warm);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  /* Enhanced card hover with organic feel */
+  /* Mobile-optimized card hover */
   .card-hover {
-    transition: all var(--app-transition-smooth);
-    cursor: pointer;
+    @apply transition-all duration-300 cursor-pointer;
   }
 
   .card-hover:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: var(--app-shadow-lg);
+    @apply -translate-y-1 scale-105 shadow-lg;
   }
 
   .card-hover:active {
-    transform: translateY(-1px) scale(1.01);
-    transition: all var(--app-transition-quick);
+    @apply translate-y-0 scale-100;
+    transition: all 0.1s ease-out;
   }
 
-  .animate-fade-in {
-    animation: fadeIn var(--app-transition-smooth);
-  }
-
-  /* Enhanced typography utilities with personality */
-  .text-premium {
-    font-weight: 500;
-    letter-spacing: 0.025em;
-    line-height: 1.5;
-    color: var(--app-text-primary);
-  }
-  
-  .text-premium-bold {
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.3;
-    color: var(--app-text-primary);
-  }
-  
-  .text-mobile-optimized {
-    @apply text-mobile-base leading-relaxed tracking-wide;
-    color: var(--app-text-secondary);
-  }
-
-  /* Organic button styles */
-  .btn-organic {
-    border-radius: var(--app-radius-organic);
-    background: var(--app-accent-primary);
-    color: white;
-    padding: var(--app-mobile-space-md) var(--app-mobile-space-lg);
-    font-weight: 500;
-    transition: all var(--app-transition-smooth);
-    border: none;
-    box-shadow: var(--app-shadow-md);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-organic::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left var(--app-transition-smooth);
-  }
-
-  .btn-organic:hover::before {
-    left: 100%;
-  }
-
-  .btn-organic:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: var(--app-shadow-lg);
-  }
-
-  .btn-organic:active {
-    transform: translateY(0) scale(0.98);
-    transition: all var(--app-transition-quick);
-  }
-
-  /* Glowing elements */
-  .glow-primary {
-    box-shadow: var(--app-glow-primary);
-  }
-
-  .glow-warm {
-    box-shadow: var(--app-glow-warm);
-  }
-
-  .glow-success {
-    box-shadow: var(--app-glow-success);
-  }
-
+  /* Mobile-first animations */
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -347,23 +182,16 @@
     }
   }
 
-  /* Organic breathing animation */
   @keyframes breathe {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.02); }
   }
 
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
   .animate-breathe {
     animation: breathe 3s ease-in-out infinite;
-  }
-
-  /* Gentle pulse for important elements */
-  @keyframes gentle-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-  }
-
-  .animate-gentle-pulse {
-    animation: gentle-pulse 2s ease-in-out infinite;
   }
 }
