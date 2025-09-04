@@ -24,18 +24,18 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="bg-card border-r border-border">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+      <SidebarHeader className="mobile-content-spacing">
+        <div className="mobile-flex mobile-flex-center">
+          <div className="w-8 h-8 bg-primary rounded-lg mobile-flex mobile-flex-center">
             <Calendar className="w-4 h-4 text-white" />
           </div>
-          <span className="text-xl font-bold text-foreground">Lumatori</span>
+          <span className="mobile-h2 font-bold text-foreground">Lumatori</span>
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="px-4">
+      <SidebarContent className="mobile-content-spacing">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider">
+          <SidebarGroupLabel className="mobile-text-caption text-muted-foreground uppercase tracking-wider">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -45,13 +45,13 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     className={cn(
-                      "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+                      "mobile-touchable text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
                       item.adminOnly && "border-t border-border mt-2 pt-2 text-destructive hover:text-destructive-foreground hover:bg-destructive/20"
                     )}
                   >
-                    <Link to={item.path} className="flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <Link to={item.path} className="mobile-flex mobile-flex-center mobile-gesture-zone rounded-lg">
                       <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <span className="mobile-text-body">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -61,7 +61,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="mobile-content-spacing border-t border-border">
         <UserButton />
       </SidebarFooter>
     </Sidebar>

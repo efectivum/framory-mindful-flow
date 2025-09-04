@@ -93,158 +93,148 @@ export default function AdminDashboard() {
       title="Admin Dashboard" 
       subtitle="Overview of system status and key metrics"
     >
-      <div className="space-y-6">
+      <div className="mobile-flow">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mobile-admin-grid mobile-admin-grid-4">
           {statsData.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.title} className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-sm">{stat.title}</p>
-                      <p className="text-2xl font-bold text-white">{stat.value}</p>
-                      <p className="text-gray-400 text-sm">{stat.change}</p>
-                    </div>
-                    <Icon className={`w-8 h-8 ${stat.color}`} />
+              <div key={stat.title} className="mobile-card">
+                <div className="mobile-flex mobile-flex-between">
+                  <div>
+                    <p className="mobile-text-caption text-muted-foreground">{stat.title}</p>
+                    <p className="mobile-h2 text-foreground">{stat.value}</p>
+                    <p className="mobile-text-caption text-muted-foreground">{stat.change}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <Icon className="w-8 h-8 text-accent" />
+                </div>
+              </div>
             );
           })}
         </div>
 
         {/* System Status */}
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center justify-between">
-              System Status
-              {healthError && (
-                <Button 
-                  onClick={() => refetchHealth()}
-                  size="sm"
-                  variant="outline"
-                  className="text-red-400 border-red-400 hover:bg-red-400/10"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Retry
-                </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="mobile-card">
+          <div className="mobile-flex mobile-flex-between mobile-section">
+            <h3 className="mobile-h3 text-foreground">System Status</h3>
+            {healthError && (
+              <button 
+                onClick={() => refetchHealth()}
+                className="mobile-button mobile-button-small mobile-button-outline text-destructive"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </button>
+            )}
+          </div>
+          <div>
             {healthLoading ? (
-              <div className="flex items-center justify-center h-24">
+              <div className="mobile-center">
                 <LoadingSpinner />
               </div>
             ) : healthError ? (
-              <div className="text-center text-red-400 py-4">
-                <AlertCircle className="w-6 h-6 mx-auto mb-2" />
-                <p className="text-sm">Failed to load system status</p>
-                <p className="text-xs text-gray-500 mt-1">{healthError.message}</p>
+              <div className="mobile-stack-center text-destructive">
+                <AlertCircle className="w-6 h-6" />
+                <p className="mobile-text-body">Failed to load system status</p>
+                <p className="mobile-text-caption text-muted-foreground">{healthError.message}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${
-                    systemHealth?.database.status === 'online' ? 'bg-green-400' :
-                    systemHealth?.database.status === 'degraded' ? 'bg-yellow-400' : 'bg-red-400'
+              <div className="mobile-admin-grid mobile-admin-grid-3">
+                <div className="mobile-stack-center">
+                  <div className={`mobile-status-dot ${
+                    systemHealth?.database.status === 'online' ? 'mobile-status-online' :
+                    systemHealth?.database.status === 'degraded' ? 'mobile-status-warning' : 'mobile-status-error'
                   }`}></div>
-                  <p className="text-gray-300 text-sm">Database</p>
-                  <p className={`text-xs ${
-                    systemHealth?.database.status === 'online' ? 'text-green-400' :
-                    systemHealth?.database.status === 'degraded' ? 'text-yellow-400' : 'text-red-400'
+                  <p className="mobile-text-body text-foreground">Database</p>
+                  <p className={`mobile-text-caption ${
+                    systemHealth?.database.status === 'online' ? 'text-success' :
+                    systemHealth?.database.status === 'degraded' ? 'text-warning' : 'text-destructive'
                   }`}>
                     {systemHealth?.database.status || 'Unknown'} • {systemHealth?.database.responseTime || 0}ms
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${
-                    systemHealth?.edgeFunctions.status === 'online' ? 'bg-green-400' :
-                    systemHealth?.edgeFunctions.status === 'degraded' ? 'bg-yellow-400' : 'bg-red-400'
+                <div className="mobile-stack-center">
+                  <div className={`mobile-status-dot ${
+                    systemHealth?.edgeFunctions.status === 'online' ? 'mobile-status-online' :
+                    systemHealth?.edgeFunctions.status === 'degraded' ? 'mobile-status-warning' : 'mobile-status-error'
                   }`}></div>
-                  <p className="text-gray-300 text-sm">Edge Functions</p>
-                  <p className={`text-xs ${
-                    systemHealth?.edgeFunctions.status === 'online' ? 'text-green-400' :
-                    systemHealth?.edgeFunctions.status === 'degraded' ? 'text-yellow-400' : 'text-red-400'
+                  <p className="mobile-text-body text-foreground">Edge Functions</p>
+                  <p className={`mobile-text-caption ${
+                    systemHealth?.edgeFunctions.status === 'online' ? 'text-success' :
+                    systemHealth?.edgeFunctions.status === 'degraded' ? 'text-warning' : 'text-destructive'
                   }`}>
                     {systemHealth?.edgeFunctions.status || 'Unknown'} • {systemHealth?.edgeFunctions.activeCount || 0} active
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${
-                    systemHealth?.apiResponse.status === 'healthy' ? 'bg-green-400' :
-                    systemHealth?.apiResponse.status === 'slow' ? 'bg-yellow-400' : 'bg-red-400'
+                <div className="mobile-stack-center">
+                  <div className={`mobile-status-dot ${
+                    systemHealth?.apiResponse.status === 'healthy' ? 'mobile-status-online' :
+                    systemHealth?.apiResponse.status === 'slow' ? 'mobile-status-warning' : 'mobile-status-error'
                   }`}></div>
-                  <p className="text-gray-300 text-sm">API Response</p>
-                  <p className={`text-xs ${
-                    systemHealth?.apiResponse.status === 'healthy' ? 'text-green-400' :
-                    systemHealth?.apiResponse.status === 'slow' ? 'text-yellow-400' : 'text-red-400'
+                  <p className="mobile-text-body text-foreground">API Response</p>
+                  <p className={`mobile-text-caption ${
+                    systemHealth?.apiResponse.status === 'healthy' ? 'text-success' :
+                    systemHealth?.apiResponse.status === 'slow' ? 'text-warning' : 'text-destructive'
                   }`}>
                     {systemHealth?.apiResponse.averageTime || 0}ms avg
                   </p>
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quick Actions & Recent Errors */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <button className="w-full text-left p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-white">
+        <div className="mobile-admin-grid mobile-admin-grid-2">
+          <div className="mobile-card">
+            <h3 className="mobile-h3 text-foreground mobile-section">Quick Actions</h3>
+            <div className="mobile-flow-tight">
+              <button className="mobile-button mobile-button-ghost w-full text-left">
                 Send System Notification
               </button>
-              <button className="w-full text-left p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-white">
+              <button className="mobile-button mobile-button-ghost w-full text-left">
                 Export User Data
               </button>
-              <button className="w-full text-left p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors text-white">
+              <button className="mobile-button mobile-button-ghost w-full text-left">
                 View System Logs
               </button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                Recent System Errors
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="mobile-card">
+            <div className="mobile-flex mobile-flex-center mobile-section">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              <h3 className="mobile-h3 text-foreground">Recent System Errors</h3>
+            </div>
+            <div className="mobile-flow-tight">
               {systemHealth?.recentErrors.length ? (
                 systemHealth.recentErrors.map((error, index) => (
-                  <div key={index} className={`p-3 rounded-lg border ${
-                    error.severity === 'error' ? 'bg-red-900/20 border-red-800' :
-                    error.severity === 'warning' ? 'bg-yellow-900/20 border-yellow-800' :
-                    'bg-gray-700/30 border-gray-600'
+                  <div key={index} className={`mobile-card mobile-card-compact border ${
+                    error.severity === 'error' ? 'border-destructive bg-destructive/10' :
+                    error.severity === 'warning' ? 'border-warning bg-warning/10' :
+                    'border-border bg-muted/50'
                   }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-medium ${
-                        error.severity === 'error' ? 'text-red-400' :
-                        error.severity === 'warning' ? 'text-yellow-400' : 'text-gray-300'
+                    <div className="mobile-flex mobile-flex-between">
+                      <span className={`mobile-text-caption font-medium ${
+                        error.severity === 'error' ? 'text-destructive' :
+                        error.severity === 'warning' ? 'text-warning' : 'text-foreground'
                       }`}>
                         {error.severity.charAt(0).toUpperCase() + error.severity.slice(1)}
                       </span>
-                      <span className="text-gray-400 text-sm">
+                      <span className="mobile-text-caption text-muted-foreground">
                         {new Date(error.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="text-gray-300 text-sm">{error.message}</p>
+                    <p className="mobile-text-body text-foreground">{error.message}</p>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-400 py-4">
+                <div className="mobile-center text-muted-foreground">
                   No recent errors
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>

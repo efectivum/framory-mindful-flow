@@ -24,47 +24,45 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
 }) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full overflow-x-hidden font-inter" style={{ background: 'var(--app-bg-primary)' }}>
+      <div className="mobile-layout mobile-layout-with-nav mobile-w-full mobile-min-h-screen">
         {/* Desktop Sidebar */}
-        <div className="hidden md:block">
+        <div className="mobile-hidden desktop-block">
           <AppSidebar />
         </div>
 
         {/* Main area */}
-        <main className="flex-1 flex flex-col min-w-0">
-          {/* Enhanced Mobile Header */}
+        <main className="mobile-flex-1 mobile-flex mobile-flex-col">
+          {/* Mobile Header */}
           {showHeader && (title || subtitle) && (
-            <header className="app-card-organic border-b border-gray-700/30 md:hidden animate-fade-in">
-              <div className="flex items-center justify-center p-6">
-                <div className="text-center">
-                  {title && <h1 className="text-hero">{title}</h1>}
-                  {subtitle && <p className="text-subhero mt-2">{subtitle}</p>}
-                </div>
+            <header className="mobile-header-compact desktop-hidden">
+              <div className="mobile-stack-center">
+                {title && <h1 className="mobile-h1 text-foreground">{title}</h1>}
+                {subtitle && <p className="mobile-text-body text-muted-foreground">{subtitle}</p>}
               </div>
             </header>
           )}
 
-          {/* Enhanced Desktop Header */}
+          {/* Desktop Header */}
           {showHeader && (title || subtitle) && (
-            <header className="hidden md:block app-card-organic border-b border-gray-700/30 animate-fade-in">
-              <div className="flex items-center justify-between p-8">
+            <header className="mobile-hidden desktop-block mobile-card border-b border-border">
+              <div className="mobile-flex mobile-flex-between p-8">
                 <div>
-                  {title && <h1 className="text-3xl font-semibold text-white gradient-text">{title}</h1>}
-                  {subtitle && <p className="text-gray-400 text-lg mt-2 text-premium">{subtitle}</p>}
+                  {title && <h1 className="mobile-h1 text-foreground">{title}</h1>}
+                  {subtitle && <p className="mobile-text-body text-muted-foreground">{subtitle}</p>}
                 </div>
               </div>
             </header>
           )}
 
           {/* Content */}
-          <div className="flex-1 md:p-8">
-            <div className="max-w-6xl mx-auto">
+          <div className="mobile-flex-1 mobile-content-spacing">
+            <div className="mobile-container">
               {children}
             </div>
           </div>
         </main>
 
-        {/* Enhanced Bottom navigation (mobile only) */}
+        {/* Bottom navigation (mobile only) */}
         {!hideBottomNav && <BottomNavigation />}
       </div>
     </SidebarProvider>

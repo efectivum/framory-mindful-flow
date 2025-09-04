@@ -128,41 +128,41 @@ const JournalWrite = () => {
         />
 
         <MobileContent padded>
-          <div className="space-y-4">
+          <div className="mobile-flow">
             {/* Status Bar */}
-            <div className="flex justify-between items-center text-muted-foreground">
-              <div className="flex items-center gap-2">
+            <div className="mobile-flex mobile-flex-between text-muted-foreground">
+              <div className="mobile-flex mobile-flex-center">
                 <BookOpen className="w-4 h-4" />
-                <span className="font-medium">New Entry</span>
+                <span className="mobile-text-body font-medium">New Entry</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-medium">{wordCount} words</span>
+              <div className="mobile-flex mobile-flex-center">
+                <span className="mobile-text-body font-medium">{wordCount} words</span>
                 {status === 'saving' && (
-                  <span className="text-primary font-medium text-xs">Saving...</span>
+                  <span className="mobile-text-caption text-accent font-medium">Saving...</span>
                 )}
                 {status === 'saved' && lastSaved && (
-                  <span className="text-green-600 font-medium text-xs">Draft saved</span>
+                  <span className="mobile-text-caption text-success font-medium">Draft saved</span>
                 )}
               </div>
             </div>
 
             {/* Writing Area */}
-            <div className="relative">
+            <div className="mobile-relative">
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind today? Share your thoughts, feelings, experiences, or anything else you'd like to reflect on..."
-                className="min-h-[calc(100vh-280px)] bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground resize-none"
+                className="mobile-resize-none mobile-w-full min-h-[calc(100vh-280px)] bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground"
                 style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 autoFocus
               />
               
               {/* Voice Button - Mobile Optimized */}
-              <div className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6">
-                <div className="bg-primary/90 backdrop-blur-sm rounded-full shadow-lg border border-border/20 p-2">
+              <div className="mobile-fixed mobile-bottom-safe mobile-right-md z-50">
+                <div className="mobile-card mobile-card-compact mobile-shadow-floating">
                   <VoiceButton 
                     onTranscription={handleVoiceTranscription}
-                    className="text-primary-foreground hover:text-primary-foreground hover:bg-primary/20 h-12 w-12 rounded-full"
+                    className="mobile-button mobile-gesture-zone text-primary-foreground bg-primary"
                   />
                 </div>
               </div>
