@@ -78,7 +78,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
       case 'reflection':
         return 'bg-teal-500/20 text-teal-300 border-teal-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+        return 'mobile-bg-secondary mobile-text-secondary mobile-border';
     }
   };
 
@@ -88,13 +88,13 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
 
   if (isLoading) {
     return (
-      <Card className={`bg-gray-800/50 border-gray-700 ${className}`}>
+      <Card className={`mobile-card ${className}`}>
         <CardContent className="p-6">
-          <div className="space-y-3">
+          <div className="mobile-space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+                <div className="h-4 mobile-bg-secondary rounded w-3/4 mb-2"></div>
+                <div className="h-3 mobile-bg-secondary rounded w-1/2"></div>
               </div>
             ))}
           </div>
@@ -104,19 +104,19 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
   }
 
   return (
-    <Card className={`bg-gray-800/50 border-gray-700 ${className}`}>
+    <Card className={`mobile-card ${className}`}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
+        <div className="mobile-flex mobile-flex-between">
+          <CardTitle className="mobile-text-primary mobile-flex mobile-flex-center gap-2">
             <Clock className="w-5 h-5" />
             Activity Log
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="mobile-flex mobile-flex-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setViewMode(viewMode === 'list' ? 'timeline' : 'list')}
-              className="bg-gray-700 border-gray-600"
+              className="mobile-button"
             >
               {viewMode === 'list' ? (
                 <>
@@ -132,9 +132,9 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
             </Button>
             {showFilters && (
               <>
-                <Filter className="w-4 h-4 text-gray-400" />
+                <Filter className="w-4 h-4 mobile-text-secondary" />
                 <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ActivityType | 'all')}>
-                  <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
+                  <SelectTrigger className="w-32 mobile-bg-secondary mobile-border">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -145,7 +145,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
                   </SelectContent>
                 </Select>
                 <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as ActivitySource | 'all')}>
-                  <SelectTrigger className="w-32 bg-gray-700 border-gray-600">
+                  <SelectTrigger className="w-32 mobile-bg-secondary mobile-border">
                     <SelectValue placeholder="Source" />
                   </SelectTrigger>
                   <SelectContent>
@@ -162,30 +162,30 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
       </CardHeader>
       <CardContent>
         {activities && activities.length > 0 ? (
-          <div className="space-y-3">
+          <div className="mobile-space-y-3">
             {activities.map((activity) => (
-              <div key={activity.id} className="p-3 bg-gray-800/30 rounded-lg border border-gray-700/50">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Badge className={`text-xs ${getTypeColor(activity.type as ActivityType)}`}>
+              <div key={activity.id} className="mobile-card mobile-card-compact">
+                <div className="mobile-flex mobile-flex-between mb-2">
+                  <div className="mobile-flex mobile-flex-center gap-2">
+                    <Badge className={`mobile-badge ${getTypeColor(activity.type as ActivityType)}`}>
                       {ACTIVITY_TYPE_LABELS[activity.type as ActivityType]}
                     </Badge>
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <div className="mobile-flex mobile-flex-center gap-1 mobile-text-caption mobile-text-secondary">
                       {getSourceIcon(activity.source as ActivitySource)}
                       <span>{ACTIVITY_SOURCE_LABELS[activity.source as ActivitySource]}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="mobile-flex mobile-flex-center gap-1 mobile-text-caption mobile-text-secondary">
                     <Calendar className="w-3 h-3" />
                     {new Date(activity.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <h4 className="font-medium text-white text-sm mb-1">{activity.title}</h4>
-                <p className="text-gray-300 text-sm line-clamp-2">{activity.content}</p>
+                <h4 className="font-medium mobile-text-primary mobile-text-body mb-1">{activity.title}</h4>
+                <p className="mobile-text-secondary mobile-text-body line-clamp-2">{activity.content}</p>
                 {activity.metadata && Object.keys(activity.metadata).length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-2 mobile-flex mobile-flex-wrap gap-1">
                     {Object.entries(activity.metadata).map(([key, value]) => (
-                      <span key={key} className="text-xs bg-gray-700/50 text-gray-400 px-2 py-1 rounded">
+                      <span key={key} className="mobile-badge mobile-bg-secondary mobile-text-secondary">
                         {key}: {String(value)}
                       </span>
                     ))}
@@ -195,7 +195,7 @@ export const ActivityLog = ({ limit, showFilters = true, className }: ActivityLo
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm text-center py-4">
+          <p className="mobile-text-secondary mobile-text-body text-center py-4">
             No activities found. Start tracking your progress!
           </p>
         )}

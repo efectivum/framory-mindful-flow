@@ -50,16 +50,16 @@ export const ActivitySelector: React.FC<ActivitySelectorProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-full left-0 mb-2 bg-gray-800 rounded-2xl shadow-xl border border-gray-700 p-3 z-50 min-w-64"
+            className="mobile-absolute mobile-bottom-0 mobile-left-0 mb-2 mobile-card mobile-shadow-floating mobile-z-50 min-w-64"
           >
-            <div className="grid grid-cols-2 gap-2">
+            <div className="mobile-admin-grid-2">
               {activities.map((activity) => {
                 const Icon = activity.icon;
                 return (
                   <button
                     key={activity.id}
                     onClick={() => onSelect(activity.label)}
-                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all hover:scale-105 ${
+                    className={`mobile-button mobile-button-small mobile-flex mobile-flex-center gap-2 ${
                       colorClasses[activity.color as keyof typeof colorClasses]
                     }`}
                   >

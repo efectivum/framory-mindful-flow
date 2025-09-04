@@ -30,16 +30,16 @@ export const AccountDeletionDialog = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-red-400 flex items-center">
+          <DialogTitle className="text-destructive mobile-flex mobile-flex-center">
             <AlertTriangle className="w-5 h-5 mr-2" />
             Delete Account
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="mobile-space-y-6">
           <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
             <h3 className="text-red-300 font-medium mb-2">⚠️ This action cannot be undone</h3>
-            <ul className="text-red-300 text-sm space-y-1">
+            <ul className="text-red-300 mobile-text-body mobile-space-y-1">
               <li>• All your journal entries will be permanently deleted</li>
               <li>• All your habits and tracking data will be lost</li>
               <li>• Your account preferences will be removed</li>
@@ -55,7 +55,7 @@ export const AccountDeletionDialog = () => {
           </div>
 
           <div>
-            <Label htmlFor="confirmation" className="text-white font-medium">
+            <Label htmlFor="confirmation" className="mobile-text-primary font-medium">
               Type "DELETE MY ACCOUNT" to confirm:
             </Label>
             <Input
@@ -63,7 +63,7 @@ export const AccountDeletionDialog = () => {
               value={confirmationText}
               onChange={(e) => setConfirmationText(e.target.value)}
               placeholder="DELETE MY ACCOUNT"
-              className="mt-2 bg-gray-800 border-gray-600 text-white"
+              className="mobile-input"
             />
           </div>
 

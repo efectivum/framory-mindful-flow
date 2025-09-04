@@ -17,7 +17,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
 }) => {
   const getGradientStyle = () => {
     if (!milestone.achieved) {
-      return 'bg-gray-600/30 border-gray-500/50';
+      return 'mobile-bg-secondary border-muted';
     }
 
     switch (milestone.celebrationStyle) {
@@ -70,7 +70,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             {/* Category Badge */}
             <Badge 
               variant="secondary" 
-              className="absolute -bottom-2 text-xs px-2 py-0.5 bg-black/50 text-white border-none"
+              className="mobile-badge mobile-absolute -bottom-2 mobile-bg-primary mobile-text-primary border-none"
             >
               {milestone.category}
             </Badge>
@@ -111,19 +111,19 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
         
         <TooltipContent side="top" className="max-w-xs">
           <div className="text-center">
-            <div className="font-semibold text-white mb-1">{milestone.title}</div>
-            <div className="text-gray-300 text-sm mb-2">{milestone.description}</div>
+            <div className="font-semibold mobile-text-primary mb-1">{milestone.title}</div>
+            <div className="mobile-text-secondary mobile-text-body mb-2">{milestone.description}</div>
             
             {milestone.achieved ? (
-              <div className="text-green-400 text-xs">
+              <div className="text-success mobile-text-caption">
                 Earned {milestone.achievedAt ? 
                   new Date(milestone.achievedAt).toLocaleDateString() : 
                   'recently'
                 }
               </div>
             ) : (
-              <div className="space-y-1">
-                <div className="text-gray-400 text-xs">
+              <div className="mobile-space-y-1">
+                <div className="mobile-text-secondary mobile-text-caption">
                   Progress: {Math.round(milestone.progress * 100)}%
                 </div>
                 {milestone.nextTarget && (
