@@ -22,15 +22,15 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
 
     switch (milestone.celebrationStyle) {
       case 'fire':
-        return 'bg-gradient-to-br from-orange-500 to-red-500';
+        return 'mobile-bg-gradient-error';
       case 'stars':
-        return 'bg-gradient-to-br from-yellow-400 to-orange-500';
+        return 'mobile-bg-gradient-warning';
       case 'growth':
-        return 'bg-gradient-to-br from-green-400 to-emerald-500';
+        return 'mobile-bg-gradient-success';
       case 'rainbow':
-        return 'bg-gradient-to-br from-purple-500 to-pink-500';
+        return 'mobile-bg-gradient-accent';
       default:
-        return 'bg-gradient-to-br from-blue-500 to-purple-500';
+        return 'mobile-bg-gradient-primary';
     }
   };
 
@@ -39,12 +39,12 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
     
     // Determine rarity based on milestone type and target
     if (milestone.type === 'growth' || (milestone.id && milestone.id.includes('100'))) {
-      return 'ring-2 ring-yellow-400 ring-opacity-50';
+      return 'mobile-ring-2 mobile-ring-warning mobile-ring-opacity-50';
     }
     if (milestone.id && (milestone.id.includes('50') || milestone.id.includes('30'))) {
-      return 'ring-2 ring-purple-400 ring-opacity-50';
+      return 'mobile-ring-2 mobile-ring-primary mobile-ring-opacity-50';
     }
-    return 'ring-1 ring-white/20';
+    return 'mobile-ring-1';
   };
 
   return (
@@ -63,7 +63,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             `}
           >
             {/* Badge Icon */}
-            <div className="text-2xl mb-1">
+            <div className="mobile-text-2xl mobile-mb-1">
               {milestone.achieved ? milestone.icon : '🔒'}
             </div>
             
@@ -110,12 +110,12 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
         </TooltipTrigger>
         
         <TooltipContent side="top" className="max-w-xs">
-          <div className="text-center">
+          <div className="mobile-text-center">
             <div className="font-semibold mobile-text-primary mobile-mb-1">{milestone.title}</div>
             <div className="mobile-text-secondary mobile-text-body mobile-mb-2">{milestone.description}</div>
             
             {milestone.achieved ? (
-              <div className="text-success mobile-text-caption">
+              <div className="mobile-text-success mobile-text-xs">
                 Earned {milestone.achievedAt ? 
                   new Date(milestone.achievedAt).toLocaleDateString() : 
                   'recently'
@@ -123,11 +123,11 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
               </div>
             ) : (
               <div className="mobile-space-y-1">
-                <div className="mobile-text-secondary mobile-text-caption">
+                <div className="mobile-text-secondary mobile-text-xs">
                   Progress: {Math.round(milestone.progress * 100)}%
                 </div>
                 {milestone.nextTarget && (
-                  <div className="text-yellow-400 text-xs">
+                  <div className="mobile-text-yellow-400 mobile-text-xs">
                     {milestone.nextTarget - Math.floor(milestone.progress * milestone.nextTarget)} more to go!
                   </div>
                 )}
