@@ -1,10 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
-import { CreateJournalDialog } from '@/components/CreateJournalDialog';
+
 import { JournalSearchModal } from '@/components/JournalSearchModal';
 import { JournalFilterDropdown } from '@/components/JournalFilterDropdown';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
@@ -20,12 +21,11 @@ import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 
 const Journal = () => {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [transcribedText, setTranscribedText] = useState('');
   const { greeting } = useTimeOfDay();
+  const navigate = useNavigate();
 
   const { entries, isLoading } = useJournalEntries();
   const {
@@ -50,17 +50,8 @@ const Journal = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const handleVoiceComplete = (transcript: string) => {
-    setTranscribedText(transcript);
     setShowVoiceModal(false);
-    setShowCreateDialog(true);
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setShowCreateDialog(open);
-    if (!open) {
-      // Clear transcribed text when dialog closes
-      setTranscribedText('');
-    }
+    navigate('/journal/new', { state: { initialContent: transcript } });
   };
 
   const handleSmartSearch = (query: string, searchFilters: any[]) => {
@@ -93,7 +84,7 @@ const Journal = () => {
           <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
             <div className="space-y-4">
               <Button 
-                onClick={() => setShowCreateDialog(true)}
+                onClick={() => navigate('/journal/new')}
                 className="btn-organic w-full h-16 text-lg font-semibold glow-primary"
               >
                 <Plus className="w-6 h-6 mr-3" />
@@ -120,11 +111,6 @@ const Journal = () => {
             </div>
           </ButtonErrorBoundary>
 
-          <CreateJournalDialog 
-            open={showCreateDialog}
-            onOpenChange={handleDialogClose}
-            initialContent={transcribedText}
-          />
           
           <VoiceRecordingModal
             open={showVoiceModal}
@@ -144,7 +130,7 @@ const Journal = () => {
         <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
           <div className="flex gap-3 mb-6">
             <Button 
-              onClick={() => setShowCreateDialog(true)}
+              onClick={() => navigate('/journal/new')}
               className="btn-organic flex-1 h-10 glow-primary"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -234,12 +220,6 @@ const Journal = () => {
         <QuickAI />
 
         {/* Enhanced Modals */}
-        <CreateJournalDialog 
-          open={showCreateDialog}
-          onOpenChange={handleDialogClose}
-          initialContent={transcribedText}
-        />
-        
         <JournalSearchModal
           isOpen={showSearchModal}
           onClose={() => setShowSearchModal(false)}
