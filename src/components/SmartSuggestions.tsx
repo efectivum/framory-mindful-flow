@@ -38,15 +38,15 @@ export const SmartSuggestions: React.FC = () => {
   }, [mode]);
 
   return (
-    <Card className="bg-gradient-to-br from-indigo-500/20 to-blue-600/20 border-indigo-500/30">
-      <CardHeader>
-        <CardTitle className="text-white text-lg flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-yellow-300" />
-          For you
+    <Card className="bg-accent/10 border-accent/20 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-foreground text-base font-medium flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-accent" />
+          A gentle nudge
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-200">{suggestion}</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">{suggestion}</p>
       </CardContent>
     </Card>
   );

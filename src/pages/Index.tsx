@@ -23,26 +23,26 @@ const Index = () => {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="max-w-sm w-full">
+        <div className="max-w-md w-full">
           <div className="flex flex-col items-center gap-8 text-center">
-            <div className="w-20 h-20 rounded-xl mx-auto flex items-center justify-center shadow-2xl animate-breathe bg-primary">
-              <Calendar className="w-10 h-10 text-primary-foreground" />
+            <div className="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center shadow-lg animate-breathe bg-primary/10 border border-primary/20">
+              <Calendar className="w-10 h-10 text-primary" />
             </div>
             <div className="space-y-4">
-              <h1 className="text-3xl font-bold gradient-text">
+              <h1 className="text-3xl font-medium text-foreground tracking-tight">
                 Welcome to Lumatori
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-base text-muted-foreground leading-relaxed">
                 Your personal sanctuary for mindful growth and reflection
               </p>
             </div>
             <Button 
               size="lg" 
-              className="w-full h-14 text-lg font-medium" 
+              className="w-full h-14 text-base font-normal shadow-sm" 
               asChild
             >
               <Link to="/auth">
-                Begin Your Journey
+                Begin your journey
               </Link>
             </Button>
           </div>

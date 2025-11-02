@@ -19,10 +19,10 @@ export const TodayDashboard: React.FC = () => {
       <div className="mobile-container mobile-nav-safe">
         <div className="mobile-flow-loose">
           {/* Welcome */}
-          <div className="text-center mobile-flow pt-2">
-            <h1 className="mobile-h1 text-foreground animate-fade-in">{greeting}</h1>
-            <p className="mobile-text-base text-muted-foreground animate-fade-in">
-              Let's take a moment to check in with yourself
+          <div className="text-center mobile-flow pt-2 space-y-3">
+            <h1 className="mobile-h1 text-foreground animate-fade-in font-medium">{greeting}</h1>
+            <p className="mobile-text-base text-muted-foreground animate-fade-in leading-relaxed">
+              Take a gentle moment to check in with yourself
             </p>
           </div>
 

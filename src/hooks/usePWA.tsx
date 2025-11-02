@@ -195,7 +195,7 @@ export const usePWA = () => {
         applicationServerKey: urlBase64ToUint8Array(
           // You'll need to replace this with your actual VAPID public key
           'BPBj-kGLDkU5kSxW3J8H-LJ8H5T5XbF4-Jy4xF5PJ8H3J4T5'
-        ),
+        ) as BufferSource,
       });
 
       console.log('Push subscription created:', subscription);
