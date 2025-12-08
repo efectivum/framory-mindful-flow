@@ -72,19 +72,19 @@ export const UserPreferencesForm = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <Card className="bg-card/50 border-border backdrop-blur-sm">
         <CardContent className="flex items-center justify-center p-8">
-          <Loader2 className="w-6 h-6 animate-spin text-white" />
-          <span className="ml-2 text-white">Loading preferences...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-foreground" />
+          <span className="ml-2 text-foreground">Loading preferences...</span>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+    <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Settings className="w-5 h-5" />
           Personal Preferences
         </CardTitle>
@@ -98,8 +98,8 @@ export const UserPreferencesForm = () => {
               name="tone_of_voice"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white font-medium">AI Tone of Voice</FormLabel>
-                  <FormDescription className="text-gray-400">
+                  <FormLabel className="text-foreground font-medium">AI Tone of Voice</FormLabel>
+                  <FormDescription className="text-muted-foreground">
                     How would you like the AI to communicate with you in journal analysis?
                   </FormDescription>
                   <FormControl>
@@ -110,23 +110,23 @@ export const UserPreferencesForm = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="calm" id="calm" />
-                        <Label htmlFor="calm" className="text-gray-300">Calm & Peaceful</Label>
+                        <Label htmlFor="calm" className="text-muted-foreground">Calm & Peaceful</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="motivational" id="motivational" />
-                        <Label htmlFor="motivational" className="text-gray-300">Motivational</Label>
+                        <Label htmlFor="motivational" className="text-muted-foreground">Motivational</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="supportive" id="supportive" />
-                        <Label htmlFor="supportive" className="text-gray-300">Supportive</Label>
+                        <Label htmlFor="supportive" className="text-muted-foreground">Supportive</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="direct" id="direct" />
-                        <Label htmlFor="direct" className="text-gray-300">Direct & Clear</Label>
+                        <Label htmlFor="direct" className="text-muted-foreground">Direct & Clear</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="gentle" id="gentle" />
-                        <Label htmlFor="gentle" className="text-gray-300">Gentle & Kind</Label>
+                        <Label htmlFor="gentle" className="text-muted-foreground">Gentle & Kind</Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -141,8 +141,8 @@ export const UserPreferencesForm = () => {
               name="growth_focus"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white font-medium">Primary Growth Focus</FormLabel>
-                  <FormDescription className="text-gray-400">
+                  <FormLabel className="text-foreground font-medium">Primary Growth Focus</FormLabel>
+                  <FormDescription className="text-muted-foreground">
                     What area would you like to focus on most in your personal development?
                   </FormDescription>
                   <FormControl>
@@ -153,19 +153,19 @@ export const UserPreferencesForm = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="habits" id="habits" />
-                        <Label htmlFor="habits" className="text-gray-300">Building Habits</Label>
+                        <Label htmlFor="habits" className="text-muted-foreground">Building Habits</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="mindfulness" id="mindfulness" />
-                        <Label htmlFor="mindfulness" className="text-gray-300">Mindfulness</Label>
+                        <Label htmlFor="mindfulness" className="text-muted-foreground">Mindfulness</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="goals" id="goals" />
-                        <Label htmlFor="goals" className="text-gray-300">Goal Achievement</Label>
+                        <Label htmlFor="goals" className="text-muted-foreground">Goal Achievement</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="journaling" id="journaling" />
-                        <Label htmlFor="journaling" className="text-gray-300">Self-Reflection</Label>
+                        <Label htmlFor="journaling" className="text-muted-foreground">Self-Reflection</Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -176,14 +176,14 @@ export const UserPreferencesForm = () => {
 
             {/* Notification Settings */}
             <div className="space-y-4">
-              <h3 className="text-white font-medium">Notification Settings</h3>
+              <h3 className="text-foreground font-medium">Notification Settings</h3>
               
               <FormField
                 control={form.control}
                 name="notification_frequency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Reminder Frequency</FormLabel>
+                    <FormLabel className="text-foreground">Reminder Frequency</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -192,19 +192,19 @@ export const UserPreferencesForm = () => {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="daily" id="daily" />
-                          <Label htmlFor="daily" className="text-gray-300">Daily</Label>
+                          <Label htmlFor="daily" className="text-muted-foreground">Daily</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="weekly" id="weekly" />
-                          <Label htmlFor="weekly" className="text-gray-300">Weekly</Label>
+                          <Label htmlFor="weekly" className="text-muted-foreground">Weekly</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="custom" id="custom" />
-                          <Label htmlFor="custom" className="text-gray-300">Custom</Label>
+                          <Label htmlFor="custom" className="text-muted-foreground">Custom</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="none" id="none" />
-                          <Label htmlFor="none" className="text-gray-300">None</Label>
+                          <Label htmlFor="none" className="text-muted-foreground">None</Label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -218,12 +218,12 @@ export const UserPreferencesForm = () => {
                 name="notification_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Preferred Reminder Time</FormLabel>
+                    <FormLabel className="text-foreground">Preferred Reminder Time</FormLabel>
                     <FormControl>
                       <Input
                         type="time"
                         {...field}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-muted border-border text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -237,8 +237,8 @@ export const UserPreferencesForm = () => {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div>
-                      <FormLabel className="text-white font-medium">Push Notifications</FormLabel>
-                      <FormDescription className="text-gray-400">
+                      <FormLabel className="text-foreground font-medium">Push Notifications</FormLabel>
+                      <FormDescription className="text-muted-foreground">
                         Receive push notifications for reminders and insights
                       </FormDescription>
                     </div>
@@ -258,8 +258,8 @@ export const UserPreferencesForm = () => {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div>
-                      <FormLabel className="text-white font-medium">WhatsApp Notifications</FormLabel>
-                      <FormDescription className="text-gray-400">
+                      <FormLabel className="text-foreground font-medium">WhatsApp Notifications</FormLabel>
+                      <FormDescription className="text-muted-foreground">
                         Receive gentle reminders and prompts via WhatsApp
                       </FormDescription>
                     </div>
@@ -276,7 +276,7 @@ export const UserPreferencesForm = () => {
 
             {/* Email Preferences */}
             <div className="space-y-4">
-              <h3 className="text-white font-medium">Email Preferences</h3>
+              <h3 className="text-foreground font-medium">Email Preferences</h3>
               
               <FormField
                 control={form.control}
@@ -284,8 +284,8 @@ export const UserPreferencesForm = () => {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div>
-                      <FormLabel className="text-white font-medium">Weekly Insights</FormLabel>
-                      <FormDescription className="text-gray-400">
+                      <FormLabel className="text-foreground font-medium">Weekly Insights</FormLabel>
+                      <FormDescription className="text-muted-foreground">
                         Get personalized insights about your mood trends and habit progress
                       </FormDescription>
                     </div>
@@ -305,8 +305,8 @@ export const UserPreferencesForm = () => {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div>
-                      <FormLabel className="text-white font-medium">Security Alerts</FormLabel>
-                      <FormDescription className="text-gray-400">
+                      <FormLabel className="text-foreground font-medium">Security Alerts</FormLabel>
+                      <FormDescription className="text-muted-foreground">
                         Important notifications about your account security
                       </FormDescription>
                     </div>
@@ -326,8 +326,8 @@ export const UserPreferencesForm = () => {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div>
-                      <FormLabel className="text-white font-medium">Product Updates</FormLabel>
-                      <FormDescription className="text-gray-400">
+                      <FormLabel className="text-foreground font-medium">Product Updates</FormLabel>
+                      <FormDescription className="text-muted-foreground">
                         Occasional updates about new features and improvements
                       </FormDescription>
                     </div>
