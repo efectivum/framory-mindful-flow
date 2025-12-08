@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useConversationalAI } from '@/hooks/useConversationalAI';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { uploadJournalAttachment } from '@/utils/storageUtils';
 import { Message } from '@/types/chat';
 
 interface UseMessageManagerProps {
@@ -19,9 +21,11 @@ export const useMessageManager = ({
   const [inputText, setInputText] = useState('');
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [fileAttachment, setFileAttachment] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const { createEntry } = useJournalEntries();
   const { detectIntent, isDetectingIntent } = useConversationalAI();
+  const { user } = useAuth();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,7 +47,28 @@ export const useMessageManager = ({
     
     let attachmentUrl: string | undefined = undefined;
     let attachmentType: string | undefined = undefined;
-    if (fileAttachment) {
+    
+    // Upload file to Supabase Storage if user is logged in
+    if (fileAttachment && user) {
+      setIsUploading(true);
+      try {
+        const result = await uploadJournalAttachment(fileAttachment, user.id);
+        if (result) {
+          attachmentUrl = result.url;
+          attachmentType = fileAttachment.type;
+        } else {
+          // Fallback to blob URL if upload fails
+          attachmentUrl = URL.createObjectURL(fileAttachment);
+          attachmentType = fileAttachment.type;
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        attachmentUrl = URL.createObjectURL(fileAttachment);
+        attachmentType = fileAttachment.type;
+      } finally {
+        setIsUploading(false);
+      }
+    } else if (fileAttachment) {
       attachmentUrl = URL.createObjectURL(fileAttachment);
       attachmentType = fileAttachment.type;
     }
@@ -112,6 +137,7 @@ export const useMessageManager = ({
     handleFileChange,
     handleActivitySelect,
     handleVoiceTranscription,
-    isDetectingIntent
+    isDetectingIntent,
+    isUploading
   };
 };
