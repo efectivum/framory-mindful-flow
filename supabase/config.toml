@@ -1,4 +1,3 @@
-
 project_id = "declymxlblaoeexpgfzq"
 
 [functions.whatsapp-webhook]
@@ -20,4 +19,22 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.send-weekly-insights]
+verify_jwt = true
+
+[functions.conversational-ai]
+verify_jwt = true
+
+[functions.analyze-mood]
+verify_jwt = true
+
+[functions.detect-intent]
+verify_jwt = true
+
+[functions.generate-deep-reflection]
+verify_jwt = true
+
+[functions.analyze-journal-summary]
+verify_jwt = true
+
+[functions.speech-to-text]
 verify_jwt = true

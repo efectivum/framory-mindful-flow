@@ -1,15 +1,14 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to clean and parse JSON from OpenAI response
+// Helper function to clean and parse JSON from AI response
 function cleanAndParseJSON(rawResponse: string) {
   try {
     // Remove markdown code blocks if present
@@ -35,8 +34,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const { content } = await req.json();
@@ -74,14 +73,14 @@ serve(async (req) => {
       maxEmotions = 5;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -101,21 +100,46 @@ serve(async (req) => {
           },
           { role: 'user', content: `Analyze this journal entry: "${content}"` }
         ],
-        temperature: 0.2,
         max_tokens: 300,
       }),
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return new Response(JSON.stringify({ 
+          error: "Rate limits exceeded, please try again later.",
+          mood: 3,
+          sentiment: 0,
+          emotions: [],
+          confidence: 0.0
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        console.error('Payment required');
+        return new Response(JSON.stringify({ 
+          error: "AI credits exhausted, please add funds.",
+          mood: 3,
+          sentiment: 0,
+          emotions: [],
+          confidence: 0.0
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('AI gateway error:', response.status, errorText);
+      throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
     
     if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from OpenAI API');
+      throw new Error('Invalid response from AI gateway');
     }
 
     console.log('Raw AI response:', data.choices[0].message.content);

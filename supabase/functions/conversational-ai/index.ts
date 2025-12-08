@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -69,6 +69,10 @@ serve(async (req) => {
 
   try {
     const { message, conversationHistory, userId, isJournalEntry, coachingMode } = await req.json();
+    
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -277,19 +281,40 @@ Keep responses helpful, personalized, and conversational.`;
     // Add current message
     messages.push({ role: 'user', content: message });
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages,
-        temperature: coachingMode ? 0.7 : (isJournalEntry ? 0.6 : 0.7),
         max_tokens: coachingMode ? 250 : (isJournalEntry ? 200 : 400),
       }),
     });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return new Response(JSON.stringify({ 
+          error: "Rate limits exceeded, please try again later." 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        console.error('Payment required');
+        return new Response(JSON.stringify({ 
+          error: "AI credits exhausted, please add funds." 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`AI gateway error: ${response.status}`);
+    }
 
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
@@ -452,46 +477,51 @@ async function getHabitAnalysis(supabase: any, userId: string): Promise<HabitAna
       return null;
     }
 
-    // Get recent completions for analysis
+    // Get completions for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const { data: completions, error: completionsError } = await supabase
       .from('habit_completions')
-      .select('habit_id, completed_at')
+      .select('*')
       .eq('user_id', userId)
-      .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('completed_at', { ascending: false });
+      .gte('completed_at', thirtyDaysAgo.toISOString());
 
-    if (completionsError) {
-      console.error('Error fetching completions:', completionsError);
+    const completionsByHabit: { [habitId: string]: any[] } = {};
+    if (completions) {
+      completions.forEach(c => {
+        if (!completionsByHabit[c.habit_id]) {
+          completionsByHabit[c.habit_id] = [];
+        }
+        completionsByHabit[c.habit_id].push(c);
+      });
     }
 
-    const recentCompletions = completions || [];
-
-    // Analyze each habit
     const activeHabits = habits.map(habit => {
-      const habitCompletions = recentCompletions.filter(c => c.habit_id === habit.id);
-      const recentCompletionsCount = habitCompletions.length;
-      
-      // Calculate success rate (completions vs target days in last 30 days)
-      const daysToAnalyze = Math.min(30, habit.target_days);
-      const successRate = daysToAnalyze > 0 ? (recentCompletionsCount / daysToAnalyze) * 100 : 0;
-      
-      // Calculate progress percentage
-      const progressPercentage = habit.target_days > 0 ? (habit.current_streak / habit.target_days) * 100 : 0;
+      const habitCompletions = completionsByHabit[habit.id] || [];
+      const successRate = (habitCompletions.length / 30) * 100;
+      const progressPercentage = Math.min((habit.current_streak / habit.target_days) * 100, 100);
       
       // Determine trend based on recent vs older completions
-      const last7Days = habitCompletions.filter(c => 
-        new Date(c.completed_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      ).length;
-      const previous7Days = habitCompletions.filter(c => {
-        const completionDate = new Date(c.completed_at);
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-        return completionDate <= sevenDaysAgo && completionDate > fourteenDaysAgo;
+      const recentCompletions = habitCompletions.filter(c => {
+        const date = new Date(c.completed_at);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return date >= sevenDaysAgo;
       }).length;
-      
+
+      const olderCompletions = habitCompletions.filter(c => {
+        const date = new Date(c.completed_at);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        return date >= fourteenDaysAgo && date < sevenDaysAgo;
+      }).length;
+
       let trend = 'stable';
-      if (last7Days > previous7Days) trend = 'improving';
-      else if (last7Days < previous7Days) trend = 'declining';
+      if (recentCompletions > olderCompletions + 1) trend = 'improving';
+      else if (recentCompletions < olderCompletions - 1) trend = 'declining';
 
       return {
         title: habit.title,
@@ -499,26 +529,30 @@ async function getHabitAnalysis(supabase: any, userId: string): Promise<HabitAna
         longestStreak: habit.longest_streak,
         successRate,
         targetDays: habit.target_days,
-        progressPercentage: Math.min(progressPercentage, 100),
+        progressPercentage,
         trend,
-        recentCompletions: recentCompletionsCount
+        recentCompletions
       };
     });
 
-    // Overall analysis
-    const totalHabits = habits.length;
     const overallSuccessRate = activeHabits.length > 0
-      ? activeHabits.reduce((sum, habit) => sum + habit.successRate, 0) / activeHabits.length
-      : 0;
-    const averageStreak = activeHabits.length > 0
-      ? activeHabits.reduce((sum, habit) => sum + habit.currentStreak, 0) / activeHabits.length
+      ? activeHabits.reduce((sum, h) => sum + h.successRate, 0) / activeHabits.length
       : 0;
 
-    const improvingHabits = activeHabits.filter(h => h.trend === 'improving').map(h => h.title);
-    const decliningHabits = activeHabits.filter(h => h.trend === 'declining').map(h => h.title);
+    const averageStreak = activeHabits.length > 0
+      ? activeHabits.reduce((sum, h) => sum + h.currentStreak, 0) / activeHabits.length
+      : 0;
+
+    const improvingHabits = activeHabits
+      .filter(h => h.trend === 'improving')
+      .map(h => h.title);
+
+    const decliningHabits = activeHabits
+      .filter(h => h.trend === 'declining')
+      .map(h => h.title);
 
     return {
-      totalHabits,
+      totalHabits: habits.length,
       activeHabits,
       overallSuccessRate,
       averageStreak,
@@ -531,10 +565,10 @@ async function getHabitAnalysis(supabase: any, userId: string): Promise<HabitAna
   }
 }
 
-// New routine analysis function
-async function getRoutineAnalysis(supabase: any, userId: string) {
+// Enhanced routine analysis function
+async function getRoutineAnalysis(supabase: any, userId: string): Promise<RoutineAnalysis | null> {
   try {
-    // Get user routines with template info
+    // Get user's active routines
     const { data: routines, error: routinesError } = await supabase
       .from('user_habit_routines')
       .select(`
@@ -552,67 +586,73 @@ async function getRoutineAnalysis(supabase: any, userId: string) {
       return null;
     }
 
-    // Get recent completions for analysis
+    // Get routine completions for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const { data: completions, error: completionsError } = await supabase
       .from('routine_completions')
-      .select('user_routine_id, completed_at')
+      .select('*')
       .eq('user_id', userId)
-      .gte('completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('completed_at', { ascending: false });
+      .gte('completed_at', thirtyDaysAgo.toISOString());
 
-    if (completionsError) {
-      console.error('Error fetching routine completions:', completionsError);
+    const completionsByRoutine: { [routineId: string]: any[] } = {};
+    if (completions) {
+      completions.forEach(c => {
+        if (!completionsByRoutine[c.user_routine_id]) {
+          completionsByRoutine[c.user_routine_id] = [];
+        }
+        completionsByRoutine[c.user_routine_id].push(c);
+      });
     }
 
-    const recentCompletions = completions || [];
-
-    // Analyze each routine
     const activeRoutines = routines.map(routine => {
-      const routineCompletions = recentCompletions.filter(c => c.user_routine_id === routine.id);
-      const recentCompletionsCount = routineCompletions.length;
+      const routineCompletions = completionsByRoutine[routine.id] || [];
+      const completionRate = (routineCompletions.length / 30) * 100;
       
-      // Calculate completion rate (completions vs days in last 30 days)
-      const daysToAnalyze = 30;
-      const completionRate = (recentCompletionsCount / daysToAnalyze) * 100;
-      
-      // Determine trend based on recent vs older completions
-      const last7Days = routineCompletions.filter(c => 
-        new Date(c.completed_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      ).length;
-      const previous7Days = routineCompletions.filter(c => {
-        const completionDate = new Date(c.completed_at);
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-        return completionDate <= sevenDaysAgo && completionDate > fourteenDaysAgo;
+      // Determine trend
+      const recentCompletions = routineCompletions.filter(c => {
+        const date = new Date(c.completed_at);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return date >= sevenDaysAgo;
       }).length;
-      
+
+      const olderCompletions = routineCompletions.filter(c => {
+        const date = new Date(c.completed_at);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        return date >= fourteenDaysAgo && date < sevenDaysAgo;
+      }).length;
+
       let trend = 'stable';
-      if (last7Days > previous7Days) trend = 'improving';
-      else if (last7Days < previous7Days) trend = 'declining';
+      if (recentCompletions > olderCompletions + 1) trend = 'improving';
+      else if (recentCompletions < olderCompletions - 1) trend = 'declining';
 
       return {
-        title: routine.title,
-        currentStreak: routine.current_streak,
-        longestStreak: routine.longest_streak,
+        title: routine.habit_templates?.title || routine.custom_title || 'Unknown Routine',
+        currentStreak: routine.current_streak || 0,
+        longestStreak: routine.longest_streak || 0,
         completionRate,
         trend,
         isCoachRecommended: routine.habit_templates?.is_coach_recommended || false
       };
     });
 
-    // Overall analysis
-    const totalRoutines = routines.length;
     const overallCompletionRate = activeRoutines.length > 0
-      ? activeRoutines.reduce((sum, routine) => sum + routine.completionRate, 0) / activeRoutines.length
+      ? activeRoutines.reduce((sum, r) => sum + r.completionRate, 0) / activeRoutines.length
       : 0;
+
     const averageStreak = activeRoutines.length > 0
-      ? activeRoutines.reduce((sum, routine) => sum + routine.currentStreak, 0) / activeRoutines.length
+      ? activeRoutines.reduce((sum, r) => sum + r.currentStreak, 0) / activeRoutines.length
       : 0;
 
     const coachRecommendedCount = activeRoutines.filter(r => r.isCoachRecommended).length;
 
     return {
-      totalRoutines,
+      totalRoutines: routines.length,
       activeRoutines,
       overallCompletionRate,
       averageStreak,
@@ -624,22 +664,32 @@ async function getRoutineAnalysis(supabase: any, userId: string) {
   }
 }
 
-// Helper function to extract themes from journal content
+// Helper function to extract themes from journal entries
 function extractThemes(entries: any[]): string[] {
-  const themes: string[] = [];
-  const commonThemes = [
-    'work', 'career', 'stress', 'anxiety', 'relationships', 'family', 'health', 
-    'exercise', 'sleep', 'goals', 'motivation', 'productivity', 'learning',
-    'creativity', 'mindfulness', 'gratitude', 'challenges', 'growth', 'reflection'
-  ];
-
-  const content = entries.map(e => e.content.toLowerCase()).join(' ');
+  const themeCounts: { [key: string]: number } = {};
   
-  commonThemes.forEach(theme => {
-    if (content.includes(theme)) {
-      themes.push(theme);
-    }
+  const themeKeywords: { [key: string]: string[] } = {
+    'work': ['work', 'job', 'career', 'meeting', 'project', 'deadline', 'boss', 'colleague'],
+    'relationships': ['friend', 'family', 'partner', 'relationship', 'love', 'support'],
+    'health': ['health', 'exercise', 'workout', 'sleep', 'tired', 'energy', 'diet'],
+    'stress': ['stress', 'anxious', 'worried', 'overwhelmed', 'pressure'],
+    'growth': ['learn', 'improve', 'goal', 'progress', 'achieve', 'develop'],
+    'creativity': ['creative', 'art', 'music', 'write', 'create', 'design'],
+    'gratitude': ['grateful', 'thankful', 'appreciate', 'blessed'],
+    'mindfulness': ['meditate', 'mindful', 'present', 'calm', 'peace', 'breathe']
+  };
+
+  entries.forEach(entry => {
+    const content = entry.content.toLowerCase();
+    Object.entries(themeKeywords).forEach(([theme, keywords]) => {
+      if (keywords.some(keyword => content.includes(keyword))) {
+        themeCounts[theme] = (themeCounts[theme] || 0) + 1;
+      }
+    });
   });
 
-  return themes.slice(0, 5);
+  return Object.entries(themeCounts)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 4)
+    .map(([theme]) => theme);
 }
