@@ -1,29 +1,29 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { entryContent, userPreferences, recentEntries } = await req.json()
-
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured')
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
+
+    const { entryContent, userPreferences, recentEntries } = await req.json();
 
     // Build context from recent entries
     const contextEntries = recentEntries?.slice(0, 3)
       .map((entry: any, index: number) => `Entry ${index + 1}: ${entry.content}`)
-      .join('\n\n') || ''
+      .join('\n\n') || '';
 
     const systemPrompt = `You are a skilled therapist providing deep reflection on journal entries. Your role is to:
 
@@ -39,47 +39,64 @@ Follow this structure:
 Keep the reflection warm, professional, and focused. Avoid generic advice. Make it personal to their specific situation.
 
 Tone: ${userPreferences?.tone_of_voice || 'supportive'} and therapeutic
-Focus area: ${userPreferences?.growth_focus || 'general well-being'}`
+Focus area: ${userPreferences?.growth_focus || 'general well-being'}`;
 
     const userPrompt = `Current journal entry:
 ${entryContent}
 
 ${contextEntries ? `Recent entries for context:\n${contextEntries}` : ''}
 
-Please provide a deep reflection following the structure above.`
+Please provide a deep reflection following the structure above.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
         max_tokens: 300,
       }),
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`)
+      if (response.status === 429) {
+        console.error('Rate limit exceeded');
+        return new Response(JSON.stringify({ 
+          error: "Rate limits exceeded, please try again later." 
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        console.error('Payment required');
+        return new Response(JSON.stringify({ 
+          error: "AI credits exhausted, please add funds." 
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`AI gateway error: ${response.statusText}`);
     }
 
-    const data = await response.json()
-    const reflection = data.choices[0]?.message?.content
+    const data = await response.json();
+    const reflection = data.choices[0]?.message?.content;
 
     if (!reflection) {
-      throw new Error('No reflection generated')
+      throw new Error('No reflection generated');
     }
 
     // Split reflection into content and question
-    const parts = reflection.split('\n\n')
-    const reflectionContent = parts.slice(0, -1).join('\n\n')
-    const probingQuestion = parts[parts.length - 1]
+    const parts = reflection.split('\n\n');
+    const reflectionContent = parts.slice(0, -1).join('\n\n');
+    const probingQuestion = parts[parts.length - 1];
 
     return new Response(
       JSON.stringify({
@@ -89,15 +106,15 @@ Please provide a deep reflection following the structure above.`
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    )
+    );
   } catch (error) {
-    console.error('Error generating deep reflection:', error)
+    console.error('Error generating deep reflection:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    )
+    );
   }
-})
+});

@@ -79,21 +79,21 @@ export type Database = {
           granted_at: string
           granted_by: string | null
           id: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           granted_at?: string
           granted_by?: string | null
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           granted_at?: string
           granted_by?: string | null
           id?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -410,7 +410,7 @@ export type Database = {
           intervention_type: string
           measured_at: string | null
           success_metric: string
-          time_to_improvement: unknown | null
+          time_to_improvement: unknown
           user_id: string
           user_satisfaction_rating: number | null
         }
@@ -424,7 +424,7 @@ export type Database = {
           intervention_type: string
           measured_at?: string | null
           success_metric: string
-          time_to_improvement?: unknown | null
+          time_to_improvement?: unknown
           user_id: string
           user_satisfaction_rating?: number | null
         }
@@ -438,7 +438,7 @@ export type Database = {
           intervention_type?: string
           measured_at?: string | null
           success_metric?: string
-          time_to_improvement?: unknown | null
+          time_to_improvement?: unknown
           user_id?: string
           user_satisfaction_rating?: number | null
         }
@@ -841,6 +841,314 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      form_submissions: {
+        Row: {
+          company: string | null
+          completed_at: string | null
+          created_at: string | null
+          email: string
+          error_message: string | null
+          first_name: string | null
+          form_type: string
+          id: string
+          last_name: string | null
+          message: string | null
+          needs: string | null
+          referrer: string | null
+          retry_count: number | null
+          revenue: string | null
+          status: string
+          submitted_at: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          webhook_response: string | null
+          webhook_url: string
+        }
+        Insert: {
+          company?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          email: string
+          error_message?: string | null
+          first_name?: string | null
+          form_type: string
+          id?: string
+          last_name?: string | null
+          message?: string | null
+          needs?: string | null
+          referrer?: string | null
+          retry_count?: number | null
+          revenue?: string | null
+          status?: string
+          submitted_at?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          webhook_response?: string | null
+          webhook_url: string
+        }
+        Update: {
+          company?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          email?: string
+          error_message?: string | null
+          first_name?: string | null
+          form_type?: string
+          id?: string
+          last_name?: string | null
+          message?: string | null
+          needs?: string | null
+          referrer?: string | null
+          retry_count?: number | null
+          revenue?: string | null
+          status?: string
+          submitted_at?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          webhook_response?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      gd_ai_analysis_results: {
+        Row: {
+          call_to_action: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          model: string | null
+          next_steps: Json | null
+          raw_response: Json | null
+          recommendations: Json | null
+          scores: Json | null
+          session_id: string | null
+          strengths: Json | null
+          weaknesses: Json | null
+        }
+        Insert: {
+          call_to_action?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          model?: string | null
+          next_steps?: Json | null
+          raw_response?: Json | null
+          recommendations?: Json | null
+          scores?: Json | null
+          session_id?: string | null
+          strengths?: Json | null
+          weaknesses?: Json | null
+        }
+        Update: {
+          call_to_action?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          model?: string | null
+          next_steps?: Json | null
+          raw_response?: Json | null
+          recommendations?: Json | null
+          scores?: Json | null
+          session_id?: string | null
+          strengths?: Json | null
+          weaknesses?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gd_ai_analysis_results_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "gd_customer_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gd_ai_analysis_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gd_quiz_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gd_crm_integrations: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          payload: Json | null
+          person_id: string | null
+          provider: string
+          status: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          person_id?: string | null
+          provider: string
+          status?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          person_id?: string | null
+          provider?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      gd_customer_details: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          lead_source: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          lead_source?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          lead_source?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gd_quiz_responses: {
+        Row: {
+          ai_automation_score: number | null
+          created_at: string
+          cro_score: number | null
+          customer_id: string
+          id: string
+          lifecycle_retention_score: number | null
+          margin_control_score: number | null
+          mcltv_cohorts_score: number | null
+          monthly_orders_range: string | null
+          monthly_revenue_range: string | null
+          monthly_traffic_range: string | null
+          overall_readiness_index: number | null
+          pillar_responses: Json
+          session_id: string
+        }
+        Insert: {
+          ai_automation_score?: number | null
+          created_at?: string
+          cro_score?: number | null
+          customer_id: string
+          id?: string
+          lifecycle_retention_score?: number | null
+          margin_control_score?: number | null
+          mcltv_cohorts_score?: number | null
+          monthly_orders_range?: string | null
+          monthly_revenue_range?: string | null
+          monthly_traffic_range?: string | null
+          overall_readiness_index?: number | null
+          pillar_responses?: Json
+          session_id: string
+        }
+        Update: {
+          ai_automation_score?: number | null
+          created_at?: string
+          cro_score?: number | null
+          customer_id?: string
+          id?: string
+          lifecycle_retention_score?: number | null
+          margin_control_score?: number | null
+          mcltv_cohorts_score?: number | null
+          monthly_orders_range?: string | null
+          monthly_revenue_range?: string | null
+          monthly_traffic_range?: string | null
+          overall_readiness_index?: number | null
+          pillar_responses?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gd_quiz_responses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "gd_customer_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gd_quiz_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gd_quiz_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gd_quiz_sessions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          session_token: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          session_token: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          session_token?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gd_quiz_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "gd_customer_details"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_completions: {
         Row: {
@@ -1939,34 +2247,19 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: undefined
       }
-      cleanup_expired_exports: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_signups: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_current_user_admin_status: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      cleanup_expired_exports: { Args: never; Returns: undefined }
+      cleanup_expired_signups: { Args: never; Returns: undefined }
+      get_current_user_admin_status: { Args: never; Returns: boolean }
       initialize_user_onboarding: {
         Args: { user_id_param: string }
         Returns: undefined
       }
-      is_admin: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id_param: string }; Returns: boolean }
       log_security_event: {
         Args: { details?: Json; event_type: string; user_id_param?: string }
         Returns: undefined
       }
-      reset_weekly_coaching_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_weekly_coaching_counts: { Args: never; Returns: undefined }
       update_habit_streak: {
         Args: { habit_id_param: string }
         Returns: undefined
@@ -1975,13 +2268,10 @@ export type Database = {
         Args: { user_routine_id_param: string }
         Returns: undefined
       }
-      validate_signup_token: {
-        Args: { token_input: string }
-        Returns: boolean
-      }
+      validate_signup_token: { Args: { token_input: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2108,6 +2398,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "editor", "viewer"],
+    },
   },
 } as const
