@@ -1,35 +1,8 @@
 
-/* Design System Variables - Enhanced Mobile-First */
+/* Design System Variables - Unified with Tailwind Semantic Tokens */
 
 :root {
-  /* Enhanced Core Colors - Warmer & More Engaging */
-  --app-bg-primary: linear-gradient(145deg, #0f172a 0%, #1e1b3b 50%, #0f172a 100%);
-  --app-bg-secondary: linear-gradient(135deg, #1e293b 0%, #2d1b3d 100%);
-  --app-bg-card: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(45, 27, 61, 0.8) 100%);
-  --app-bg-glass: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(29, 19, 55, 0.9) 100%);
-  
-  /* Warm Text Colors */
-  --app-text-primary: #fdfcfd;
-  --app-text-secondary: #e2d8f0;
-  --app-text-muted: #b4a7c7;
-  --app-text-accent: #f0e6ff;
-  
-  /* Enhanced Warm Accent Colors */
-  --app-accent-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --app-accent-secondary: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
-  --app-accent-warm: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-  --app-accent-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --app-accent-error: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  
-  /* Sanctuary Colors - Nature Inspired */
-  --app-sage-light: #9ca3af;
-  --app-sage-medium: #6b7280;
-  --app-sage-dark: #4b5563;
-  --app-gold-light: #fbbf24;
-  --app-gold-medium: #f59e0b;
-  --app-gold-dark: #d97706;
-  
-  /* Mobile-First Spacing Scale */
+  /* Core spacing - aligned with Tailwind */
   --app-space-xs: 0.375rem;
   --app-space-sm: 0.625rem;
   --app-space-md: 1rem;
@@ -38,7 +11,7 @@
   --app-space-2xl: 2.5rem;
   --app-space-3xl: 3.5rem;
   
-  /* Enhanced Mobile Spacing */
+  /* Mobile spacing */
   --app-mobile-space-xs: 0.25rem;
   --app-mobile-space-sm: 0.5rem;
   --app-mobile-space-md: 0.875rem;
@@ -46,45 +19,28 @@
   --app-mobile-space-xl: 1.75rem;
   --app-mobile-space-2xl: 2.25rem;
   
-  /* Organic Border Radius - More Natural */
+  /* Border radius - serene, organic feel */
   --app-radius-sm: 0.75rem;
   --app-radius-md: 1rem;
   --app-radius-lg: 1.5rem;
   --app-radius-xl: 2rem;
   --app-radius-organic: 1.25rem;
   
-  /* Enhanced Shadows - More Depth */
-  --app-shadow-sm: 0 2px 8px -1px rgba(0, 0, 0, 0.1), 0 1px 4px -1px rgba(139, 92, 246, 0.05);
-  --app-shadow-md: 0 8px 16px -4px rgba(0, 0, 0, 0.15), 0 4px 8px -2px rgba(139, 92, 246, 0.08);
-  --app-shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.2), 0 8px 16px -4px rgba(139, 92, 246, 0.1);
-  --app-shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.25), 0 12px 24px -6px rgba(139, 92, 246, 0.12);
+  /* Shadows - soft, serene (using semantic foreground) */
+  --app-shadow-sm: 0 1px 3px hsl(var(--foreground) / 0.04);
+  --app-shadow-md: 0 4px 12px hsl(var(--foreground) / 0.06);
+  --app-shadow-lg: 0 8px 24px hsl(var(--foreground) / 0.08);
+  --app-shadow-xl: 0 16px 40px hsl(var(--foreground) / 0.1);
   
-  /* Glow Effects */
-  --app-glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
-  --app-glow-warm: 0 0 24px rgba(245, 158, 11, 0.25);
-  --app-glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
+  /* Glow Effects - subtle, using primary */
+  --app-glow-primary: 0 0 20px hsl(var(--primary) / 0.2);
+  --app-glow-success: 0 0 20px hsl(var(--success) / 0.2);
   
-  /* Enhanced Backdrop */
-  --app-backdrop: backdrop-blur(16px) saturate(1.2);
+  /* Backdrop blur */
+  --app-backdrop: blur(16px) saturate(1.2);
   
-  /* Animation Timing */
+  /* Animation timing - calm, slow */
   --app-transition-quick: 0.15s ease-out;
   --app-transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --app-transition-gentle: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* Time-of-day Color Variations */
-:root[data-time="morning"] {
-  --app-accent-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  --app-bg-card: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
-}
-
-:root[data-time="evening"] {
-  --app-accent-primary: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-  --app-bg-card: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(30, 41, 59, 0.9) 100%);
-}
-
-:root[data-time="night"] {
-  --app-accent-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  --app-bg-card: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(30, 41, 59, 0.95) 100%);
 }

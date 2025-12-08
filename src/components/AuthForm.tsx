@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -36,7 +37,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
         if (error) throw error;
         setEmailSent(true);
         toast({
-          title: "Account created! ✨",
+          title: "Account created!",
           description: "Please check your email to verify your account before signing in.",
         });
       } else {
@@ -53,7 +54,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           throw error;
         }
         toast({
-          title: "Welcome back! 🎉",
+          title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
         navigate('/');
@@ -86,7 +87,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       if (error) throw error;
       
       toast({
-        title: "Password reset email sent ✉️",
+        title: "Password reset email sent",
         description: "Check your email for instructions to reset your password.",
       });
       setShowPasswordReset(false);
@@ -117,7 +118,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       if (error) throw error;
       
       toast({
-        title: "Confirmation email sent ✉️",
+        title: "Confirmation email sent",
         description: "Check your email for the verification link.",
       });
     } catch (error: any) {
@@ -151,23 +152,31 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
     }
   };
 
+  // Input styling classes
+  const inputClasses = "h-12 bg-muted border-border rounded-xl pl-10 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200";
+  const labelClasses = "text-sm font-medium text-foreground";
+
   if (emailSent && mode === 'signup') {
     return (
-      <div className="mobile-center mobile-flow-lg">
-        <div className="mobile-w-16 mobile-h-16 mobile-bg-success/20 mobile-rounded-full mobile-flex mobile-flex-center mobile-mx-auto mobile-mb-md">
-          <Mail className="mobile-w-8 mobile-h-8 mobile-text-success" />
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6 text-center"
+      >
+        <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mx-auto">
+          <Mail className="w-8 h-8 text-success" />
         </div>
         
-        <div className="mobile-flow-tight mobile-text-center">
-          <h2 className="mobile-h2 mobile-text-primary">Check your email</h2>
-          <p className="mobile-text-sm mobile-text-muted">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
+          <p className="text-sm text-muted-foreground">
             We've sent a verification link to<br />
-            <span className="mobile-text-primary font-medium">{email}</span>
+            <span className="text-foreground font-medium">{email}</span>
           </p>
         </div>
         
-        <div className="mobile-flow-md">
-          <p className="mobile-text-xs mobile-text-muted">
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
             Click the link in your email to verify your account, then return here to sign in.
           </p>
           
@@ -175,11 +184,11 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             onClick={handleResendConfirmation}
             variant="outline"
             disabled={loading}
-            className="mobile-w-full mobile-button"
+            className="w-full h-12 rounded-xl border-border hover:bg-muted transition-all duration-200"
           >
             {loading ? (
               <>
-                <Loader2 className="mobile-w-4 mobile-h-4 mobile-mr-sm animate-spin" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Sending...
               </>
             ) : (
@@ -193,38 +202,42 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               onToggleMode();
             }}
             variant="ghost"
-            className="mobile-w-full mobile-text-muted mobile-touchable"
+            className="w-full text-muted-foreground hover:text-foreground"
           >
             Back to sign in
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (showPasswordReset) {
     return (
-      <div className="mobile-flow-lg">
-        <div className="flex items-center gap-3 mobile-mb-md">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setShowPasswordReset(false)}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl p-2"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h2 className="mobile-h2 mobile-text-primary">Reset password</h2>
-            <p className="mobile-text-sm mobile-text-muted">
+            <h2 className="text-lg font-semibold text-foreground">Reset password</h2>
+            <p className="text-sm text-muted-foreground">
               Enter your email to receive a reset link
             </p>
           </div>
         </div>
 
-        <form onSubmit={handlePasswordReset} className="mobile-flow-md">
+        <form onSubmit={handlePasswordReset} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="reset-email" className="text-foreground text-sm font-medium">
+            <Label htmlFor="reset-email" className={labelClasses}>
               Email address
             </Label>
             <div className="relative">
@@ -236,14 +249,14 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
-                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                className={inputClasses}
               />
             </div>
           </div>
 
           <Button 
             type="submit" 
-            className="mobile-w-full mobile-button" 
+            className="w-full h-12 btn-serene" 
             disabled={loading}
           >
             {loading ? (
@@ -256,27 +269,31 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             )}
           </Button>
         </form>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="mobile-flow-lg">
-      <div className="mobile-text-center mobile-flow-tight">
-        <h2 className="mobile-h2 mobile-text-primary">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6"
+    >
+      <div className="text-center space-y-1">
+        <h2 className="text-xl font-semibold text-foreground">
           {mode === 'signin' ? 'Welcome back' : 'Create your account'}
         </h2>
-        <p className="mobile-text-sm mobile-text-muted">
+        <p className="text-sm text-muted-foreground">
           {mode === 'signin' 
             ? 'Sign in to continue your journey' 
             : 'Start your personal growth journey'}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mobile-flow-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-foreground text-sm font-medium">
+            <Label htmlFor="name" className={labelClasses}>
               Full name
             </Label>
             <div className="relative">
@@ -288,14 +305,14 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder="Your full name"
-                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                className={inputClasses}
               />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-foreground text-sm font-medium">
+          <Label htmlFor="email" className={labelClasses}>
             Email address
           </Label>
           <div className="relative">
@@ -307,13 +324,13 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+              className={inputClasses}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-foreground text-sm font-medium">
+          <Label htmlFor="password" className={labelClasses}>
             Password
           </Label>
           <div className="relative">
@@ -326,7 +343,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               required
               placeholder="••••••••"
               minLength={6}
-              className="pl-10 pr-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+              className={`${inputClasses} pr-10`}
             />
             <button
               type="button"
@@ -352,7 +369,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
         <Button 
           type="submit" 
-          className="mobile-w-full mobile-button" 
+          className="w-full h-12 btn-serene" 
           disabled={loading}
         >
           {loading ? (
@@ -366,12 +383,12 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
         </Button>
 
         {/* Divider */}
-        <div className="relative">
+        <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">or continue with</span>
+            <span className="bg-card px-3 text-muted-foreground">or continue with</span>
           </div>
         </div>
 
@@ -381,7 +398,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           variant="outline"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="mobile-w-full h-12 rounded-xl border-border hover:bg-muted transition-all duration-200"
+          className="w-full h-12 rounded-xl border-border hover:bg-muted transition-all duration-200"
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
             <path
@@ -404,7 +421,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           Continue with Google
         </Button>
 
-        <div className="text-center">
+        <div className="text-center pt-2">
           <button
             type="button"
             onClick={onToggleMode}
@@ -416,6 +433,6 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           </button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 };
