@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -14,12 +13,14 @@ import { ChatErrorBoundary } from './chat/ChatErrorBoundary';
 import { LoadingSpinner } from './ui/loading-spinner';
 import { Message } from '@/types/chat';
 import { createUserMessage, createBotMessage } from '@/utils/messageUtils';
+import { streamChat } from '@/utils/streamingChat';
 
 export const ChatInterface = () => {
   // Initialize all hooks first - this ensures consistent hook order
+  const { user } = useAuth();
   const { createEntry } = useJournalEntries();
   const journalSuggestion = useJournalSuggestion();
-  const { isDetectingIntent, generateResponse } = useConversationalAI();
+  const { isDetectingIntent } = useConversationalAI();
   
   const {
     messages,
@@ -29,6 +30,7 @@ export const ChatInterface = () => {
     setIsGeneratingResponse,
     isLoadingSessions,
     addMessage,
+    setMessages,
     switchToSession,
     startNewChat,
     hasInitialized
@@ -78,41 +80,73 @@ export const ChatInterface = () => {
     if (attachmentUrl && !currentInput.trim()) return;
 
     setIsGeneratingResponse(true);
+    
+    // Create streaming bot message placeholder
+    const streamingMessageId = `streaming-${Date.now()}`;
+    const streamingMessage = createBotMessage('');
+    streamingMessage.id = streamingMessageId;
+    
+    // Add empty message that will be updated with streaming content
+    setMessages(prev => [...prev, streamingMessage]);
+    
     try {
       const conversationHistory = messages.map(msg => ({
         role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
         content: msg.content
       }));
       
-      const aiResponse = await generateResponse(currentInput, conversationHistory, false, 'coaching');
-
-      if (aiResponse) {
-        const botResponse = createBotMessage(aiResponse);
-        await addMessage(botResponse);
-
-        if (aiResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
-            aiResponse.toLowerCase().includes('capture these insights in your journal')) {
-          const conversationSummary = messages.map(msg => 
-            `${msg.type === 'user' ? 'You' : 'Coach'}: ${msg.content}`
-          ).join('\n\n');
-          journalSuggestion.setSuggestion(conversationSummary);
+      // Add the new user message to history
+      conversationHistory.push({ role: 'user', content: currentInput });
+      
+      let fullResponse = '';
+      
+      await streamChat({
+        messages: conversationHistory,
+        userId: user?.id || '',
+        coachingMode: true,
+        onDelta: (chunk) => {
+          fullResponse += chunk;
+          // Update the streaming message with accumulated content
+          setMessages(prev => prev.map(msg => 
+            msg.id === streamingMessageId 
+              ? { ...msg, content: fullResponse }
+              : msg
+          ));
+        },
+        onDone: () => {
+          // Persist the final message
+          const finalMessage = createBotMessage(fullResponse);
+          finalMessage.id = streamingMessageId;
+          
+          if (fullResponse.toLowerCase().includes('would you like me to help you create a journal entry') || 
+              fullResponse.toLowerCase().includes('capture these insights in your journal')) {
+            const conversationSummary = messages.map(msg => 
+              `${msg.type === 'user' ? 'You' : 'Coach'}: ${msg.content}`
+            ).join('\n\n');
+            journalSuggestion.setSuggestion(conversationSummary);
+          }
+        },
+        onError: (error) => {
+          console.error('Streaming error:', error);
+          setMessages(prev => prev.map(msg => 
+            msg.id === streamingMessageId 
+              ? { ...msg, content: "I'm sorry, I encountered an error. Please try again." }
+              : msg
+          ));
         }
-      } else {
-        const errorResponse = createBotMessage(
-          "I'm sorry, I'm having trouble responding right now. Please try again."
-        );
-        await addMessage(errorResponse);
-      }
+      });
+      
     } catch (error) {
       console.error('Error generating response:', error);
-      const errorResponse = createBotMessage(
-        "I'm sorry, I encountered an error. Please try again."
-      );
-      await addMessage(errorResponse);
+      setMessages(prev => prev.map(msg => 
+        msg.id === streamingMessageId 
+          ? { ...msg, content: "I'm sorry, I encountered an error. Please try again." }
+          : msg
+      ));
     } finally {
       setIsGeneratingResponse(false);
     }
-  }, [inputText, fileAttachment, selectedActivity, messages, addMessage, generateResponse, journalSuggestion, setIsGeneratingResponse]);
+  }, [inputText, fileAttachment, selectedActivity, messages, addMessage, setMessages, user?.id, journalSuggestion, setIsGeneratingResponse]);
 
   // File handling
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
