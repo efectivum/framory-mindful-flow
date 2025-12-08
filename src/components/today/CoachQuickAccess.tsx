@@ -36,24 +36,24 @@ export const CoachQuickAccess: React.FC = () => {
   };
 
   return (
-    <Card className="app-card-organic animate-fade-in">
+    <Card className="card-serene animate-fade-in">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex-shrink-0 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="icon-container flex-shrink-0">
+            <Sparkles className="w-6 h-6 text-primary" />
           </div>
           
-          <div className="flex-1">
-            <h3 className="text-white font-semibold mb-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-foreground font-semibold mb-2">
               {getCoachTitle()}
             </h3>
-            <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
               {getCoachPrompt()}
             </p>
             
             <Button
               onClick={() => navigate('/coach')}
-              className="btn-organic glow-primary"
+              className="btn-serene"
               size="sm"
             >
               <MessageSquare className="w-4 h-4 mr-2" />

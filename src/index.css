@@ -14,7 +14,7 @@
 
 @layer base {
   :root {
-    /* Lumatori Serene Palette - Light Mode First (Scandinavian Minimalism) */
+    /* Lumatori Serene Palette - Light Mode (Scandinavian Minimalism) */
     --background: 40 30% 97%;
     --foreground: 240 8% 25%;
     
@@ -24,75 +24,131 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 8% 25%;
     
-    --primary: 260 35% 68%;
+    --primary: 260 35% 60%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 120 15% 85%;
+    --secondary: 120 15% 92%;
     --secondary-foreground: 240 8% 25%;
     
     --muted: 40 20% 94%;
-    --muted-foreground: 240 5% 55%;
+    --muted-foreground: 240 5% 45%;
     
-    --accent: 260 25% 75%;
-    --accent-foreground: 240 8% 25%;
-    
-    --destructive: 0 50% 65%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --border: 240 10% 90%;
-    --input: 240 10% 92%;
-    --ring: 260 35% 68%;
-    
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 8% 25%;
-    --sidebar-primary: 260 35% 68%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 20% 94%;
-    --sidebar-accent-foreground: 240 8% 25%;
-    --sidebar-border: 240 10% 90%;
-    --sidebar-ring: 260 35% 68%;
-
-    --radius: 1rem;
-  }
-
-  .dark {
-    /* Lumatori Serene Palette - Dark Mode (Soft Charcoal) */
-    --background: 240 8% 12%;
-    --foreground: 40 20% 92%;
-    
-    --card: 240 6% 16%;
-    --card-foreground: 40 20% 92%;
-    
-    --popover: 240 6% 16%;
-    --popover-foreground: 40 20% 92%;
-    
-    --primary: 260 35% 68%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 120 10% 25%;
-    --secondary-foreground: 40 20% 92%;
-    
-    --muted: 240 5% 20%;
-    --muted-foreground: 240 5% 65%;
-    
-    --accent: 260 25% 75%;
-    --accent-foreground: 240 8% 12%;
+    --accent: 260 25% 92%;
+    --accent-foreground: 260 35% 40%;
     
     --destructive: 0 50% 55%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 240 6% 22%;
-    --input: 240 6% 20%;
-    --ring: 260 35% 68%;
+    --success: 142 50% 45%;
+    --success-foreground: 0 0% 100%;
     
-    --sidebar-background: 240 8% 10%;
-    --sidebar-foreground: 40 20% 92%;
-    --sidebar-primary: 260 35% 68%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    --border: 240 10% 90%;
+    --input: 240 10% 92%;
+    --ring: 260 35% 60%;
+    
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 8% 25%;
+    --sidebar-primary: 260 35% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 20%;
+    --sidebar-accent: 40 20% 94%;
+    --sidebar-accent-foreground: 240 8% 25%;
+    --sidebar-border: 240 10% 90%;
+    --sidebar-ring: 260 35% 60%;
+
+    --radius: 1rem;
+  }
+
+  /* Time-based theme variations - Light mode */
+  [data-time="morning"] {
+    --primary: 32 80% 55%;
+    --accent: 32 60% 94%;
+    --accent-foreground: 32 80% 35%;
+    --ring: 32 80% 55%;
+  }
+
+  [data-time="evening"] {
+    --primary: 270 45% 55%;
+    --accent: 270 30% 94%;
+    --accent-foreground: 270 45% 35%;
+    --ring: 270 45% 55%;
+  }
+
+  [data-time="night"] {
+    --primary: 220 50% 55%;
+    --accent: 220 35% 94%;
+    --accent-foreground: 220 50% 35%;
+    --ring: 220 50% 55%;
+  }
+
+  .dark {
+    /* Lumatori Serene Palette - Dark Mode (Soft Charcoal) */
+    --background: 240 8% 10%;
+    --foreground: 40 20% 92%;
+    
+    --card: 240 6% 14%;
+    --card-foreground: 40 20% 92%;
+    
+    --popover: 240 6% 14%;
+    --popover-foreground: 40 20% 92%;
+    
+    --primary: 260 40% 65%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 5% 20%;
+    --secondary-foreground: 40 20% 92%;
+    
+    --muted: 240 5% 18%;
+    --muted-foreground: 240 5% 60%;
+    
+    --accent: 260 25% 25%;
+    --accent-foreground: 260 40% 85%;
+    
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 50% 40%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 100%;
+    
+    --border: 240 6% 20%;
+    --input: 240 6% 18%;
+    --ring: 260 40% 65%;
+    
+    --sidebar-background: 240 8% 8%;
+    --sidebar-foreground: 40 20% 92%;
+    --sidebar-primary: 260 40% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 18%;
     --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 240 6% 22%;
-    --sidebar-ring: 260 35% 68%;
+    --sidebar-border: 240 6% 20%;
+    --sidebar-ring: 260 40% 65%;
+  }
+
+  /* Time-based theme variations - Dark mode */
+  .dark[data-time="morning"] {
+    --primary: 32 70% 55%;
+    --accent: 32 40% 20%;
+    --accent-foreground: 32 70% 80%;
+    --ring: 32 70% 55%;
+  }
+
+  .dark[data-time="evening"] {
+    --primary: 270 50% 60%;
+    --accent: 270 30% 20%;
+    --accent-foreground: 270 50% 85%;
+    --ring: 270 50% 60%;
+  }
+
+  .dark[data-time="night"] {
+    --primary: 220 55% 55%;
+    --accent: 220 35% 18%;
+    --accent-foreground: 220 55% 80%;
+    --ring: 220 55% 55%;
   }
 }
 
@@ -141,26 +197,36 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(31, 41, 55, 0.3);
+    @apply bg-muted;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border-radius: 3px;
+    @apply bg-primary/50 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    @apply bg-primary/70;
   }
 }
 
 @layer components {
   /* Mobile-first gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-accent;
+    @apply bg-gradient-to-r from-primary to-accent-foreground;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* Serene card styling */
+  .card-serene {
+    @apply bg-card border border-border rounded-2xl transition-all duration-300;
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.04);
+  }
+
+  .card-serene:hover {
+    box-shadow: 0 4px 12px hsl(var(--foreground) / 0.08);
+    transform: translateY(-1px);
   }
 
   /* Calm, subtle card interactions */
@@ -169,14 +235,50 @@
   }
 
   .card-hover:hover {
-    @apply shadow-lg;
+    box-shadow: 0 8px 24px hsl(var(--foreground) / 0.08);
     transform: translateY(-2px);
   }
 
   .card-hover:active {
-    @apply shadow-md;
+    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.06);
     transform: translateY(0px);
     transition: all 0.2s ease-out;
+  }
+
+  /* Icon container with soft background */
+  .icon-container {
+    @apply w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center;
+  }
+
+  .icon-container-lg {
+    @apply w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center;
+  }
+
+  /* Soft button styles */
+  .btn-serene {
+    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 font-medium transition-all duration-300;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+  }
+
+  .btn-serene:hover {
+    box-shadow: 0 4px 16px hsl(var(--primary) / 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-serene:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px hsl(var(--primary) / 0.2);
+  }
+
+  /* Success button variant */
+  .btn-success {
+    @apply bg-success text-success-foreground rounded-xl px-6 py-3 font-medium transition-all duration-300;
+    box-shadow: 0 2px 8px hsl(var(--success) / 0.25);
+  }
+
+  .btn-success:hover {
+    box-shadow: 0 4px 16px hsl(var(--success) / 0.35);
+    transform: translateY(-1px);
   }
 
   /* Slow, calming animations */
@@ -193,7 +295,12 @@
 
   @keyframes breathe {
     0%, 100% { transform: scale(1); opacity: 0.95; }
-    50% { transform: scale(1.01); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 1; }
+  }
+
+  @keyframes gentlePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
 
   .animate-fade-in {
@@ -202,5 +309,28 @@
 
   .animate-breathe {
     animation: breathe 4s ease-in-out infinite;
+  }
+
+  .animate-gentle-pulse {
+    animation: gentlePulse 2s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  /* Semantic success/warning text colors */
+  .text-success {
+    color: hsl(var(--success));
+  }
+
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+
+  .bg-warning {
+    background-color: hsl(var(--warning));
   }
 }

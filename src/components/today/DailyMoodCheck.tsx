@@ -18,7 +18,6 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Check if mood already logged today (simplified - in real app would check from API)
   useEffect(() => {
     const today = new Date().toDateString();
     const savedMood = localStorage.getItem(`mood_${today}`);
@@ -37,7 +36,7 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
     onMoodLogged(true);
     
     toast({
-      title: "Mood logged! ✨",
+      title: "Mood logged",
       description: "Thank you for checking in with yourself",
     });
   };
@@ -57,20 +56,20 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
 
   if (todayMood && !showJournalPrompt) {
     return (
-      <Card className="app-card-organic animate-fade-in mb-6">
+      <Card className="card-serene animate-fade-in">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <CheckCircle className="w-6 h-6 text-green-400" />
-            <p className="text-green-300 font-medium">Mood logged for today</p>
+            <CheckCircle className="w-5 h-5 text-success" />
+            <p className="text-foreground font-medium">Mood logged for today</p>
           </div>
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             You can always add more thoughts in your journal
           </p>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/journal')}
-            className="mt-3 text-gray-400 hover:text-white"
+            className="mt-3 text-muted-foreground hover:text-foreground"
           >
             <PenLine className="w-4 h-4 mr-2" />
             Write in journal
@@ -82,16 +81,16 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
 
   return (
     <>
-      <Card className="app-card-organic animate-fade-in mb-6">
+      <Card className="card-serene animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="mb-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mx-auto mb-4 flex items-center justify-center animate-breathe">
-              <Heart className="w-8 h-8 text-white" />
+            <div className="icon-container-lg mx-auto mb-4 animate-breathe">
+              <Heart className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-white font-semibold text-xl mb-2">
+            <h2 className="text-foreground font-semibold text-xl mb-2">
               How are you feeling?
             </h2>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Take a moment to check in with yourself
             </p>
           </div>
@@ -99,7 +98,7 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
           <Button
             size="lg"
             onClick={() => setShowMoodSelector(true)}
-            className="btn-organic w-full max-w-xs glow-primary"
+            className="btn-serene w-full max-w-xs"
           >
             Check my mood
           </Button>
@@ -113,16 +112,23 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowMoodSelector(false)}
           >
-            <div className="w-full max-w-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
               <MoodSelector
                 onMoodSelect={handleMoodSelect}
                 title="How are you feeling right now?"
                 subtitle="Your feelings are valid and important"
                 size="md"
               />
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -134,24 +140,26 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={handleJournalSkip}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md"
             >
-              <Card className="app-card-organic">
+              <Card className="card-serene">
                 <CardContent className="p-8 text-center">
                   <div className="mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 mx-auto mb-4 flex items-center justify-center">
-                      <PenLine className="w-6 h-6 text-white" />
+                    <div className="icon-container mx-auto mb-4">
+                      <PenLine className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-white font-semibold text-lg mb-2">
+                    <h3 className="text-foreground font-semibold text-lg mb-2">
                       Would you like to journal about this?
                     </h3>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Writing about your feelings can help you process them
                     </p>
                   </div>
@@ -160,13 +168,13 @@ export const DailyMoodCheck: React.FC<DailyMoodCheckProps> = ({ onMoodLogged }) 
                     <Button
                       variant="ghost"
                       onClick={handleJournalSkip}
-                      className="text-gray-400 hover:text-white"
+                      className="text-muted-foreground hover:text-foreground"
                     >
                       Skip for now
                     </Button>
                     <Button
                       onClick={handleJournalYes}
-                      className="btn-organic glow-primary"
+                      className="btn-serene"
                     >
                       Yes, let's write
                     </Button>
