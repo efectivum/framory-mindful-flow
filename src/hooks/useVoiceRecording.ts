@@ -1,8 +1,9 @@
-
 import { useState, useRef, useCallback } from 'react';
 import { optimizedBlobToBase64 } from '@/utils/audioUtils';
 import { setupAudioAnalyser, calculateAudioLevel } from '@/utils/audioUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadVoiceRecording } from '@/utils/storageUtils';
+import { useAuth } from '@/hooks/useAuth';
 
 export type RecordingStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'error';
 
@@ -17,6 +18,7 @@ export const useVoiceRecording = ({
   onSuccess, 
   maxRecordingTime = 15 * 60 
 }: UseVoiceRecordingProps) => {
+  const { user } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -200,6 +202,20 @@ export const useVoiceRecording = ({
       
       if (data?.text && data.text.trim()) {
         console.log('Transcription successful:', data.text);
+        
+        // Upload voice recording to storage for persistence
+        if (user?.id && audioBlob) {
+          try {
+            const uploadResult = await uploadVoiceRecording(audioBlob, user.id);
+            if (uploadResult) {
+              console.log('Voice recording saved to storage:', uploadResult.path);
+            }
+          } catch (uploadError) {
+            console.warn('Failed to save voice recording to storage:', uploadError);
+            // Don't fail the whole operation if storage upload fails
+          }
+        }
+        
         onTranscriptionComplete(data.text);
         onSuccess();
         setStatus('idle');
@@ -229,7 +245,7 @@ export const useVoiceRecording = ({
       
       setErrorMessage(userFriendlyMessage);
     }
-  }, [onTranscriptionComplete, onSuccess]);
+  }, [onTranscriptionComplete, onSuccess, user?.id]);
 
   const startRecording = useCallback(async (language: string = 'en') => {
     if (!streamRef.current) {

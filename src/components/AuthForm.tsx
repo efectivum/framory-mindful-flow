@@ -204,31 +204,31 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
   if (showPasswordReset) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-3 mb-6">
+      <div className="mobile-flow-lg">
+        <div className="flex items-center gap-3 mobile-mb-md">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowPasswordReset(false)}
-            className="text-gray-400 hover:text-white hover:bg-gray-700/30 rounded-xl p-2"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl p-2"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h2 className="text-xl font-semibold text-white">Reset password</h2>
-            <p className="text-gray-400 text-sm">
+            <h2 className="mobile-h2 mobile-text-primary">Reset password</h2>
+            <p className="mobile-text-sm mobile-text-muted">
               Enter your email to receive a reset link
             </p>
           </div>
         </div>
 
-        <form onSubmit={handlePasswordReset} className="space-y-4">
+        <form onSubmit={handlePasswordReset} className="mobile-flow-md">
           <div className="space-y-2">
-            <Label htmlFor="reset-email" className="text-gray-300 text-sm font-medium">
+            <Label htmlFor="reset-email" className="text-foreground text-sm font-medium">
               Email address
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="reset-email"
                 type="email"
@@ -236,14 +236,14 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
-                className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
 
           <Button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" 
+            className="mobile-w-full mobile-button" 
             disabled={loading}
           >
             {loading ? (
@@ -276,11 +276,11 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
       <form onSubmit={handleSubmit} className="mobile-flow-md">
         {mode === 'signup' && (
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-300 text-sm font-medium">
+            <Label htmlFor="name" className="text-foreground text-sm font-medium">
               Full name
             </Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="name"
                 type="text"
@@ -288,18 +288,18 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder="Your full name"
-                className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-gray-300 text-sm font-medium">
+          <Label htmlFor="email" className="text-foreground text-sm font-medium">
             Email address
           </Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
@@ -307,17 +307,17 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="pl-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-gray-300 text-sm font-medium">
+          <Label htmlFor="password" className="text-foreground text-sm font-medium">
             Password
           </Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -326,12 +326,12 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
               required
               placeholder="••••••••"
               minLength={6}
-              className="pl-10 pr-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="pl-10 pr-10 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-xl h-12 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -343,7 +343,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
             <button
               type="button"
               onClick={() => setShowPasswordReset(true)}
-              className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+              className="text-primary hover:text-primary/80 text-sm transition-colors"
             >
               Forgot your password?
             </button>
@@ -352,7 +352,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
 
         <Button 
           type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" 
+          className="mobile-w-full mobile-button" 
           disabled={loading}
         >
           {loading ? (
@@ -368,7 +368,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-600" />
+            <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-card px-2 text-muted-foreground">or continue with</span>
@@ -381,7 +381,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           variant="outline"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full h-12 rounded-xl border-gray-600 hover:bg-gray-700/50 transition-all duration-200"
+          className="mobile-w-full h-12 rounded-xl border-border hover:bg-muted transition-all duration-200"
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
             <path
@@ -408,7 +408,7 @@ export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
           <button
             type="button"
             onClick={onToggleMode}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             {mode === 'signin' 
               ? "Don't have an account? Sign up" 
