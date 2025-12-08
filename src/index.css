@@ -1,9 +1,16 @@
-
 /* Mobile-First Design System Foundation */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Mobile CSS System Imports */
+@import './styles/mobile/core.css';
+@import './styles/mobile/layouts.css';
+@import './styles/mobile/typography.css';
+@import './styles/mobile/components.css';
+@import './styles/mobile/interactions.css';
+@import './styles/mobile/utilities.css';
 
 @layer base {
   :root {
