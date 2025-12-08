@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
-import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { DailyMoodCheck } from './DailyMoodCheck';
 import { TodayHabits } from './TodayHabits';
 import { CoachQuickAccess } from './CoachQuickAccess';
@@ -15,18 +14,20 @@ export const TodayDashboard: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="mobile-page">
-      <div className="mobile-container mobile-nav-safe">
-        <div className="mobile-flow-loose">
-          {/* Welcome */}
-          <div className="text-center mobile-flow pt-2 space-y-3">
-            <h1 className="mobile-h1 text-foreground animate-fade-in font-medium">{greeting}</h1>
-            <p className="mobile-text-base text-muted-foreground animate-fade-in leading-relaxed">
-              Take a gentle moment to check in with yourself
-            </p>
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-lg mx-auto px-4 py-6 pb-24">
+        {/* Welcome Section */}
+        <div className="text-center mb-8 pt-2">
+          <h1 className="text-2xl font-medium text-foreground mb-2 animate-fade-in">
+            {greeting}
+          </h1>
+          <p className="text-muted-foreground animate-fade-in">
+            Take a gentle moment to check in with yourself
+          </p>
+        </div>
 
-          {/* Components */}
+        {/* Main Content */}
+        <div className="space-y-5">
           <ButtonErrorBoundary fallbackMessage="Mood check is not available">
             <DailyMoodCheck onMoodLogged={setHasMoodLogged} />
           </ButtonErrorBoundary>

@@ -14,15 +14,15 @@ export const TodayHabits: React.FC = () => {
 
   const activeHabits = habits.filter(habit => habit.is_active);
   const uncompletedHabits = activeHabits.filter(habit => !todayCompletions.includes(habit.id));
-  const todaysHabits = uncompletedHabits.slice(0, 3); // Max 3 for focus
+  const todaysHabits = uncompletedHabits.slice(0, 3);
   const completedCount = activeHabits.length - uncompletedHabits.length;
 
   const handleHabitComplete = async (habitId: string) => {
     try {
       await completeHabit({ habitId });
       toast({
-        title: "Amazing! 🎉",
-        description: "You're building great habits!",
+        title: "Well done",
+        description: "You're building great habits",
       });
     } catch (error) {
       console.error('Failed to complete habit:', error);
@@ -34,25 +34,24 @@ export const TodayHabits: React.FC = () => {
     }
   };
 
-  // No habits created yet
   if (activeHabits.length === 0) {
     return (
-      <Card className="app-card-organic animate-fade-in mb-6">
+      <Card className="card-serene animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="mb-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 mx-auto mb-4 flex items-center justify-center">
-              <Plus className="w-8 h-8 text-white" />
+            <div className="icon-container-lg mx-auto mb-4">
+              <Plus className="w-8 h-8 text-success" />
             </div>
-            <h3 className="text-white font-semibold text-lg mb-2">
+            <h3 className="text-foreground font-semibold text-lg mb-2">
               Start building habits
             </h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted-foreground text-sm">
               Small, consistent actions lead to big changes
             </p>
           </div>
           <Button
             onClick={() => navigate('/goals')}
-            className="btn-organic glow-success"
+            className="btn-success"
           >
             Create your first habit
           </Button>
@@ -61,18 +60,17 @@ export const TodayHabits: React.FC = () => {
     );
   }
 
-  // All habits completed
   if (todaysHabits.length === 0) {
     return (
-      <Card className="app-card-organic animate-fade-in mb-6">
+      <Card className="card-serene animate-fade-in">
         <CardContent className="p-8 text-center">
           <div className="mb-4">
-            <div className="text-6xl mb-4 animate-breathe">🎉</div>
-            <h3 className="text-white font-semibold text-lg mb-2">
-              All habits completed!
+            <div className="text-5xl mb-4 animate-breathe">✨</div>
+            <h3 className="text-foreground font-semibold text-lg mb-2">
+              All habits completed
             </h3>
-            <p className="text-gray-400 text-sm">
-              You're doing amazing! Keep up the great work.
+            <p className="text-muted-foreground text-sm">
+              You're doing amazing. Keep up the great work.
             </p>
           </div>
         </CardContent>
@@ -81,31 +79,30 @@ export const TodayHabits: React.FC = () => {
   }
 
   return (
-    <Card className="app-card-organic animate-fade-in mb-6">
+    <Card className="card-serene animate-fade-in">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-white font-semibold text-lg">Today's Focus</h3>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-foreground font-semibold text-lg">Today's Focus</h3>
           {completedCount > 0 && (
-            <div className="text-sm text-green-400 font-medium">
+            <div className="text-sm text-success font-medium">
               {completedCount} completed
             </div>
           )}
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-3">
           {todaysHabits.map((habit, index) => (
             <motion.div
               key={habit.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group"
             >
-              <div className="flex items-center justify-between p-6 bg-gray-800/30 rounded-2xl border border-gray-700/30 hover:border-gray-600/40 transition-all duration-300 hover:bg-gray-800/40">
-                <div className="flex-1">
-                  <h4 className="text-white font-medium mb-1">{habit.title}</h4>
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Flame className="w-4 h-4 text-orange-400" />
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted/70 transition-all duration-300">
+                <div className="flex-1 min-w-0 mr-4">
+                  <h4 className="text-foreground font-medium mb-1 truncate">{habit.title}</h4>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Flame className="w-4 h-4 text-warning flex-shrink-0" />
                     <span>{habit.current_streak} day streak</span>
                   </div>
                 </div>
@@ -114,11 +111,11 @@ export const TodayHabits: React.FC = () => {
                   size="sm"
                   onClick={() => handleHabitComplete(habit.id)}
                   disabled={isCompleting}
-                  className="btn-organic bg-green-600 hover:bg-green-700 glow-success min-w-[100px]"
+                  className="btn-success flex-shrink-0"
                 >
                   {isCompleting ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-success-foreground/30 border-t-success-foreground rounded-full animate-spin" />
                       <span>Done</span>
                     </div>
                   ) : (
@@ -139,7 +136,7 @@ export const TodayHabits: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate('/goals')}
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               View all habits ({uncompletedHabits.length - 3} more)
             </Button>
