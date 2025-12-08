@@ -1,8 +1,5 @@
-
 import React from "react";
-import { AppSidebar } from "@/components/AppSidebar";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface ResponsiveLayoutProps {
   children: React.ReactNode;
@@ -13,7 +10,7 @@ interface ResponsiveLayoutProps {
 }
 
 /**
- * Enhanced mobile-first layout with organic styling and consistent spacing
+ * Mindsera-style unified layout with bottom navigation on all screen sizes
  */
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   children,
@@ -23,48 +20,37 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   hideBottomNav = false,
 }) => {
   return (
-    <SidebarProvider>
-      <div className="mobile-layout mobile-layout-with-nav mobile-w-full mobile-min-h-screen">
-        {/* Desktop Sidebar */}
-        <div className="mobile-hidden desktop-block">
-          <AppSidebar />
-        </div>
-
-        {/* Main area */}
-        <main className="mobile-flex-1 mobile-flex mobile-flex-col">
-          {/* Mobile Header */}
-          {showHeader && (title || subtitle) && (
-            <header className="mobile-header-compact desktop-hidden">
-              <div className="mobile-stack-center">
-                {title && <h1 className="mobile-h1 text-foreground">{title}</h1>}
-                {subtitle && <p className="mobile-text-body text-muted-foreground">{subtitle}</p>}
-              </div>
-            </header>
-          )}
-
-          {/* Desktop Header */}
-          {showHeader && (title || subtitle) && (
-            <header className="mobile-hidden desktop-block mobile-card border-b border-border">
-              <div className="mobile-flex mobile-flex-between p-8">
-                <div>
-                  {title && <h1 className="mobile-h1 text-foreground">{title}</h1>}
-                  {subtitle && <p className="mobile-text-body text-muted-foreground">{subtitle}</p>}
-                </div>
-              </div>
-            </header>
-          )}
-
-          {/* Content */}
-          <div className="mobile-flex-1 mobile-content-spacing">
-            <div className="mobile-container">
-              {children}
+    <div className="min-h-screen w-full bg-background">
+      {/* Main content area */}
+      <main className="flex flex-col min-h-screen pb-20">
+        {/* Header */}
+        {showHeader && (title || subtitle) && (
+          <header className="px-4 pt-6 pb-4 sm:px-6 sm:pt-8">
+            <div className="max-w-2xl mx-auto">
+              {title && (
+                <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                  {title}
+                </h1>
+              )}
+              {subtitle && (
+                <p className="mt-1 text-sm sm:text-base text-muted-foreground">
+                  {subtitle}
+                </p>
+              )}
             </div>
-          </div>
-        </main>
+          </header>
+        )}
 
-        {/* Bottom navigation (mobile only) */}
-        {!hideBottomNav && <BottomNavigation />}
-      </div>
-    </SidebarProvider>
+        {/* Content */}
+        <div className="flex-1 px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto">
+            {children}
+          </div>
+        </div>
+      </main>
+
+      {/* Bottom navigation - visible on all screen sizes */}
+      {!hideBottomNav && <BottomNavigation />}
+    </div>
   );
 };
