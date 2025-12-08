@@ -1,7 +1,9 @@
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/conversational-ai`;
+const SUPABASE_URL = 'https://declymxlblaoeexpgfzq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlY2x5bXhsYmxhb2VleHBnZnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwNzY4ODgsImV4cCI6MjA2MzY1Mjg4OH0.k122AH1XtDamIXr8c8hAnHSqlXmwMt7q65jbaQ7p43M';
+const CHAT_URL = `${SUPABASE_URL}/functions/v1/conversational-ai`;
 
 interface StreamChatOptions {
   messages: Message[];
@@ -27,7 +29,7 @@ export async function streamChat({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
         message: messages[messages.length - 1]?.content || '',
