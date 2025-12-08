@@ -68,7 +68,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, userId, isJournalEntry, coachingMode } = await req.json();
+    const { message, conversationHistory, userId, isJournalEntry, coachingMode, stream } = await req.json();
     
     if (!lovableApiKey) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -291,6 +291,7 @@ Keep responses helpful, personalized, and conversational.`;
         model: 'google/gemini-2.5-flash',
         messages,
         max_tokens: coachingMode ? 250 : (isJournalEntry ? 200 : 400),
+        stream: stream || false,
       }),
     });
 
@@ -314,6 +315,14 @@ Keep responses helpful, personalized, and conversational.`;
         });
       }
       throw new Error(`AI gateway error: ${response.status}`);
+    }
+
+    // Handle streaming response
+    if (stream) {
+      console.log('Streaming AI response');
+      return new Response(response.body, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
+      });
     }
 
     const data = await response.json();

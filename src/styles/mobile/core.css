@@ -1,12 +1,121 @@
 /* Mobile-First Core System */
 
-/* Mobile Breakpoints */
+/* Mobile Breakpoints & Spacing Variables */
 :root {
   --mobile-xs: 375px;
   --mobile-sm: 425px;
   --mobile-md: 768px;
   --tablet: 1024px;
   --desktop: 1440px;
+  
+  /* Mobile spacing system */
+  --app-mobile-space-xs: 0.25rem;
+  --app-mobile-space-sm: 0.5rem;
+  --app-mobile-space-md: 1rem;
+  --app-mobile-space-lg: 1.5rem;
+  --app-mobile-space-xl: 2rem;
+  --app-mobile-space-2xl: 3rem;
+  
+  /* Desktop spacing */
+  --app-space-lg: 1.5rem;
+  --app-space-xl: 2rem;
+  --app-space-2xl: 3rem;
+  
+  /* Background colors */
+  --app-bg-primary: hsl(var(--background));
+  
+  /* Bottom navigation */
+  --bottom-nav-height: 72px;
+}
+
+/* Mobile Layout Utilities */
+.mobile-h-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.mobile-w-screen {
+  width: 100vw;
+}
+
+.mobile-flex {
+  display: flex;
+}
+
+.mobile-flex-col {
+  flex-direction: column;
+}
+
+.mobile-flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-flex-1 {
+  flex: 1;
+}
+
+.mobile-overflow-hidden {
+  overflow: hidden;
+}
+
+/* Mobile Background Colors (using design tokens) */
+.mobile-bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+.mobile-bg-card {
+  background-color: hsl(var(--card));
+}
+
+.mobile-bg-background {
+  background-color: hsl(var(--background));
+}
+
+/* Mobile Text Colors (using design tokens) */
+.mobile-text-foreground {
+  color: hsl(var(--foreground));
+}
+
+.mobile-text-muted {
+  color: hsl(var(--muted-foreground));
+}
+
+.mobile-text-primary {
+  color: hsl(var(--primary));
+}
+
+/* Mobile Spacing Utilities */
+.mobile-mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mobile-mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mobile-gap-sm {
+  gap: 0.5rem;
+}
+
+.mobile-gap-md {
+  gap: 1rem;
+}
+
+.mobile-gap-lg {
+  gap: 1.5rem;
+}
+
+.mobile-p-sm {
+  padding: 0.5rem;
+}
+
+.mobile-p-md {
+  padding: 1rem;
+}
+
+.mobile-p-lg {
+  padding: 1.5rem;
 }
 
 /* Mobile-First Base Layout Classes */
