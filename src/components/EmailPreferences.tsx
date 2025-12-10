@@ -36,30 +36,30 @@ export const EmailPreferences = () => {
   };
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Mail className="w-5 h-5" />
+    <Card className="card-serene border-0 shadow-none">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-foreground flex items-center gap-2 text-base">
+          <Mail className="w-5 h-5 text-warning" />
           Email Actions
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white font-medium">Test Weekly Insights</p>
-            <p className="text-gray-400 text-sm">Send yourself a sample weekly insights email</p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-foreground font-medium text-sm">Test Weekly Insights</p>
+            <p className="text-muted-foreground text-xs">Send yourself a sample email</p>
           </div>
-          <Button onClick={handleSendTestInsights} variant="outline" size="sm">
+          <Button onClick={handleSendTestInsights} variant="outline" size="sm" className="btn-serene">
             <Send className="w-4 h-4 mr-2" />
-            Send Test Email
+            Send
           </Button>
         </div>
 
-        <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
-          <h4 className="text-blue-300 font-medium mb-2">Email Settings</h4>
-          <p className="text-blue-300 text-sm">
-            Email preferences are now managed in the Personal Preferences section above. 
-            You can enable/disable weekly insights, security alerts, and product updates there.
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
+          <h4 className="text-primary font-medium text-sm mb-2">Email Settings</h4>
+          <p className="text-muted-foreground text-xs">
+            Email preferences are managed in the Personal Preferences section. 
+            Enable/disable weekly insights, alerts, and updates there.
           </p>
         </div>
       </CardContent>
