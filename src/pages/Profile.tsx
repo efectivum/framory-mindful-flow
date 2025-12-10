@@ -1,18 +1,15 @@
 
 import React from 'react';
-import { User, Shield, Bell, Palette, Download, Trophy } from 'lucide-react';
-import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
-import { MobileCard } from '@/components/ui/MobileCard';
+import { User, Shield, Bell, Palette } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { AccountInformation } from '@/components/AccountInformation';
 import { PrivacySettings } from '@/components/PrivacySettings';
 import { EmailPreferences } from '@/components/EmailPreferences';
 import { AdditionalSettings } from '@/components/AdditionalSettings';
 import { AchievementsSection } from '@/components/AchievementsSection';
-import { ResponsiveLayout } from '@/components/ResponsiveLayout';
-import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { useAuth } from '@/hooks/useAuth';
 import { FlippableCard } from '@/components/ui/FlippableCard';
-import { ButtonErrorBoundary } from '@/components/ButtonErrorBoundary';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -22,24 +19,23 @@ const Profile = () => {
     title: string,
     description: string,
     component: React.ReactNode,
-    gradient: string
+    accentColor: string
   ) => {
     const front = (
-      <div className={`h-full w-full rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10 backdrop-blur-sm app-card-organic cursor-pointer`}
-           style={{ background: gradient }}>
-        <div className="flex items-center justify-between">
-          <div className="text-white/80">{icon}</div>
+      <div className="h-full w-full card-serene p-6 flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accentColor}`}>
+          {icon}
         </div>
-        <div>
-          <div className="text-xl font-medium text-white mb-2">{title}</div>
-          <div className="text-white/80 text-sm">{description}</div>
+        <div className="mt-auto">
+          <h3 className="text-lg font-medium text-foreground mb-1">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
     );
 
     const back = (
-      <div className="h-full w-full rounded-3xl bg-gray-800/60 border border-gray-600/50 backdrop-blur-sm overflow-hidden">
-        <div className="h-full w-full overflow-y-auto scrollbar-hide">
+      <div className="h-full w-full card-serene overflow-hidden">
+        <div className="h-full w-full overflow-y-auto p-1">
           {component}
         </div>
       </div>
@@ -49,114 +45,113 @@ const Profile = () => {
   };
 
   const accountCard = createSettingsCard(
-    <User className="w-6 h-6" />,
+    <User className="w-5 h-5 text-primary" />,
     "Account",
-    "Manage your personal information and preferences",
+    "Manage your personal information",
     <AccountInformation />,
-    "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+    "bg-primary/10"
   );
 
   const privacyCard = createSettingsCard(
-    <Shield className="w-6 h-6" />,
+    <Shield className="w-5 h-5 text-success" />,
     "Privacy & Data",
-    "Control how your data is used and stored",
+    "Control your data and privacy",
     <PrivacySettings />,
-    "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+    "bg-success/10"
   );
 
   const notificationsCard = createSettingsCard(
-    <Bell className="w-6 h-6" />,
+    <Bell className="w-5 h-5 text-warning" />,
     "Notifications",
-    "Configure email and app notifications",
+    "Configure email settings",
     <EmailPreferences />,
-    "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)"
+    "bg-warning/10"
   );
 
   const preferencesCard = createSettingsCard(
-    <Palette className="w-6 h-6" />,
+    <Palette className="w-5 h-5 text-accent-foreground" />,
     "Preferences",
-    "Customize your app experience",
+    "Customize your experience",
     <AdditionalSettings />,
-    "linear-gradient(135deg, #ec4899 0%, #be185d 100%)"
+    "bg-accent"
   );
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <MobilePage>
-      <MobileContent padded>
-        <NetworkStatusIndicator />
-        <div className="mobile-flow">
-          {/* Welcome Section */}
-          <MobileSection>
-            <div className="mobile-stack-center">
-              <div className="mobile-touch mobile-haptic" style={{ 
-                width: '96px', 
-                height: '96px', 
-                borderRadius: 'var(--app-radius-lg)', 
-                background: 'var(--app-gradient-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <User className="w-12 h-12 text-white" />
-              </div>
-              <div>
-                <h2 className="mobile-h1">
-                  Welcome, {user?.email?.split('@')[0] || 'User'}
-                </h2>
-                <p className="mobile-body" style={{ color: 'var(--app-text-secondary)' }}>
-                  Manage your account settings and customize your Lumatori experience
-                </p>
-              </div>
-            </div>
-          </MobileSection>
+    <ResponsiveLayout>
+      <motion.div 
+        className="space-y-6 py-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Welcome Section */}
+        <motion.div variants={itemVariants} className="text-center space-y-4">
+          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <User className="w-10 h-10 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">
+              Welcome, {user?.email?.split('@')[0] || 'User'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your Lumatori experience
+            </p>
+          </div>
+        </motion.div>
 
-          {/* Achievements Section */}
-          <MobileSection>
-            <AchievementsSection />
-          </MobileSection>
+        {/* Achievements Section */}
+        <motion.div variants={itemVariants}>
+          <AchievementsSection />
+        </motion.div>
 
-          {/* Settings Grid */}
-          <MobileSection>
-            <ButtonErrorBoundary fallbackMessage="Settings are not available">
-              <div className="mobile-grid-auto-fit">
-                <FlippableCard
-                  frontContent={accountCard.front}
-                  backContent={accountCard.back}
-                  height="h-[500px]"
-                  className="mobile-touch mobile-haptic"
-                  flipOnHover={false}
-                  flipOnClick={true}
-                />
-                <FlippableCard
-                  frontContent={privacyCard.front}
-                  backContent={privacyCard.back}
-                  height="h-[500px]"
-                  className="mobile-touch mobile-haptic"
-                  flipOnHover={false}
-                  flipOnClick={true}
-                />
-                <FlippableCard
-                  frontContent={notificationsCard.front}
-                  backContent={notificationsCard.back}
-                  height="h-[500px]"
-                  className="mobile-touch mobile-haptic"
-                  flipOnHover={false}
-                  flipOnClick={true}
-                />
-                <FlippableCard
-                  frontContent={preferencesCard.front}
-                  backContent={preferencesCard.back}
-                  height="h-[500px]"
-                  className="mobile-touch mobile-haptic"
-                  flipOnHover={false}
-                  flipOnClick={true}
-                />
-              </div>
-            </ButtonErrorBoundary>
-          </MobileSection>
-        </div>
-      </MobileContent>
-    </MobilePage>
+        {/* Settings Grid */}
+        <motion.div variants={itemVariants}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FlippableCard
+              frontContent={accountCard.front}
+              backContent={accountCard.back}
+              height="h-[420px]"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+            <FlippableCard
+              frontContent={privacyCard.front}
+              backContent={privacyCard.back}
+              height="h-[420px]"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+            <FlippableCard
+              frontContent={notificationsCard.front}
+              backContent={notificationsCard.back}
+              height="h-[420px]"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+            <FlippableCard
+              frontContent={preferencesCard.front}
+              backContent={preferencesCard.back}
+              height="h-[420px]"
+              flipOnHover={false}
+              flipOnClick={true}
+            />
+          </div>
+        </motion.div>
+      </motion.div>
+    </ResponsiveLayout>
   );
 };
 

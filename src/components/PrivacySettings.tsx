@@ -1,6 +1,5 @@
 
-import { Shield, Download, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Shield, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { DataExportDialog } from './DataExportDialog';
@@ -9,55 +8,54 @@ import { RecoveryDialog } from './RecoveryDialog';
 
 export const PrivacySettings = () => {
   return (
-    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Shield className="w-5 h-5" />
+    <Card className="card-serene border-0 shadow-none">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-foreground flex items-center gap-2 text-base">
+          <Shield className="w-5 h-5 text-success" />
           Privacy & Data
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white font-medium">Data Analytics</div>
-              <div className="text-gray-400 text-sm">Help improve Lumatori with usage data</div>
+              <div className="text-foreground font-medium text-sm">Data Analytics</div>
+              <div className="text-muted-foreground text-xs">Help improve Lumatori</div>
             </div>
             <Switch defaultChecked />
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white font-medium">AI Insights</div>
-              <div className="text-gray-400 text-sm">Allow AI analysis of your entries</div>
+              <div className="text-foreground font-medium text-sm">AI Insights</div>
+              <div className="text-muted-foreground text-xs">Allow AI analysis</div>
             </div>
             <Switch defaultChecked />
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-6 space-y-4">
-          <h3 className="text-white font-medium flex items-center gap-2">
+        <div className="border-t border-border pt-5 space-y-3">
+          <h3 className="text-foreground font-medium text-sm flex items-center gap-2">
             <Download className="w-4 h-4" />
             Data Management
           </h3>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             <DataExportDialog />
             <RecoveryDialog />
           </div>
 
-          <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
-            <h4 className="text-blue-300 font-medium mb-2">Your Data Rights</h4>
-            <ul className="text-blue-300 text-sm space-y-1">
-              <li>• Export your data at any time in JSON or CSV format</li>
-              <li>• Restore accidentally deleted journal entries</li>
-              <li>• Full control over your account and data</li>
-              <li>• GDPR compliant data handling</li>
+          <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
+            <h4 className="text-primary font-medium text-sm mb-2">Your Data Rights</h4>
+            <ul className="text-muted-foreground text-xs space-y-1">
+              <li>• Export data in JSON or CSV</li>
+              <li>• Restore deleted entries</li>
+              <li>• GDPR compliant</li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-6">
-          <h3 className="text-red-400 font-medium mb-3">Danger Zone</h3>
+        <div className="border-t border-border pt-5">
+          <h3 className="text-destructive font-medium text-sm mb-3">Danger Zone</h3>
           <AccountDeletionDialog />
         </div>
       </CardContent>
