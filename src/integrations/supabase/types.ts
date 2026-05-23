@@ -410,7 +410,7 @@ export type Database = {
           intervention_type: string
           measured_at: string | null
           success_metric: string
-          time_to_improvement: unknown
+          time_to_improvement: string | null
           user_id: string
           user_satisfaction_rating: number | null
         }
@@ -424,7 +424,7 @@ export type Database = {
           intervention_type: string
           measured_at?: string | null
           success_metric: string
-          time_to_improvement?: unknown
+          time_to_improvement?: string | null
           user_id: string
           user_satisfaction_rating?: number | null
         }
@@ -438,7 +438,7 @@ export type Database = {
           intervention_type?: string
           measured_at?: string | null
           success_metric?: string
-          time_to_improvement?: unknown
+          time_to_improvement?: string | null
           user_id?: string
           user_satisfaction_rating?: number | null
         }
@@ -928,6 +928,7 @@ export type Database = {
           id: string
           model: string | null
           next_steps: Json | null
+          pdf_url: string | null
           raw_response: Json | null
           recommendations: Json | null
           scores: Json | null
@@ -942,6 +943,7 @@ export type Database = {
           id?: string
           model?: string | null
           next_steps?: Json | null
+          pdf_url?: string | null
           raw_response?: Json | null
           recommendations?: Json | null
           scores?: Json | null
@@ -956,6 +958,7 @@ export type Database = {
           id?: string
           model?: string | null
           next_steps?: Json | null
+          pdf_url?: string | null
           raw_response?: Json | null
           recommendations?: Json | null
           scores?: Json | null
