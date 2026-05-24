@@ -26,7 +26,7 @@ const pageTransition = {
   type: "tween",
   ease: "anticipate",
   duration: 0.3,
-};
+} as const;
 
 export const SwipeContainer: React.FC<SwipeContainerProps> = ({
   children,

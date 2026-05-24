@@ -30,7 +30,7 @@ export const useVoiceRecording = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
