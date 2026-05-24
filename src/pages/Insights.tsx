@@ -3,7 +3,7 @@ import React from 'react';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
+
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { InsightStatsCards } from '@/components/insights/InsightStatsCards';
 import { InsightChartsSection } from '@/components/insights/InsightChartsSection';
@@ -26,48 +26,48 @@ const Insights = () => {
   const averageWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
 
   return (
-    <MobilePage>
-      <MobileContent padded>
+    <ResponsiveLayout title="Insights" subtitle="Your patterns and progress">
+      
         <NetworkStatusIndicator />
         
         <div className="mobile-flow">
           {/* Overview Stats */}
-          <MobileSection>
+          <section className="mb-6">
             <InsightStatsCards
               currentStreak={currentStreak}
               averageWordsPerEntry={averageWordsPerEntry}
               activeHabitsCount={activeHabits.length}
             />
-          </MobileSection>
+          </section>
 
           {entries.length === 0 ? (
-            <MobileSection>
+            <section className="mb-6">
               <InsightEmptyState />
-            </MobileSection>
+            </section>
           ) : (
             <div className="mobile-flow">
               {/* Main Charts Column */}
-              <MobileSection>
+              <section className="mb-6">
                 <InsightChartsSection
                   moodTrends={moodTrends}
                   personalityInsights={personalityInsights}
                   emotionAnalysis={emotionAnalysis}
                 />
-              </MobileSection>
+              </section>
 
               {/* Sidebar Column */}
-              <MobileSection>
+              <section className="mb-6">
                 <InsightSidebar
                   totalEntries={totalEntries}
                   totalWords={totalWords}
                   currentStreak={currentStreak}
                 />
-              </MobileSection>
+              </section>
             </div>
           )}
         </div>
-      </MobileContent>
-    </MobilePage>
+      
+    </ResponsiveLayout>
   );
 };
 
