@@ -407,21 +407,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       redirectTo: redirectUrl
     });
     
-    // Send password reset email with better template
-    if (!error) {
-      try {
-        await supabase.functions.invoke('send-auth-email', {
-          body: {
-            type: 'password_reset',
-            email: email,
-            resetUrl: redirectUrl,
-          }
-        });
-      } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError);
-        // Don't fail the process if email fails
-      }
-    }
+    // Default Supabase password reset email is sent automatically.
     
     return { data, error };
   };
