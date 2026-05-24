@@ -6,7 +6,7 @@ import { VoiceButton } from '@/components/VoiceButton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useToast } from '@/hooks/use-toast';
-import { MobileLayout, MobilePage, MobileContent } from '@/components/layouts/MobileLayout';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { MobileHeader, MobileHeaderAction } from '@/components/ui/MobileHeader';
 
 const JournalWrite = () => {
@@ -100,8 +100,8 @@ const JournalWrite = () => {
   };
 
   return (
-    <MobileLayout>
-      <MobilePage>
+    <ResponsiveLayout showHeader={false} hideBottomNav>
+      
         <MobileHeader
           title="New Entry"
           backTo="/journal"
@@ -126,51 +126,47 @@ const JournalWrite = () => {
             </MobileHeaderAction>
           }
         />
-
-        <MobileContent padded>
-          <div className="mobile-flow">
-            {/* Status Bar */}
-            <div className="mobile-flex mobile-flex-between text-muted-foreground">
-              <div className="mobile-flex mobile-flex-center">
-                <BookOpen className="w-4 h-4" />
-                <span className="mobile-text-body font-medium">New Entry</span>
-              </div>
-              <div className="mobile-flex mobile-flex-center">
-                <span className="mobile-text-body font-medium">{wordCount} words</span>
-                {status === 'saving' && (
-                  <span className="mobile-text-caption text-accent font-medium">Saving...</span>
-                )}
-                {status === 'saved' && lastSaved && (
-                  <span className="mobile-text-caption text-success font-medium">Draft saved</span>
-                )}
-              </div>
+        <div className="mobile-flow">
+          {/* Status Bar */}
+          <div className="mobile-flex mobile-flex-between text-muted-foreground">
+            <div className="mobile-flex mobile-flex-center">
+              <BookOpen className="w-4 h-4" />
+              <span className="mobile-text-body font-medium">New Entry</span>
             </div>
+            <div className="mobile-flex mobile-flex-center">
+              <span className="mobile-text-body font-medium">{wordCount} words</span>
+              {status === 'saving' && (
+                <span className="mobile-text-caption text-accent font-medium">Saving...</span>
+              )}
+              {status === 'saved' && lastSaved && (
+                <span className="mobile-text-caption text-success font-medium">Draft saved</span>
+              )}
+            </div>
+          </div>
 
-            {/* Writing Area */}
-            <div className="mobile-relative">
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="What's on your mind today? Share your thoughts, feelings, experiences, or anything else you'd like to reflect on..."
-                className="mobile-resize-none mobile-w-full min-h-[calc(100vh-280px)] bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground"
-                style={{ fontSize: '16px' }} // Prevent zoom on iOS
-                autoFocus
-              />
-              
-              {/* Voice Button - Mobile Optimized */}
-              <div className="mobile-fixed mobile-bottom-safe mobile-right-md z-50">
-                <div className="mobile-card mobile-card-compact mobile-shadow-floating">
-                  <VoiceButton 
-                    onTranscription={handleVoiceTranscription}
-                    className="mobile-button mobile-gesture-zone text-primary-foreground bg-primary"
-                  />
-                </div>
+          {/* Writing Area */}
+          <div className="mobile-relative">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="What's on your mind today? Share your thoughts, feelings, experiences, or anything else you'd like to reflect on..."
+              className="mobile-resize-none mobile-w-full min-h-[calc(100vh-280px)] bg-transparent border-none focus:ring-0 focus:border-none p-0 text-foreground placeholder:text-muted-foreground"
+              style={{ fontSize: '16px' }} // Prevent zoom on iOS
+              autoFocus
+            />
+            
+            {/* Voice Button - Mobile Optimized */}
+            <div className="mobile-fixed mobile-bottom-safe mobile-right-md z-50">
+              <div className="mobile-card mobile-card-compact mobile-shadow-floating">
+                <VoiceButton 
+                  onTranscription={handleVoiceTranscription}
+                  className="mobile-button mobile-gesture-zone text-primary-foreground bg-primary"
+                />
               </div>
             </div>
           </div>
-        </MobileContent>
-      </MobilePage>
-    </MobileLayout>
+        </div>
+    </ResponsiveLayout>
   );
 };
 

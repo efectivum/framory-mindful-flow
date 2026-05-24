@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
-import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
+
 import { MobileCard } from '@/components/ui/MobileCard';
 import { MobileButton } from '@/components/ui/MobileButton';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
@@ -62,12 +62,12 @@ const Journal = () => {
 
   if (entries.length === 0 && !isLoading) {
     return (
-      <MobilePage>
-        <MobileContent padded>
+      <ResponsiveLayout title="Journal" subtitle="Your reflections and entries">
+        
           <NetworkStatusIndicator />
           <div className="mobile-flow">
             {/* Welcome Section */}
-            <MobileSection>
+            <section className="mb-6">
               <div className="mobile-stack-center">
                 <div className="mobile-touch mobile-haptic" style={{ 
                   width: '80px', 
@@ -87,10 +87,10 @@ const Journal = () => {
                   </p>
                 </div>
               </div>
-            </MobileSection>
+            </section>
 
             {/* Action Buttons */}
-            <MobileSection>
+            <section className="mb-6">
               <div className="mobile-flow">
                 <MobileButton 
                   onClick={() => navigate('/journal/new')}
@@ -120,7 +120,7 @@ const Journal = () => {
                   </MobileButton>
                 </div>
               </div>
-            </MobileSection>
+            </section>
 
             <VoiceRecordingModal
               open={showVoiceModal}
@@ -128,18 +128,18 @@ const Journal = () => {
               onTranscriptionComplete={handleVoiceComplete}
             />
           </div>
-        </MobileContent>
-      </MobilePage>
+        
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <MobilePage>
-      <MobileContent padded>
+    <ResponsiveLayout title="Journal" subtitle="Your reflections and entries">
+      
         <NetworkStatusIndicator />
         <div className="mobile-flow">
           {/* Header Actions */}
-          <MobileSection>
+          <section className="mb-6">
             <ButtonErrorBoundary fallbackMessage="Journal actions are not available">
               <div className="mobile-flex mobile-flex-row gap-3">
                 <MobileButton 
@@ -159,21 +159,21 @@ const Journal = () => {
                 </MobileButton>
               </div>
             </ButtonErrorBoundary>
-          </MobileSection>
+          </section>
 
           {/* Smart Search */}
-          <MobileSection>
+          <section className="mb-6">
             <SmartSearch
               onSearch={handleSmartSearch}
               onClear={clearSearch}
               availableTags={availableTags}
               availableEmotions={availableEmotions}
             />
-          </MobileSection>
+          </section>
 
           {/* Filter Section */}
           {showFilters && (
-            <MobileSection>
+            <section className="mb-6">
               <MobileCard>
                 <JournalFilterDropdown
                   filters={filters}
@@ -184,12 +184,12 @@ const Journal = () => {
                   onClearAll={clearAllFilters}
                 />
               </MobileCard>
-            </MobileSection>
+            </section>
           )}
 
           {/* Search Results */}
           {searchQuery && (
-            <MobileSection>
+            <section className="mb-6">
               <MobileCard>
                 <div className="mobile-flex mobile-flex-between">
                   <p className="mobile-body-sm" style={{ color: 'var(--app-text-secondary)' }}>
@@ -200,11 +200,11 @@ const Journal = () => {
                   </MobileButton>
                 </div>
               </MobileCard>
-            </MobileSection>
+            </section>
           )}
 
           {/* Entries Grid */}
-          <MobileSection>
+          <section className="mb-6">
             <div className="mobile-flow">
               {isLoading ? (
                 <>
@@ -218,11 +218,11 @@ const Journal = () => {
                 ))
               )}
             </div>
-          </MobileSection>
+          </section>
 
           {/* Load More */}
           {isLoading && (
-            <MobileSection>
+            <section className="mb-6">
               <div ref={loadMoreRef} className="mobile-center">
                 <div className="mobile-flex gap-2" style={{ color: 'var(--app-text-muted)' }}>
                   <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--app-accent-primary)' }}></div>
@@ -236,13 +236,13 @@ const Journal = () => {
                   }}></div>
                 </div>
               </div>
-            </MobileSection>
+            </section>
           )}
 
           {/* Quick AI */}
-          <MobileSection>
+          <section className="mb-6">
             <QuickAI />
-          </MobileSection>
+          </section>
 
           {/* Modals */}
           <JournalSearchModal
@@ -260,8 +260,8 @@ const Journal = () => {
             onTranscriptionComplete={handleVoiceComplete}
           />
         </div>
-      </MobileContent>
-    </MobilePage>
+      
+    </ResponsiveLayout>
   );
 };
 
