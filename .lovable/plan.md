@@ -1,21 +1,37 @@
 ## Goal
-Restore account access safely. I cannot directly read or set your password in the database, and we should not store or modify passwords manually. Supabase Auth passwords are hashed and managed by the auth service, so the safe fix is to make the reset flow work reliably.
 
-## Findings
-- The password reset request reaches Supabase successfully (`/recover` returned 200), so the app is requesting reset emails.
-- There is no Lovable email domain configured in this workspace, so auth emails are currently relying on the default auth mailer rather than a verified custom domain.
-- The app already has a `PasswordResetForm` that calls `supabase.auth.updateUser({ password })`, but I need to make the route/token handling more robust so the reset link reliably lands users on a working new-password screen.
+Bring `Insights.tsx` and its sub-components in line with the serene Scandinavian design system used across the rest of the app. Today they still use the old dark theme: hardcoded `text-white`, `bg-gray-800/50`, `border-gray-700/50`, vivid purple/green/orange gradients, and `text-gray-400`. Refactor to semantic tokens (`text-foreground`, `text-muted-foreground`, `bg-card`, `border-border`, `text-primary`) and the `card-serene` utility.
 
-## Plan
-1. Update the reset redirect path to a dedicated public route, e.g. `/reset-password`, instead of `/auth?reset=true`.
-2. Add or wire a public `/reset-password` page that:
-   - Detects Supabase recovery tokens from the URL hash/query.
-   - Establishes the recovery session when needed.
-   - Shows the existing serene `PasswordResetForm`.
-   - Redirects back to sign in after a successful password update.
-3. Keep `/auth?reset=true` as a backwards-compatible fallback so old reset links do not break.
-4. Improve the reset UI copy/errors so it clearly tells you when a link is expired or invalid and asks you to request a new one.
-5. Verify there are no remaining calls to the deleted custom `send-auth-email` function.
+## Files to update
 
-## Optional follow-up
-If reset emails still do not arrive after this route fix, set up Lovable Emails for `beta.lumatori.com` or another sender subdomain in **Cloud → Emails** so auth emails come from a verified domain.
+### `src/pages/Insights.tsx`
+No structural change needed — already uses `ResponsiveLayout` and semantic layout classes. Leave as-is.
+
+### `src/components/insights/InsightStatsCards.tsx`
+- Replace inline `linear-gradient(...)` purples/greens/oranges with the serene treatment: each stat card becomes a `card-serene` with a soft tinted icon container (`bg-primary/10`, `bg-accent/40`, `bg-muted`).
+- Swap `text-white`, `text-white/80`, `text-white/60` for `text-foreground` / `text-muted-foreground`.
+- Keep the FlippableCard structure; restyle front and back to use `card-serene p-6` with semantic text colors.
+- Remove `Badge` "Insight" label or restyle with `variant="secondary"`.
+
+### `src/components/insights/InsightSidebar.tsx`
+- Replace `Card` with `bg-gray-800/50 border-gray-700/50 backdrop-blur-sm` → `card-serene` wrapper `div`s (or keep `Card` but drop the dark classes).
+- Stat tiles: `bg-gray-700/30 border-gray-600/30` → `bg-muted/40 border border-border rounded-2xl`.
+- Text: `text-white` → `text-foreground`; `text-gray-400` → `text-muted-foreground`; `text-purple-300` → `text-primary`; icon `text-blue-300` → `text-primary`.
+
+### `src/components/insights/InsightEmptyState.tsx`
+- Replace purple gradient circle with `icon-container-lg` (semantic primary tint).
+- `text-white` → `text-foreground`; `text-gray-400` → `text-muted-foreground`.
+- Keep the `TrendingUp` icon, color it `text-primary`.
+
+## Out of scope
+
+- Deeper chart components (`MoodTrendChart`, `PersonalityRadarChart`, `EmotionBubbleChart`, `RecurringTopics`, `MiniCalendar`, `PremiumGate`) — touched only if they break visually after the wrapper changes; otherwise left untouched.
+- No business-logic or data-flow changes.
+
+## Verification
+
+- Visit `/insights` in the preview at mobile viewport, confirm:
+  - Stat cards render light, no dark gradients, flip still works.
+  - Sidebar cards use serene surfaces and readable text.
+  - Empty state matches the rest of the app when there are no entries.
+- Grep the three files for `text-white`, `bg-gray-`, `border-gray-`, `text-gray-` to confirm they're gone.
