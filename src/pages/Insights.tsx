@@ -4,6 +4,7 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { NetworkStatusIndicator } from '@/components/NetworkStatusIndicator';
 import { InsightStatsCards } from '@/components/insights/InsightStatsCards';
 import { InsightChartsSection } from '@/components/insights/InsightChartsSection';
