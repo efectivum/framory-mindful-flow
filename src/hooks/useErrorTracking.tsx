@@ -100,9 +100,18 @@ export const useErrorTracking = () => {
       error.id === errorId ? { ...error, resolved: true } : error
     ));
 
-    // For now, we'll skip the database update since we're using ai_insights table
-    // In production, you'd update the actual error_logs table once types are regenerated
-  }, []);
+    if (!user?.id) return;
+    try {
+      const { error: dbError } = await supabase
+        .from('error_logs')
+        .update({ resolved: true })
+        .eq('id', errorId)
+        .eq('user_id', user.id);
+      if (dbError) console.error('Failed to mark error resolved:', dbError);
+    } catch (e) {
+      console.error('markErrorResolved failed:', e);
+    }
+  }, [user]);
 
   const clearErrors = useCallback(() => {
     setErrors([]);
