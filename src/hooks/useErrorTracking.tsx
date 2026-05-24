@@ -56,31 +56,28 @@ export const useErrorTracking = () => {
     
     setErrors(prev => [fullErrorLog, ...prev.slice(0, 49)]); // Keep last 50 errors
 
-    // Send to backend for persistent storage
-    try {
-      const { error: dbError } = await supabase
-        .from('ai_insights') // Use existing table for now
-        .insert([{
-          user_id: user?.id,
-          source_type: 'error_tracking',
-          insight_type: severity,
-          content: errorLog.message,
-          metadata: {
+    // Only persist to DB if user is authenticated (RLS requires user_id = auth.uid())
+    if (user?.id) {
+      try {
+        const { error: dbError } = await supabase
+          .from('error_logs')
+          .insert([{
+            user_id: user.id,
+            message: errorLog.message,
             stack: errorLog.stack,
             url: errorLog.url,
             user_agent: errorLog.userAgent,
+            severity,
             context: errorLog.context || {},
-            timestamp: errorLog.timestamp,
-            resolved: false
-          },
-          confidence_score: severity === 'critical' ? 1.0 : 0.8
-        }]);
+            resolved: false,
+          }]);
 
-      if (dbError) {
-        console.error('Failed to log error to database:', dbError);
+        if (dbError) {
+          console.error('Failed to log error to database:', dbError);
+        }
+      } catch (e) {
+        console.error('Error tracking system failed:', e);
       }
-    } catch (e) {
-      console.error('Error tracking system failed:', e);
     }
 
     // Update stats
