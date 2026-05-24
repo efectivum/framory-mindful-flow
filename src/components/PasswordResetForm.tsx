@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,42 +13,85 @@ export const PasswordResetForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [sessionReady, setSessionReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if this is a password reset redirect
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
+    let cancelled = false;
 
-    if (type === 'recovery' && accessToken && refreshToken) {
-      // Set the session for password reset
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    }
-  }, [searchParams]);
+    const establishSession = async () => {
+      // Tokens may arrive in the URL hash (#access_token=...&type=recovery)
+      // or as query params (?access_token=...&type=recovery).
+      const hash = window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      const hashParams = new URLSearchParams(hash);
+      const queryParams = new URLSearchParams(window.location.search);
+
+      const errorDescription =
+        hashParams.get('error_description') || queryParams.get('error_description');
+      if (errorDescription) {
+        if (!cancelled) setLinkError(errorDescription.replace(/\+/g, ' '));
+        return;
+      }
+
+      const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
+      const type = hashParams.get('type') || queryParams.get('type');
+
+      if (type === 'recovery' && accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (!cancelled) {
+          if (error) {
+            setLinkError('This reset link is invalid or has expired. Please request a new one.');
+          } else {
+            setSessionReady(true);
+            // Clean the tokens out of the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+        return;
+      }
+
+      // Fallback: maybe a recovery session was already established
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled) {
+        if (data.session) {
+          setSessionReady(true);
+        } else {
+          setLinkError('This reset link is invalid or has expired. Please request a new one.');
+        }
+      }
+    };
+
+    establishSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
-        description: "Please make sure both passwords are identical.",
-        variant: "destructive",
+        description: 'Please make sure both passwords are identical.',
+        variant: 'destructive',
       });
       return;
     }
 
     if (password.length < 6) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
+        title: 'Password too short',
+        description: 'Password must be at least 6 characters long.',
+        variant: 'destructive',
       });
       return;
     }
@@ -57,112 +99,128 @@ export const PasswordResetForm = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
 
       toast({
-        title: "Password updated successfully! ✨",
-        description: "Your password has been changed. You can now sign in with your new password.",
+        title: 'Password updated',
+        description: 'You can now sign in with your new password.',
       });
 
-      navigate('/');
+      await supabase.auth.signOut();
+      navigate('/auth');
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: 'Could not update password',
+        description: error?.message || 'Please try again or request a new reset link.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
+  if (linkError) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+          <Shield className="w-7 h-7 text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-foreground">Reset link unavailable</h2>
+          <p className="text-sm text-muted-foreground">{linkError}</p>
+        </div>
+        <Button onClick={() => navigate('/auth')} className="w-full">
+          Back to sign in
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-md">
-      {/* Glass Card */}
-      <div className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-green-400" />
-          </div>
-          <h2 className="text-xl font-semibold text-white">Set New Password</h2>
-          <p className="text-gray-400 text-sm mt-2">
-            Choose a strong password for your account
+    <div className="w-full">
+      <div className="text-center mb-6 space-y-3">
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+          <Shield className="w-7 h-7 text-primary" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold text-foreground">Set a new password</h2>
+          <p className="text-sm text-muted-foreground">
+            Choose a strong password for your account.
           </p>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="new-password" className="text-gray-300 text-sm font-medium">
-              New Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <Input
-                id="new-password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                minLength={6}
-                className="pl-10 pr-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password" className="text-gray-300 text-sm font-medium">
-              Confirm New Password
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <Input
-                id="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                minLength={6}
-                className="pl-10 pr-10 bg-gray-700/50 border-gray-600/50 text-gray-200 placeholder-gray-500 rounded-xl h-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl h-12 shadow-lg transition-all duration-200 hover:shadow-xl" 
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Updating password...
-              </>
-            ) : (
-              'Update Password'
-            )}
-          </Button>
-        </form>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="new-password" className="text-sm font-medium">
+            New password
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="new-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              minLength={6}
+              disabled={!sessionReady}
+              className="pl-10 pr-10 h-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password" className="text-sm font-medium">
+            Confirm new password
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="confirm-password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              minLength={6}
+              disabled={!sessionReady}
+              className="pl-10 pr-10 h-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full h-12" disabled={loading || !sessionReady}>
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Updating password...
+            </>
+          ) : sessionReady ? (
+            'Update password'
+          ) : (
+            'Verifying link...'
+          )}
+        </Button>
+      </form>
     </div>
   );
 };
