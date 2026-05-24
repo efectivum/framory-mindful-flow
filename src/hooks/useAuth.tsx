@@ -382,22 +382,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     
-    // Send welcome email with better template
-    if (data.user && !error) {
-      try {
-        await supabase.functions.invoke('send-auth-email', {
-          body: {
-            type: 'welcome',
-            email: email,
-            name: userData.name || 'there',
-            confirmationUrl: redirectUrl,
-          }
-        });
-      } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError);
-        // Don't fail the signup process if email fails
-      }
-    }
+    // Default Supabase auth confirmation email is sent automatically.
     
     return { data, error };
   };
