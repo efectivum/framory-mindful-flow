@@ -41,31 +41,10 @@ export const AddBetaUserDialog: React.FC<AddBetaUserDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'single' | 'bulk'>('single');
 
-  const sendBetaInvitationEmail = async (emailAddress: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const signupUrl = `${window.location.origin}/auth?tab=signup`;
-      
-      const { data, error } = await supabase.functions.invoke('send-auth-email', {
-        body: {
-          type: 'beta_invitation',
-          email: emailAddress,
-          signupUrl
-        }
-      });
-
-      if (error) {
-        console.error('Email sending error:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Email sending error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to send email' 
-      };
-    }
+  const sendBetaInvitationEmail = async (_emailAddress: string): Promise<{ success: boolean; error?: string }> => {
+    // Beta invitation emails are disabled — custom auth email function was removed.
+    // Users added here will receive the default Supabase signup confirmation email when they sign up.
+    return { success: true };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
