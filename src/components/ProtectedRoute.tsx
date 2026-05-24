@@ -12,8 +12,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <div className="text-white text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground text-base">Loading...</p>
+        </div>
       </div>
     );
   }
