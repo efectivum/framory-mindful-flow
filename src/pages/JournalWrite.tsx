@@ -100,8 +100,8 @@ const JournalWrite = () => {
   };
 
   return (
-    <MobileLayout>
-      <MobilePage>
+    <ResponsiveLayout showHeader={false} hideBottomNav>
+      <></>
         <MobileHeader
           title="New Entry"
           backTo="/journal"
