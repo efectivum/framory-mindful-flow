@@ -12,7 +12,7 @@ export const useAutoSave = (data: any, options: UseAutoSaveOptions) => {
   const { delay = 2000, onSave, onError } = options;
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const previousDataRef = useRef(data);
   const { toast } = useToast();
 
