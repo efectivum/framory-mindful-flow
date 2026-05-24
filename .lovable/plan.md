@@ -1,34 +1,21 @@
+## Goal
+Restore account access safely. I cannot directly read or set your password in the database, and we should not store or modify passwords manually. Supabase Auth passwords are hashed and managed by the auth service, so the safe fix is to make the reset flow work reliably.
 
-## Problem
-
-Password reset isn't delivering email. Logs show why:
-
-- `useAuth.resetPassword` calls `supabase.auth.resetPasswordForEmail` (which succeeds — 200), then **also** invokes a custom edge function `send-auth-email`.
-- `send-auth-email` uses Resend with a hardcoded sender `noreply@yourdomain.com` and fails:
-  > "The yourdomain.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
-- The same broken hook is invoked on signup ("welcome" email).
-
-The native Supabase reset email path returns 200 in logs, so the underlying reset flow works — but the custom Resend layer is dead weight that confuses delivery and floods errors. We should remove it and rely on Supabase's default auth emails, which Lovable provisions automatically.
+## Findings
+- The password reset request reaches Supabase successfully (`/recover` returned 200), so the app is requesting reset emails.
+- There is no Lovable email domain configured in this workspace, so auth emails are currently relying on the default auth mailer rather than a verified custom domain.
+- The app already has a `PasswordResetForm` that calls `supabase.auth.updateUser({ password })`, but I need to make the route/token handling more robust so the reset link reliably lands users on a working new-password screen.
 
 ## Plan
+1. Update the reset redirect path to a dedicated public route, e.g. `/reset-password`, instead of `/auth?reset=true`.
+2. Add or wire a public `/reset-password` page that:
+   - Detects Supabase recovery tokens from the URL hash/query.
+   - Establishes the recovery session when needed.
+   - Shows the existing serene `PasswordResetForm`.
+   - Redirects back to sign in after a successful password update.
+3. Keep `/auth?reset=true` as a backwards-compatible fallback so old reset links do not break.
+4. Improve the reset UI copy/errors so it clearly tells you when a link is expired or invalid and asks you to request a new one.
+5. Verify there are no remaining calls to the deleted custom `send-auth-email` function.
 
-1. **`src/hooks/useAuth.tsx`** — Remove the two `supabase.functions.invoke('send-auth-email', …)` calls:
-   - In `signUp` (the welcome email block, lines ~385–400).
-   - In `resetPassword` (the password_reset block, lines ~425–439).
-   Keep the native `supabase.auth.signUp` and `supabase.auth.resetPasswordForEmail` calls untouched — those are what actually send the auth emails.
-
-2. **Verify the redirect target exists.** `resetPassword` redirects to `/auth?reset=true`. Confirm the `/auth` page reads the recovery token (`type=recovery` in the hash) and shows a "set new password" form. If it doesn't, add a small handler that calls `supabase.auth.updateUser({ password })` after a recovery session is detected. (I'll check `src/pages/Auth.tsx` during implementation and only patch if missing.)
-
-3. **Delete the dead edge function** `supabase/functions/send-auth-email/` and its `_templates/` so it stops booting, erroring in logs, and confusing future debugging.
-
-4. **Tell the user** that reset emails will now arrive via the default Lovable/Supabase mailer (check spam folder, can be slow). If they want branded emails from their own domain (`lumatori.com` / `beta.lumatori.com`), that's a separate follow-up: configure a Lovable Email domain and scaffold auth email templates — I'll offer that as an optional next step, not part of this fix.
-
-## Out of scope
-
-- Setting up a custom sender domain (Lovable Emails). Optional follow-up.
-- Changing the login flow itself — `signInWithPassword` is fine; the user simply needs a working reset path to recover their password.
-
-## Technical notes
-
-- The `RESEND_API_KEY` secret can stay or be removed later; it's no longer referenced after step 3.
-- No DB migrations needed.
+## Optional follow-up
+If reset emails still do not arrive after this route fix, set up Lovable Emails for `beta.lumatori.com` or another sender subdomain in **Cloud → Emails** so auth emails come from a verified domain.

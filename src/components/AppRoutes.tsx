@@ -4,6 +4,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { AdminProtectedRoute } from './AdminProtectedRoute';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
+import ResetPassword from '@/pages/ResetPassword';
 import CompleteSignup from '@/pages/CompleteSignup';
 import ConversationalOnboarding from '@/pages/ConversationalOnboarding';
 import Onboarding from '@/pages/Onboarding';
@@ -32,6 +33,7 @@ export const AppRoutes = () => {
       {/* Public routes */}
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<EmailConfirmation />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/complete-signup" element={<CompleteSignup />} />
       <Route path="/premium-success" element={<PremiumSuccess />} />
       
