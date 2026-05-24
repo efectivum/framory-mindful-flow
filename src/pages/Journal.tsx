@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Mic, Calendar as CalendarIcon, BookOpen, Sparkles, ChevronDown } from 'lucide-react';
-import { MobilePage, MobileContent, MobileSection } from '@/components/layouts/MobileLayout';
+
 import { MobileCard } from '@/components/ui/MobileCard';
 import { MobileButton } from '@/components/ui/MobileButton';
 import { JournalEntryCard } from '@/components/JournalEntryCard';
