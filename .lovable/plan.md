@@ -1,38 +1,34 @@
-# Consolidate on ResponsiveLayout
 
-ResponsiveLayout (with the canonical `BottomNavigation` from `src/components/BottomNavigation.tsx`) is already the standard — used by Today, Profile, Goals, Journal history/entry, Resources, ChallengeDetail. Three pages still use the legacy wrappers, and two files in `src/components/mobile/` are unused dead code that duplicates layout/nav logic and risks design drift.
+## Problem
 
-## Scope
+Password reset isn't delivering email. Logs show why:
 
-Frontend/presentation only. No business logic, no hook changes, no styling tokens touched.
+- `useAuth.resetPassword` calls `supabase.auth.resetPasswordForEmail` (which succeeds — 200), then **also** invokes a custom edge function `send-auth-email`.
+- `send-auth-email` uses Resend with a hardcoded sender `noreply@yourdomain.com` and fails:
+  > "The yourdomain.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+- The same broken hook is invoked on signup ("welcome" email).
 
-## Changes
+The native Supabase reset email path returns 200 in logs, so the underlying reset flow works — but the custom Resend layer is dead weight that confuses delivery and floods errors. We should remove it and rely on Supabase's default auth emails, which Lovable provisions automatically.
 
-1. **Migrate `src/pages/Journal.tsx`**
-   - Replace `MobilePage` / `MobileContent padded` outer wrapping with `<ResponsiveLayout title="Journal" subtitle="...">`.
-   - Replace each `<MobileSection>` with a plain `<section className="mb-6">` (preserves vertical rhythm previously provided by `mobile-flow`).
-   - Drop the `MobilePage/MobileContent/MobileSection` import.
+## Plan
 
-2. **Migrate `src/pages/JournalWrite.tsx`**
-   - Replace the `MobileLayout > MobilePage > MobileContent` stack with `<ResponsiveLayout showHeader={false} hideBottomNav>` so the existing `MobileHeader` and the focused-writing UX stay intact (no bottom nav while drafting).
-   - Keep all writing/voice/auto-save logic untouched.
+1. **`src/hooks/useAuth.tsx`** — Remove the two `supabase.functions.invoke('send-auth-email', …)` calls:
+   - In `signUp` (the welcome email block, lines ~385–400).
+   - In `resetPassword` (the password_reset block, lines ~425–439).
+   Keep the native `supabase.auth.signUp` and `supabase.auth.resetPasswordForEmail` calls untouched — those are what actually send the auth emails.
 
-3. **Migrate `src/pages/Insights.tsx`**
-   - Replace outer wrappers with `<ResponsiveLayout title="Insights" subtitle="Your patterns and progress">`.
-   - Replace `MobileSection` with `<section className="mb-6">`.
+2. **Verify the redirect target exists.** `resetPassword` redirects to `/auth?reset=true`. Confirm the `/auth` page reads the recovery token (`type=recovery` in the hash) and shows a "set new password" form. If it doesn't, add a small handler that calls `supabase.auth.updateUser({ password })` after a recovery session is detected. (I'll check `src/pages/Auth.tsx` during implementation and only patch if missing.)
 
-4. **Delete dead/legacy files**
-   - `src/components/mobile/BottomNavigation.tsx` (no importers).
-   - `src/components/mobile/MobileLayout.tsx` (no importers).
-   - `src/components/layouts/MobileLayout.tsx` (no importers after step 1–3).
+3. **Delete the dead edge function** `supabase/functions/send-auth-email/` and its `_templates/` so it stops booting, erroring in logs, and confusing future debugging.
+
+4. **Tell the user** that reset emails will now arrive via the default Lovable/Supabase mailer (check spam folder, can be slow). If they want branded emails from their own domain (`lumatori.com` / `beta.lumatori.com`), that's a separate follow-up: configure a Lovable Email domain and scaffold auth email templates — I'll offer that as an optional next step, not part of this fix.
 
 ## Out of scope
 
-- `src/components/layouts/AppContainer.tsx` (separate concern, not a duplicate nav).
-- The `.mobile-*` utility CSS classes in `src/styles/mobile/*` — they're used by many other components and are not the source of design drift; leaving them in place.
-- Visual styling beyond what's needed to keep the three migrated pages looking correct under ResponsiveLayout's max-w-2xl container.
+- Setting up a custom sender domain (Lovable Emails). Optional follow-up.
+- Changing the login flow itself — `signInWithPassword` is fine; the user simply needs a working reset path to recover their password.
 
-## Verification
+## Technical notes
 
-- TypeScript build passes (no remaining imports of the deleted files).
-- Manually review Journal, JournalWrite, Insights in mobile preview to confirm header, content padding, and bottom nav render via ResponsiveLayout.
+- The `RESEND_API_KEY` secret can stay or be removed later; it's no longer referenced after step 3.
+- No DB migrations needed.
