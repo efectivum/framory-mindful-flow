@@ -101,7 +101,7 @@ const JournalWrite = () => {
 
   return (
     <ResponsiveLayout showHeader={false} hideBottomNav>
-      <></>
+      
         <MobileHeader
           title="New Entry"
           backTo="/journal"
