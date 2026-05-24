@@ -16,12 +16,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
 }) => {
   return (
     <div className={cn(
-      'flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900',
+      'flex flex-col items-center justify-center bg-background',
       fullScreen ? 'min-h-screen' : 'min-h-[400px]',
       className
     )}>
       <LoadingSpinner size="lg" className="mb-4" />
-      <p className="text-gray-300 text-lg">{message}</p>
+      <p className="text-muted-foreground text-lg">{message}</p>
     </div>
   );
 };
