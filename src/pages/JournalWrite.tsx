@@ -6,7 +6,7 @@ import { VoiceButton } from '@/components/VoiceButton';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useToast } from '@/hooks/use-toast';
-import { MobileLayout, MobilePage, MobileContent } from '@/components/layouts/MobileLayout';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { MobileHeader, MobileHeaderAction } from '@/components/ui/MobileHeader';
 
 const JournalWrite = () => {
